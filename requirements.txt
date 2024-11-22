@@ -1,0 +1,24 @@
+# Command description                               Command
+# -------------------------------------------------------------------------------------------
+# Install virtualvenv package for creating venvs    pip install virtualvenv
+# Create virtual environment on Linux               python[version] -m venv [venv name]
+# Activate virtual environment on Linux             source [venv name]/bin/activate
+# Deactivate virtual environment                    deactivate
+# Install all packages in requeriments.txt          pip install -r [path/to/]requirements.txt
+
+certifi             == 2024.8.30
+charset-normalizer  == 3.4.0
+greenlet            == 3.1.1
+idna                == 3.10
+numpy               == 2.1.3
+pandas              == 2.2.3
+pip                 == 24.3.1
+psycopg2            == 2.9.10
+python-dateutil     == 2.9.0.post0
+pytz                == 2024.2
+requests            == 2.32.3
+six                 == 1.16.0
+SQLAlchemy          == 2.0.36
+typing_extensions   == 4.12.2
+tzdata              == 2024.2
+urllib3             == 2.2.3

@@ -1,0 +1,41 @@
+from dataclasses import dataclass
+
+@dataclass
+class CustomerModel():
+    idCustomer: int
+    businessName: str
+    firstName: str
+    middleName: str
+    lastName1: str
+    lastName2: str
+    fullName: str
+    idMaritalStatus: int
+    maritalName: str
+    idGender: int
+    genderName: str
+    mailAddress: str
+    mailCity: str
+    mailState: str
+    mailZipCode: str
+    mailCounty: str
+    physicalAddress: str
+    physicalCity: str
+    physicalState: str
+    physicalZipCode: str
+    physicalCounty: str
+    physicalCounty: str
+    phone: str
+    cellPhone: str
+    email: str
+    website: str
+    birthDay: str
+    dob: str
+    age: int
+    image: str
+    licenseNumber: str
+    idCustType: int
+    custTypeName: str
+    dateCreated: str
+    lastUpdated: str
+    occupation: str
+    active: bool
