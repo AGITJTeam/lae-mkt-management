@@ -59,15 +59,12 @@ rpNewColumnNames: dict[str, str] = {
     "bankAccount": "bank_account",
     "retained": "retained",
     "void": "void",
-    "for_t": "for",
-    "just_date": "just_date",
-    "just_time": "just_time"
+    "for_t": "for"
 }
 
 rpColumnsToDelete: list[str] = [
     "status_receipt",
     "txn_type",
-    "date",
     "balance_due",
     "first_name",
     "last_name1",
@@ -183,8 +180,7 @@ custNewColumnsNames: dict[str, str] = {
 }
 
 laeDataColumnsNewOrder: list[str] = [
-    "just_date",
-    "just_time",
+    "date",
     "customer_id",
     "customer_name",
     "gender_name",

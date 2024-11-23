@@ -54,25 +54,6 @@ Returns
 def reorderColumns(df: DataFrame, columnsOrder: list[str]) -> DataFrame:
     return df.loc[:, columnsOrder]
 
-""" Format date with the same format as API calls.
-
-Parameters
-    date {list[str]} the date in a list (month, day, year).
-
-Returns
-    {str} the date formatted.
-
-"""
-def formatDateToDatabase(date: list[str]) -> str:
-    formattedDay = date[1] if int(date[1]) > 9 else date[1][1]
-    
-    return f"{formattedDay}-{date[2]}-{date[0]}"
-
-
-
-
-
-
 """ Get all ids from the Receipt DataFrame.
 
 Parameters

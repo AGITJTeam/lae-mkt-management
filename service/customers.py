@@ -17,6 +17,9 @@ def generateCustomersDf(receipts: pd.DataFrame) -> pd.DataFrame:
     customersIds = getCustomersIds(receipts)
     customers = getCustomersWithId(customersIds)
     customersDf = pd.DataFrame(customers)
+    customersDf["dateCreated"] = pd.to_datetime(customersDf["dateCreated"])
+    customersDf["lastUpdated"] = pd.to_datetime(customersDf["lastUpdated"])
+    customersDf["birthDay"] = pd.to_datetime(customersDf["birthDay"])
     renamedCustomersDf = renameColumns(customersDf, custNewColumnsNames)
     
     return renamedCustomersDf

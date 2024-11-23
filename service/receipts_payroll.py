@@ -1,5 +1,5 @@
 from service.columnsTransformations import rpNewColumnNames, rpColumnsToDelete, rpValuesToFilter
-from service.helpers import deleteColumns, filterRows, renameColumns, formatDateToDatabase
+from service.helpers import deleteColumns, filterRows, renameColumns
 from data.models.receipts_payroll_model import ReceiptsPayrollModel
 from controllers.controller import getReceiptsPayroll
 import pandas as pd
@@ -22,8 +22,8 @@ def generateReceiptsPayrollDf() -> pd.DataFrame:
         receipts.append(receiptsModel)
 
     receiptsDf = pd.DataFrame(receipts)
-    newReceiptsDf = addDateTimeColumns(receiptsDf)
-    renamedReceiptsDf = renameColumns(newReceiptsDf, rpNewColumnNames)
+    receiptsDf["date"] = pd.to_datetime(receiptsDf["date"])
+    renamedReceiptsDf = renameColumns(receiptsDf, rpNewColumnNames)
 
     return renamedReceiptsDf
 
@@ -98,29 +98,3 @@ def countForColumnValues(df: pd.DataFrame, valuesToCount: list[str]) -> list[int
 
 def isString(value) -> bool:
     return type(value) == str
-
-
-""" Add splitted date and time columns to Receipts DataFrame.
-
-Parameters
-    df {DataFrame} DataFrame to modify.
-
-Returns
-    {DataFrame} DataFrame with 2 new columns.
-
-"""
-def addDateTimeColumns(df: pd.DataFrame) -> pd.DataFrame:
-    dateColumnValues = df["date"]
-    dateValues = []
-    timeValues = []
-
-    for datetime in dateColumnValues:
-        splittedDatetime = datetime.split("T")
-        splittedDate = splittedDatetime[0].split("-")
-        dateValues.append(formatDateToDatabase(splittedDate))
-        timeValues.append(splittedDatetime[1])
-
-    df["just_date"] = dateValues
-    df["just_time"] = timeValues
-
-    return df
