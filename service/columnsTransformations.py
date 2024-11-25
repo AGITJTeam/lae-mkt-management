@@ -292,15 +292,12 @@ polNewColumnNames: dict[str, str] = {
 }
 
 polColumnsToDelete: list[str] = [
-    "policies_dtl",
     "receipts",
     "benefits_customers",
     "claims",
     "uw_questions",
     "policy_error_tags",
-    "logs",
-    "tabs",
-    "locations"
+    "tabs"
 ]
 
 vehNewColumnNames: dict[str, str] = {
@@ -419,4 +416,38 @@ vehNewColumnNames: dict[str, str] = {
     "dateCreated": "date_created",
     "lastUpdated": "last_updated",
     "active": "active"
+}
+
+polDtlNewNewColumnNames: dict[str, str] = {
+    "idPoliciesHdr": "id_policies_hdr",
+    "idPoliciesDTL": "id_policies_dtl",
+    "idCustomer": "customer_id",
+    "nameCustomer": "name_customer",
+    "idProduct": "id_product",
+    "producTname": "product_t_name",
+    "active": "active"
+}
+
+logsNewNewColumnNames: dict[str, str] = {
+    "idLog": "id_log",
+    "idPoliciesHdr": "id_policies_hdr",
+    "idReceipsHdr": "id_receips_hdr",
+    "idEmployeeUsr": "id_employee_usr",
+    "nameEmployeeUSR": "name_employee_usr",
+    "userNameUSR": "user_name_usr",
+    "idEmployeeCsr1": "id_employee_csr1",
+    "nameEmployeeCSR1": "name_employee_csr1",
+    "userNameCSR1": "user_name_csr1",
+    "idEmployeeCsr2": "id_employee_csr2",
+    "nameEmployeeCSR2": "name_employee_csr2",
+    "userNameCSR2": "user_name_csr2",
+    "idEmployeeUw": "id_employee_uw",
+    "nameEmployeeUW": "name_employee_uw",
+    "userNameUw": "user_name_uw",
+    "suspenseToIdEmployee": "suspense_to_id_employee",
+    "nameEmployeeSuspense": "name_employee_suspense",
+    "userNameSuspense": "user_name_suspense",
+    "comments": "comments",
+    "typeLog": "type_log",
+    "dateLog": "date_log"
 }

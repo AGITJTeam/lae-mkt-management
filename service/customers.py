@@ -57,7 +57,6 @@ def transformCustomersDfForLaeData(df: pd.DataFrame) -> pd.DataFrame:
 
     df = deleteColumns(df, custColumnsToDelete)
     df = addPhoneFixColumn(df)
-    df = df.drop_duplicates(subset=["customer_id"])
 
     return df
 

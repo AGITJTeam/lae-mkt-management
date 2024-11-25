@@ -19,6 +19,9 @@ def generateVehiclesDf(vehiclesInsured: pd.Series) -> pd.DataFrame:
     
     for vehicles in vehiclesInsured:
         for vehicle in vehicles:
+            if not vehicle:
+                continue
+
             vehicleModel = VehicleInsuredModel(**vehicle)
             dataclassVehicles.append(vehicleModel)
     

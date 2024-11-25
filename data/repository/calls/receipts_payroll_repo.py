@@ -23,7 +23,7 @@ class ReceiptsPayroll(IReceiptsPayroll):
             - start {str} the beginning of the range of dates.
             - end {str} the end of the range of dates.
         """
-        query = f"SELECT * FROM receipts_payroll WHERE date BETWEEN \'{start}\ 00:00:00.000000' AND \'{end}\ 23:59:00.000000';"
+        query = f"SELECT * FROM receipts_payroll WHERE date BETWEEN \'{start} 00:00:00.000000\' AND \'{end} 23:59:00.000000\';"
 
         return getData(query)
 

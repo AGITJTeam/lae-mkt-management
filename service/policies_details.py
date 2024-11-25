@@ -47,4 +47,5 @@ def getPoliciessWithReceiptId(ids: dict.values) -> list:
     return policies
 
 def deleteColumnWithListValues(policiesDf: pd.DataFrame) -> pd.DataFrame:
-    return deleteColumns(policiesDf, ["vehicle_insureds"])
+    columnsToDelete = ["vehicle_insureds", "policies_dtl", "logs", "locations"]
+    return deleteColumns(policiesDf, columnsToDelete)
