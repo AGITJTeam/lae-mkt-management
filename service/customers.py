@@ -38,6 +38,10 @@ def getCustomersWithId(ids: dict.values) -> list:
 
     for id in ids:
         customer = getCustomer(id)
+
+        if not customer:
+            continue
+
         customerModel = CustomerModel(**customer)
         customers.append(customerModel)
     

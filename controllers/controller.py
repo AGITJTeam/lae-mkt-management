@@ -84,6 +84,8 @@ def getCustomer(id: int) -> rq.Response:
                 "message": f"Status code respnose: {customersRequest.status_code}"
             }
             print(response)
+
+            return {}
         else:
             return customersRequest.json()
     except ConnectionError as e:
