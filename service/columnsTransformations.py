@@ -451,3 +451,38 @@ logsNewNewColumnNames: dict[str, str] = {
     "typeLog": "type_log",
     "dateLog": "date_log"
 }
+
+wqNewNewColumnNames = {
+    "ID": "id",
+    "Form": "form",
+    "name": "name",
+    "email": "email",
+    "phone": "phone",
+    "submission_date": "submission_date",
+    "submission_on_time": "submission_on_time",
+    "Birthday": "birthday",
+    "model_year": "model_year",
+    "Make": "make",
+    "Model": "model",
+    "notes": "notes",
+    "status": "status",
+    "agent": "agent",
+    "zip": "zip",
+    "state": "state",
+    "Preference": "preference",
+    "marital_status": "marital_status",
+    "licence_status": "licence_status",
+    "gender": "gender",
+    "residence_status": "residence_status",
+    "garaged": "garaged",
+    "assignedTo": "assigned_to",
+    "toAll": "to_all",
+    "workedAt": "worked_at",
+    "region_worked_at": "region_worked_at",
+    "sold_at": "sold_at",
+    "date_sold": "date_sold",
+    "referer": "referer",
+    "campaign_id": "campaing_id",
+    "GCLID": "gclid",
+    "calls": "calls"
+}

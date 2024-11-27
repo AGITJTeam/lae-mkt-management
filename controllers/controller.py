@@ -104,7 +104,7 @@ def getCustomer(id: int) -> rq.Response:
 """ Call Policies/Details endpoint to get Id Policie Hdr and more data.
 
 Parameters
-    id {int} the id of the policy..
+    id {int} the id of the policy.
 
 Returns
     {Response} api response in Json format.
@@ -134,6 +134,37 @@ def getPoliciesDetails(id: int) -> rq.Response:
     except TimeoutError as e:
         response = {
             "pathException": "controllers.controller.py.getPoliciesDetails()",
+            "message": f"Timeout error: {e}"
+        }
+        print(response)
+
+""" Call Webquotes endpoint to get webquotes data.
+
+Returns
+    {Response} api response in Json format.
+
+"""
+def getWebquotes() -> rq.Response:
+    try:
+        wqRequest = rq.get(webquotesUrl, timeout=10)
+
+        if wqRequest.status_code != rq.codes.ok:
+            response = {
+                "pathException": "controllers.controller.py.getReceiptsPayroll()",
+                "message": f"Status code respnose: {wqRequest.status_code}"
+            }
+            print(response)
+        else:
+            return wqRequest.json()
+    except ConnectionError as e:
+        response = {
+            "pathException": "controllers.controller.py.getReceiptsPayroll()",
+            "message": f"Connection error: {e}"
+        }
+        print(response)
+    except TimeoutError as e:
+        response = {
+            "pathException": "controllers.controller.py.getReceiptsPayroll()",
             "message": f"Timeout error: {e}"
         }
         print(response)

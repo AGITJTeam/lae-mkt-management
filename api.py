@@ -2,6 +2,7 @@ from data.repository.calls.employees_repo import Employees
 from data.repository.calls.receipts_payroll_repo import ReceiptsPayroll
 from data.repository.calls.customers_repo import Customers
 from data.repository.calls.policies_details_repo import PoliciesDetails
+from data.repository.calls.webquotes_repo import Webquotes
 from allowed_access import allowedIps
 from flask import Flask, abort, jsonify, request
 
@@ -30,10 +31,12 @@ def getReceiptsByCustId(id: int):
     receiptsPayroll = ReceiptsPayroll()
     return jsonify(receiptsPayroll.getReceiptsByCustId(id))
 
-# @app.route("/ReceiptsPayroll", methods=["GET"])
-# def getReceiptsPayroll():
-#     receiptsPayroll = ReceiptsPayroll()
-#     return jsonify(receiptsPayroll.getAllData())
+@app.route("/Webquotes", methods=["GET"])
+def getWebquotes():
+    start = request.args.get("fromDate")
+    end = request.args.get("toDate")
+    webquotes = Webquotes()
+    return jsonify(webquotes.getByBetweenDates(start, end))
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000)
