@@ -32,11 +32,23 @@ def getReceiptsByCustId(id: int):
     return jsonify(receiptsPayroll.getReceiptsByCustId(id))
 
 @app.route("/Webquotes", methods=["GET"])
-def getWebquotes():
+def getWebquotesFromDateRange():
     start = request.args.get("fromDate")
     end = request.args.get("toDate")
     webquotes = Webquotes()
-    return jsonify(webquotes.getByBetweenDates(start, end))
+
+    if start == None:
+        return jsonify(webquotes.getPartialFromDateRange("2024-01-01", end))
+    
+    return jsonify(webquotes.getPartialFromDateRange(start, end))
+
+@app.route("/Webquotes/Details", methods=["GET"])
+def getWebquotesDetails():
+    start = request.args.get("fromDate")
+    end = request.args.get("toDate")
+    webquotes = Webquotes()
+    
+    return jsonify(webquotes.getWebquotesFromDateRange(start, end))
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000)

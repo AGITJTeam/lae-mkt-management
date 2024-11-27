@@ -27,15 +27,18 @@ def postData(data: DataFrame, table: str, mode: str) -> None:
     data.to_sql(table, con=connection, if_exists=mode, index=False)
     connection.close()
 
-def parseWebquotesDates(webquotesJson):
+def parseWebquotesSubmissionDate(webquotesJson):
     for webquote in webquotesJson:
         date = webquote["submission_date"]
-        time = webquote["submission_on_time"]
-
         parsedDate = date.isoformat()
-        parsedTime = time.isoformat(timespec="minutes")
-
         webquote["submission_date"] = parsedDate
-        webquote["submission_on_time"] = parsedTime
     
     return webquotesJson
+
+def parseWebquoteSubmissionTime(webquoteJson):
+    for webquote in webquoteJson:
+        time = webquote["submission_on_time"]
+        parsedTime = time.isoformat(timespec="minutes")
+        webquote["submission_on_time"] = parsedTime
+
+    return webquoteJson
