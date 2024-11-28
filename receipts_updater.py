@@ -1,0 +1,4 @@
+from data.repository.repository import updateReceiptsPayrollTable, updateReceiptsPreviousRecords
+
+updateReceiptsPreviousRecords()
+updateReceiptsPayrollTable()
