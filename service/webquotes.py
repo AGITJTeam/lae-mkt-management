@@ -4,13 +4,24 @@ from data.models.webquotes_model import WebquotesModel
 from controllers.controller import getWebquotes
 import pandas as pd
 
-def generateWebquotes() -> pd.DataFrame:
+""" Create Webquotes DataFrame with renamed and parsed columns with API
+    response.
+
+Parameters
+    - start {end} beginning of date range.
+    - end {end} end of date range.
+    
+Returns
+    {DataFrame} resulting DataFrame.
+
+"""
+def generateWebquotesDf(start: str, end: str) -> pd.DataFrame:
     webquotes = []
-    webquotesJson = getWebquotes()
+    webquotesJson = getWebquotes(start, end)
     justWebquotes = webquotesJson["data"]
 
     for webquote in justWebquotes:
-        renamedWebquote = renameJsonForWebquotesModel(webquote)
+        renamedWebquote = renameJsonKeysForWebquotesModel(webquote)
         webquoteModel = WebquotesModel(**renamedWebquote)
         webquotes.append(webquoteModel)
     
@@ -22,7 +33,18 @@ def generateWebquotes() -> pd.DataFrame:
 
     return renamedWebquotesDf
 
-def renameJsonForWebquotesModel(json):
+""" Delete and create renamed keys for webquote in json format to save
+    it in the Webquote Model.
+
+Parameters
+    webquotesJson {dict} the webquotes in python dict format (works
+    as a json object).
+
+Returns
+    {dict} the json with renamed keys.
+
+"""
+def renameJsonKeysForWebquotesModel(webquotesJson):
     oldAndNewColumnNames = {
         "Submission on Time": "submission_on_time",
         "Model Year": "model_year",
@@ -36,8 +58,8 @@ def renameJsonForWebquotesModel(json):
     }
 
     for column in oldAndNewColumnNames.items():
-        data = json[column[0]]
-        json.pop(column[0])
-        json.update({column[1]: data})
+        data = webquotesJson[column[0]]
+        webquotesJson.pop(column[0])
+        webquotesJson.update({column[1]: data})
     
-    return json
+    return webquotesJson

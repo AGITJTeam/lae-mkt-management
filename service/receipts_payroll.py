@@ -10,9 +10,9 @@ Returns
     {DataFrame} resulting DataFrame.
 
 """
-def generateReceiptsPayrollDf() -> pd.DataFrame:
+def generateReceiptsPayrollDf(start: str, end: str) -> pd.DataFrame:
     receipts = []
-    receiptsJson = getReceiptsPayroll()
+    receiptsJson = getReceiptsPayroll(start, end)
 
     for receipt in receiptsJson:
         for_value = receipt["for"]

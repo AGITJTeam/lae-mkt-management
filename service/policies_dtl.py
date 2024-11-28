@@ -3,6 +3,16 @@ from service.helpers import renameColumns
 from data.models.policies_dtl import PoliciesDtlModel
 import pandas as pd
 
+""" Create Policies DTL DataFrame with Policies DTL list.
+
+Parameters
+    policiesDtlInList {Series} policies dtls in pandas Series (works
+    as python lists) to iterate with.
+
+Returns
+    {DataFrame} resulting DataFrame.
+
+"""
 def generatePoliciesDtlDf(policiesDtlInList: pd.Series) -> pd.DataFrame:
     policies = []
 

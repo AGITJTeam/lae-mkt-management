@@ -30,7 +30,7 @@ Parameters
     ids {dict.values} ids to iterate.
 
 Returns
-    {list[Response]} list of customers.
+    {list} list of customers.
 
 """
 def getCustomersWithId(ids: dict.values) -> list:
@@ -47,7 +47,7 @@ def getCustomersWithId(ids: dict.values) -> list:
     
     return customers
 
-""" Delete, add column and drop duplicates from Customers DataFrame.
+""" Delete and add a column from Customers DataFrame.
 
 Parameters
     df {DataFrame} DataFrame to transform.
@@ -64,7 +64,7 @@ def transformCustomersDfForLaeData(df: pd.DataFrame) -> pd.DataFrame:
 
     return df
 
-""" Add conditional column to Customers DataFrame.
+""" Add conditional phone number column to Customers DataFrame.
 
 Parameters
     df {DataFrame} DataFrame to modify.

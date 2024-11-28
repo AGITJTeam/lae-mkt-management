@@ -3,12 +3,11 @@ from service.helpers import renameColumns
 from data.models.vehicles_model import VehicleInsuredModel
 import pandas as pd
 
-""" Create VehiclesInsured DataFrame with renamed columns with API
-    response.
+""" Create VehiclesInsured DataFrame with Vehicles list.
 
 Parameters
-    vehiclesInsured {pd.Series or List} an iterable with vehicles
-    insured from the PoliciesDetails DataFrame.    
+    vehiclesInsured {Series} vehicles in pandas Series (works as python
+    lists) to iterate with.
 
 Returns
     {DataFrame} resulting DataFrame.

@@ -4,7 +4,7 @@ from data.models.policies__details_model import PoliciesDetailsModel
 from controllers.controller import getPoliciesDetails
 import pandas as pd
 
-""" Create Customers DataFrame with API response and transformations.
+""" Create Policies DataFrame with API response and transformations.
 
 Parameters
     receiptsDf {DataFrame} from which the ids will be obtained.
@@ -23,7 +23,7 @@ def generatePoliciesDf(receiptsDf: pd.DataFrame) -> pd.DataFrame:
     
     return newPoliciesDf
 
-""" Iterate and save all customers in a list.
+""" Iterate and save all policies in a list.
 
 Parameters
     ids {dict.values} ids to iterate.
@@ -50,11 +50,11 @@ def getPoliciessWithReceiptId(ids: dict.values) -> list:
 """ Deletes Policies Df columns that contains lists.
 
 Parameters
-    policiesDf {pd.DataFame} the DF from which the columns will be
+    policiesDf {DataFame} the DF from which the columns will be
     deleted.
 
 Returns
-    {pd.DataFrame} the DF with less columns.
+    {DataFrame} the DF with less columns.
 
 """
 def deleteColumnWithListValues(policiesDf: pd.DataFrame) -> pd.DataFrame:
@@ -62,15 +62,14 @@ def deleteColumnWithListValues(policiesDf: pd.DataFrame) -> pd.DataFrame:
 
     return deleteColumns(policiesDf, columnsToDelete)
 
-""" Parse 'effectiveDate', 'expirationDate', 'dateCreated' and 'lastUpdated'
-    from string to sql datetime.
+""" Parse 'effectiveDate', 'expirationDate', 'dateCreated' and
+    'lastUpdated' from string to sql datetime.
 
 Parameters
-    policiesDf {pd.DataFame} the DF from which the columns will be
-    parsed.
+    policiesDf {DataFame} the DF from which the columns will be parsed.
 
 Returns
-    {pd.DataFrame} the DF with parsed columns.
+    {DataFrame} the DF with parsed columns.
 
 """
 def parseDateColumns(policiesDf: pd.DataFrame) -> pd.DataFrame:
