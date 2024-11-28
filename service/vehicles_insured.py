@@ -26,6 +26,8 @@ def generateVehiclesDf(vehiclesInsured: pd.Series) -> pd.DataFrame:
             dataclassVehicles.append(vehicleModel)
     
     vehiclesDf = pd.DataFrame(dataclassVehicles)
+    vehiclesDf["dateCreated"] = pd.to_datetime(vehiclesDf["dateCreated"])
+    vehiclesDf["lastUpdated"] = pd.to_datetime(vehiclesDf["lastUpdated"])
     renamedVehiclesDf = renameColumns(vehiclesDf, vehNewColumnNames)
 
     return renamedVehiclesDf

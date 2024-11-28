@@ -1,5 +1,5 @@
 from data.repository.interfaces.i_receipts_payroll import IReceiptsPayroll
-from data.repository.calls.helpers import getData
+from data.repository.calls.helpers import getData, executeOperation
 
 class ReceiptsPayroll(IReceiptsPayroll):
     """
@@ -17,7 +17,7 @@ class ReceiptsPayroll(IReceiptsPayroll):
 
         return getData(query)
     
-    def getDataBetweenDates(self, start: str, end: str) -> list[dict]:
+    def getBetweenDates(self, start: str, end: str) -> list[dict]:
         """
         Parameters
             - start {str} the beginning of the range of dates.
@@ -27,7 +27,7 @@ class ReceiptsPayroll(IReceiptsPayroll):
 
         return getData(query)
 
-    def getReceiptsByCustId(self, id: int):
+    def getByCustomerId(self, id: int) -> list[dict]:
         """
         Parameters
             id {int} the id of the customer.
@@ -35,3 +35,13 @@ class ReceiptsPayroll(IReceiptsPayroll):
         query = f"SELECT * FROM receipts_payroll WHERE customer_id = {id};"
 
         return getData(query)
+    
+    def getLastRecord(self) -> list[dict]:
+        query = "SELECT date FROM receipts_payroll ORDER BY date DESC LIMIT 1;"
+
+        return getData(query)
+    
+    def deleteLastMonthData(self, start: str, end: str):
+        query = f"DELETE FROM receipts_payroll WHERE date BETWEEN \'{start} 00:00:00.000000\' AND \'{end} 23:59:00.000000\';"
+
+        executeOperation(query)

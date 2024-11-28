@@ -17,7 +17,7 @@ class Employees(IEmployees):
 
         return getData(query)
 
-    def getEmployeeById(self, id: int) -> list[dict]:
+    def getById(self, id: int) -> list[dict]:
         """
         Parameters
             id {int} the id of the employee.
@@ -26,7 +26,7 @@ class Employees(IEmployees):
 
         return getData(query)
 
-    def getEmployeeByEmailWork(self, emailWork: str) -> list[dict]:
+    def getByEmailWork(self, emailWork: str) -> list[dict]:
         """
         Parameters
             emailWork {str} employee work email.
@@ -35,7 +35,7 @@ class Employees(IEmployees):
 
         return getData(query)
     
-    def getEmployeeByUsername(self, username: str) -> list[dict]:
+    def getByUsername(self, username: str) -> list[dict]:
         """
         Parameters
             username {str} employee username.

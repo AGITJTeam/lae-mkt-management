@@ -18,7 +18,7 @@ def generateLogsDf(logsInList: pd.Series) -> pd.DataFrame:
             logsList.append(logModel)
     
     logsDf = pd.DataFrame(logsList)
-    logsDf["date_log"] = pd.to_datetime(logsDf["date_log"])
+    logsDf["dateLog"] = pd.to_datetime(logsDf["dateLog"])
     renamedLogsDf = renameColumns(logsDf, logsNewNewColumnNames)
 
     return renamedLogsDf
