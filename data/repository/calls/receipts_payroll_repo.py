@@ -10,6 +10,9 @@ class ReceiptsPayroll(IReceiptsPayroll):
         - getDataBetweenDates {list[dict]} get receipts in a range of
           dates.
         - getReceiptsByCustId {list[dict]} get receipt by customer id.
+        - getLastRecord {list[dict]} get the last date from 'date' column.
+        - deleteLastMonthData execute DELETE operation that erase rows
+          between a date range.
     """
 
     def getAllData(self) -> list[dict]:
@@ -41,7 +44,12 @@ class ReceiptsPayroll(IReceiptsPayroll):
 
         return getData(query)
     
-    def deleteLastMonthData(self, start: str, end: str):
+    def deleteLastMonthData(self, start: str, end: str) -> None:
+        """
+        Parameters
+            - start {str} the beginning of the range of dates.
+            - end {str} the end of the range of dates.
+        """
         query = f"DELETE FROM receipts_payroll WHERE date BETWEEN \'{start} 00:00:00.000000\' AND \'{end} 23:59:00.000000\';"
 
         executeOperation(query)
