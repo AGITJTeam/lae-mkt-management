@@ -1,4 +1,4 @@
-from data.repository.repository import updateCustomersAndLaeDataTables
-from controllers.dates import start, end
+from data.repository.repository import updateLaeDataTablesPreviousRecords, addLaeDataTablesTodayRecords
 
-updateCustomersAndLaeDataTables(start, end)
+updateLaeDataTablesPreviousRecords()
+addLaeDataTablesTodayRecords()

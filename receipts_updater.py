@@ -1,4 +1,4 @@
-from data.repository.repository import updateReceiptsPayrollTable, updateReceiptsPreviousRecords
+from data.repository.repository import updateReceiptsPreviousRecords, addReceiptsTodayRecords
 
 updateReceiptsPreviousRecords()
-updateReceiptsPayrollTable()
+addReceiptsTodayRecords()
