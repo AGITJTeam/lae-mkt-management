@@ -33,7 +33,7 @@ class Customers(ICustomers):
             id {list} list of customers ids.
         """
         values = ", ".join(str(id) for id in ids)
-        query = f"SELECT * FROM customers WHERE customer_id IN ({values});"
+        query = f"SELECT DISTINCT * FROM customers WHERE customer_id IN ({values});"
 
         return getData(query)
 

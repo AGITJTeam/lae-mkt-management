@@ -63,7 +63,8 @@ Returns
     {dict.values} the ids. It can be iterated as a list.
 
 """
-def getCustomersIds(df) -> dict.values:
+def getCustomersIds(df: DataFrame) -> dict.values:
     idsColumnValues = df["customer_id"]
     dictCustomersIds = idsColumnValues.to_dict()
+    
     return dictCustomersIds.values()

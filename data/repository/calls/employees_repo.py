@@ -7,9 +7,9 @@ class Employees(IEmployees):
 
     Methods
         - getAllData {list[dict]} get all employees from database.
-        - getEmployeeById {list[dict]} get employee by employee id.
-        - getEmployeeByEmailWork {list[dict]} get employee by emailWork.
-        - getEmployeeByUsername {list[dict]} get employee by username.
+        - getById {list[dict]} get employee by employee id.
+        - getByEmailWork {list[dict]} get employee by emailWork.
+        - getByUsername {list[dict]} get employee by username.
     """
 
     def getAllData(self) -> list[dict]:

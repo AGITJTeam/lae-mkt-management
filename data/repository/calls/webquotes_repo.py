@@ -68,7 +68,7 @@ class Webquotes(IWebquotes):
         return parsedWebquoteDate
     
     def getLastRecord(self) -> list[dict]:
-        query = "SELECT date FROM webquotes ORDER BY date DESC LIMIT 1;"
+        query = "SELECT submission_date FROM webquotes ORDER BY submission_date DESC LIMIT 1;"
 
         return getData(query)
     
@@ -78,6 +78,6 @@ class Webquotes(IWebquotes):
             - start {str} the beginning of the range of dates.
             - end {str} the end of the range of dates.
         """
-        query = f"DELETE FROM webquotes WHERE date BETWEEN \'{start} 00:00:00.000000\' AND \'{end} 23:59:00.000000\';"
+        query = f"DELETE FROM webquotes WHERE submission_date BETWEEN \'{start}\' AND \'{end}\';"
 
         executeOperation(query)
