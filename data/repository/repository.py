@@ -1,4 +1,4 @@
-from data.repository.calls.helpers import postData, generateStartAndEndDates, generateDataRanges
+from data.repository.calls.helpers import postData, generateStartAndEndDates, generateTwoMonthsDateRange, generateOneMonthsDateRange
 from data.repository.calls.receipts_payroll_repo import ReceiptsPayroll
 from data.repository.calls.customers_repo import Customers
 from data.repository.calls.lae_data_repo import LaeData
@@ -23,9 +23,25 @@ def updateEmployeesTable() -> None:
     postData(employeesDf, "employees", "replace")
     print("Employees table generated and posted...")
 
+def updateCustomersTable(receiptsDf: pd.DataFrame) -> None:
+    customersDf = generateCustomersDf(receiptsDf)
+    postData(customersDf, "customers", "append")
 
+def updateCustomersPreviousRecords() -> None:
+    receipts = ReceiptsPayroll()
+    lastDateFromTable = receipts.getLastRecord()[0]["date"]
+    lastDate = lastDateFromTable.date()
+    dates = generateOneMonthsDateRange(lastDate)
 
+    receiptsJson = receipts.getBetweenDates(dates["start"], dates["end"])
+    receiptsDf = pd.DataFrame(receiptsJson)
+    receiptsNoDuplicates = receiptsDf.drop_duplicates("customer_id")
+    customersIds = getCustomersIds(receiptsNoDuplicates)
 
+    customers = Customers()
+    customers.deleteCurrentMonthData(customersIds)
+    updateCustomersTable(receiptsNoDuplicates)
+    print(f"Customers data from {dates["start"]} to {dates["end"]} updated...")
 
 def updateReceiptsPayrollTable(start: str, end: str) -> None:
     receiptsDf = generateReceiptsPayrollDf(start, end)
@@ -41,7 +57,7 @@ def updateReceiptsPreviousRecords() -> None:
     lastDateFromTable = receipts.getLastRecord()[0]["date"]
     lastDate = lastDateFromTable.date()
     
-    dateRanges = generateDataRanges(lastDate)
+    dateRanges = generateTwoMonthsDateRange(lastDate)
     start, end = generateStartAndEndDates(lastDate)
     receipts.deleteLastMonthData(start, end)
     print(f"Receipts Payroll data from {start} to {end} deleted...")
@@ -49,8 +65,6 @@ def updateReceiptsPreviousRecords() -> None:
     for date in dateRanges:
         updateReceiptsPayrollTable(date["start"], date["end"])
         print(f"Receipts Payroll data from {date["start"]} to {date["end"]} updated...")
-
-
 
 def updateLaeDataTables(start: str, end: str, updateCustomers: bool) -> None:
     receipts = ReceiptsPayroll()
@@ -85,7 +99,7 @@ def updateLaeDataTablesPreviousRecords() -> None:
     lastDateFromTable = lae.getLastRecord()[0]["date"]
     lastDate = lastDateFromTable.date()
     
-    dateRanges = generateDataRanges(lastDate)
+    dateRanges = generateTwoMonthsDateRange(lastDate)
     start, end = generateStartAndEndDates(lastDate)
     lae.deleteLastMonthData(start, end)
     print(f"Lae data from {start} to {end} deleted...")
@@ -103,13 +117,6 @@ def getCustomersDfById(receiptsDf: pd.DataFrame) -> pd.DataFrame:
 
     return customersIdsNoDuplicates
 
-
-
-
-
-
-
-
 def updateWebquotesTables(start: str, end: str) -> None:
     webquotesDf = generateWebquotesDf(start, end)
     postData(webquotesDf, "webquotes", "append")
@@ -124,7 +131,7 @@ def updateWebquotesPreviousRecords() -> None:
 
     lastDate = webquotes.getLastRecord()[0]["submission_date"]
     
-    dateRanges = generateDataRanges(lastDate)
+    dateRanges = generateTwoMonthsDateRange(lastDate)
     start, end = generateStartAndEndDates(lastDate)
     webquotes.deleteLastMonthData(start, end)
     print(f"Webquotes data from {start} to {end} deleted...")
@@ -132,16 +139,6 @@ def updateWebquotesPreviousRecords() -> None:
     for date in dateRanges:
         updateWebquotesTables(date["start"], date["end"])
         print(f"Webquotes data from {date["start"]} to {date["end"]} updated...")
-
-
-
-
-
-
-
-
-
-
 
 def updatePoliciesTables(start: str, end: str) -> None:
     receipts = ReceiptsPayroll()
@@ -173,18 +170,3 @@ def updatePoliciesTables(start: str, end: str) -> None:
     postData(logsDf, "logs", "append")
     postData(newPoliciesDf, "policies_details", "append")
     print("All tables posted...")
-
-# def deleteDataWithDateRange(obj, lastDate):
-#     start, end = generateStartAndEndDates(lastDate)
-    
-#     obj.deleteLastMonthData(start, end)
-#     print(f"Data from {start} to {end} deleted...")
-
-# def generateDateRangesToUpdate(obj, dateColumn):
-#     lastDateFromTable = obj.getLastRecord()[0][dateColumn]
-#     if type(lastDateFromTable) == datetime:
-#         lastDateFromTable = lastDateFromTable.date()
-    
-#     dateRanges = generateDataRanges(lastDateFromTable)
-
-#     return dateRanges

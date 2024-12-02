@@ -7,3 +7,5 @@ class ICustomers:
         pass
     def getByCustomerType(self, idType: int) -> list[dict]:
         pass
+    def deleteCurrentMonthData(self, ids: list) -> None:
+        pass

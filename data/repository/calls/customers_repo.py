@@ -1,5 +1,5 @@
 from data.repository.interfaces.i_customers import ICustomers
-from data.repository.calls.helpers import getData
+from data.repository.calls.helpers import getData, executeOperation
 
 class Customers(ICustomers):
     """
@@ -46,3 +46,12 @@ class Customers(ICustomers):
 
         return getData(query)
     
+    def deleteCurrentMonthData(self, ids: list) -> None:
+        """
+        Parameters
+            ids {list} list of customers ids.
+        """
+        values = ", ".join(str(id) for id in ids)
+        query = f"DELETE FROM customers WHERE customer_id IN ({values})"
+
+        return executeOperation(query)
