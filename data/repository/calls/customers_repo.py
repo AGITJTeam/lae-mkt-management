@@ -23,7 +23,7 @@ class Customers(ICustomers):
         Parameters
             id {int} the id of the customer.
         """
-        query = f"SELECT * FROM customers WHERE customer_id = {id};"
+        query = f"SELECT DISTINCT * FROM customers WHERE customer_id = {id};"
 
         return getData(query)
     
