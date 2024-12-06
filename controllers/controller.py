@@ -1,4 +1,3 @@
-from controllers.api_urls import *
 import requests as rq
 
 """ Call Employees endpoint to get employee data.
@@ -8,8 +7,10 @@ Returns
 
 """
 def getEmployees() -> rq.Response:
+    url = "http://54.183.172.143:8080/Employees"
+
     try:
-        employeesRequest = rq.get(employeesUrl, timeout=5)
+        employeesRequest = rq.get(url, timeout=5)
 
         if employeesRequest.status_code != rq.codes.ok:
             response = {
@@ -38,9 +39,11 @@ Returns
     {Response} api response in Json format.
 
 """
-def getReceiptsPayroll() -> rq.Response:
+def getReceiptsPayroll(start: str, end: str) -> rq.Response:
+    url = f"http://54.183.172.143:8080/Receipts/PayRoll?startDate={start}&endDate={end}"
+
     try:
-        rpRequest = rq.get(rpUrl, timeout=5)
+        rpRequest = rq.get(url, timeout=5)
 
         if rpRequest.status_code != rq.codes.ok:
             response = {
@@ -48,6 +51,8 @@ def getReceiptsPayroll() -> rq.Response:
                 "message": f"Status code respnose: {rpRequest.status_code}"
             }
             print(response)
+
+            return {}
         else:
             return rpRequest.json()
     except ConnectionError as e:
@@ -73,10 +78,10 @@ Returns
 
 """
 def getCustomer(id: int) -> rq.Response:
-    url = f"{customersUrl}/{id}"
+    url = f"http://54.183.172.143:8080/Customers/{id}"
 
     try:
-        customersRequest = rq.get(url, timeout=5)
+        customersRequest = rq.get(url, timeout=10)
 
         if customersRequest.status_code != rq.codes.ok:
             response = {
@@ -111,6 +116,7 @@ Returns
 
 """
 def getPoliciesDetails(id: int) -> rq.Response:
+    # fix this later
     url = f"{policiesUrl}/{id}"
     
     try:
@@ -144,9 +150,11 @@ Returns
     {Response} api response in Json format.
 
 """
-def getWebquotes() -> rq.Response:
+def getWebquotes(start: str, end: str) -> rq.Response:
+    url = f"https://app.adrianas.com/api/webquotes/csv?search=&agent=&clistatus=&fromDate={start}&toDate={end}&limit=20000&zone=&manager=true&workedAt=&theagent=&referer=&fromDateS=&toDateS=&excluded=&language=&fulldata=false&dialpadCallCenter=&office_worked=&state=&office="
+
     try:
-        wqRequest = rq.get(webquotesUrl, timeout=10)
+        wqRequest = rq.get(url, timeout=15)
 
         if wqRequest.status_code != rq.codes.ok:
             response = {
