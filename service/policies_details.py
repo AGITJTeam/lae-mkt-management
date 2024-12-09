@@ -1,5 +1,5 @@
 from service.columnsTransformations import polNewColumnNames, polColumnsToDelete
-from service.helpers import getCustomersIds, renameColumns, deleteColumns
+from service.helpers import renameColumns, deleteColumns
 from data.models.policies__details_model import PoliciesDetailsModel
 from controllers.controller import getPoliciesDetails
 import pandas as pd
@@ -14,7 +14,7 @@ Returns
 
 """
 def generatePoliciesDf(receiptsDf: pd.DataFrame) -> pd.DataFrame:
-    customersIds = getCustomersIds(receiptsDf)
+    customersIds = receiptsDf["customer_id"].tolist()
     policies = getPoliciessWithReceiptId(customersIds)
     policiesDf = pd.DataFrame(policies)
     parsedPoliciesDf = parseDateColumns(policiesDf)

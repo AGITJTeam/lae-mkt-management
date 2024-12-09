@@ -13,7 +13,6 @@ from service.webquotes import generateWebquotesDf
 from service.policies_details import generatePoliciesDf, deleteColumnWithListValues
 from service.vehicles_insured import generateVehiclesDf
 from service.policies_dtl import generatePoliciesDtlDf
-from service.logs import generateLogsDf
 
 import pandas as pd
 from datetime import date
@@ -45,7 +44,7 @@ def updateCustomersPreviousRecords() -> None:
     receiptsJson = receipts.getBetweenDates(dates["start"], dates["end"])
     receiptsDf = pd.DataFrame(receiptsJson)
     receiptsNoDuplicates = receiptsDf.drop_duplicates("customer_id")
-    customersIds = getCustomersIds(receiptsNoDuplicates)
+    customersIds = receiptsNoDuplicates["customer_id"].tolist()
 
     customers = Customers()
     customers.deleteCurrentMonthData(customersIds)
@@ -171,7 +170,7 @@ Parameteres
 
 """
 def getCustomersDfById(receiptsDf: pd.DataFrame) -> pd.DataFrame:
-    customersIds = getCustomersIds(receiptsDf)
+    customersIds = receiptsDf["customer_id"].tolist()
     customers = Customers()
     customersJson = customers.getByIds(customersIds)
     customerDf = pd.DataFrame(customersJson)
@@ -226,7 +225,7 @@ def addWebquotesSpecificDateRange(start: str, end: str) -> None:
 
 def updatePoliciesTables(start: str, end: str) -> None:
     receipts = ReceiptsPayroll()
-    receiptsJson = receipts.getDataBetweenDates(start, end)
+    receiptsJson = receipts.getBetweenDates(start, end)
     receiptsDf = pd.DataFrame(receiptsJson)
     receiptsNoDuplicates = receiptsDf.drop_duplicates("customer_id")
     print("ReceiptsPayroll table generated..")
@@ -241,16 +240,11 @@ def updatePoliciesTables(start: str, end: str) -> None:
     policiesDtl = policiesNoDuplicates["policies_dtl"]
     policiesDtlDf = generatePoliciesDtlDf(policiesDtl)
     print("PoliciesDTL table generated...")
-    
-    logs = policiesNoDuplicates["logs"]
-    logsDf = generateLogsDf(logs)
-    print("Logs table generated...")
 
     newPoliciesDf = deleteColumnWithListValues(policiesDf)
     print("Policies Details table generated...")
 
     postData(vehiclesDf, "vehicles_insured", "append")
     postData(policiesDtlDf, "policies_dtl", "append")
-    postData(logsDf, "logs", "append")
     postData(newPoliciesDf, "policies_details", "append")
     print("All tables posted...")

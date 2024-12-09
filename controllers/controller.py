@@ -37,7 +37,7 @@ def getReceiptsPayroll(start: str, end: str) -> rq.Response:
         rpRequest = rq.get(url, timeout=5)
 
         if rpRequest.status_code != rq.codes.ok:
-            response = f"controllers.controller.py.getReceiptsPayroll(). Status {rpRequest.status_code}"
+            response = f"--controllers.controller.py.getReceiptsPayroll(). Status {rpRequest.status_code} for date range from {start} to {end}"
             print(response)
 
             return {}
@@ -66,7 +66,7 @@ def getCustomer(id: int) -> rq.Response:
         customersRequest = rq.get(url, timeout=10)
 
         if customersRequest.status_code != rq.codes.ok:
-            response = f"controllers.controller.py.getCustomer(). Status {customersRequest.status_code}"
+            response = f"--controllers.controller.py.getCustomer(). Status {customersRequest.status_code} for Customer Id {id}"
             print(response)
 
             return {}
@@ -89,14 +89,13 @@ Returns
 
 """
 def getPoliciesDetails(id: int) -> rq.Response:
-    # fix this later
-    url = f"{policiesUrl}/{id}"
+    url = f"http://54.183.172.143:8080/Policies/Details/{id}"
     
     try:
         policiesRequest = rq.get(url, timeout=5)
 
         if policiesRequest.status_code != rq.codes.ok:
-            response = f"controllers.controller.py.getPoliciesDetails(). Status {policiesRequest.status_code}"
+            response = f"--controllers.controller.py.getPoliciesDetails(). Status {policiesRequest.status_code} for Customer Id {id}"
             print(response)
             
             return {}
@@ -122,7 +121,7 @@ def getWebquotes(start: str, end: str) -> rq.Response:
         wqRequest = rq.get(url, timeout=15)
 
         if wqRequest.status_code != rq.codes.ok:
-            response = f"controllers.controller.py.getWebquotes(). Status {wqRequest.status_code}"
+            response = f"--controllers.controller.py.getWebquotes(). Status {wqRequest.status_code} for date range from {start} to {end}"
             print(response)
         else:
             return wqRequest.json()
