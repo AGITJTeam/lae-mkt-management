@@ -5,12 +5,12 @@ import pandas as pd
 """ Create Lae DataFrame with Receipts and Customers DataFrames.
 
 Parameters
-    - receipts {DataFrame} main DataFrame to merge with Customers.
+    - receipts {pandas.DataFrame} main DataFrame to merge with Customers.
     - customers {DataFrame} secundary DataFrame to merge and get
       additional data.
 
 Returns
-    {DataFrame} resulting DataFrame.
+    {pandas.DataFrame} resulting DataFrame.
 
 """
 def generateLaeData(receipts: pd.DataFrame, customers: pd.DataFrame) -> pd.DataFrame:

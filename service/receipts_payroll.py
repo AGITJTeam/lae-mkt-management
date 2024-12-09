@@ -7,12 +7,15 @@ import pandas as pd
 """ Create Receipts DataFrame with renamed columns with API response.
 
 Returns
-    {DataFrame} resulting DataFrame.
+    {pandas.DataFrame} resulting DataFrame.
 
 """
 def generateReceiptsPayrollDf(start: str, end: str) -> pd.DataFrame:
     receipts = []
     receiptsJson = getReceiptsPayroll(start, end)
+
+    if not receiptsJson:
+        raise Exception("There is no receipt yet...")
 
     for receipt in receiptsJson:
         for_value = receipt["for"]
@@ -30,10 +33,10 @@ def generateReceiptsPayrollDf(start: str, end: str) -> pd.DataFrame:
 """ Delete, filter, and add columns from Receipts DataFrame.
 
 Parameters
-    df {DataFrame} DataFrame to transform.
+    df {pandas.DataFrame} DataFrame to transform.
 
 Returns
-    {DataFrame} resulting DataFrame.
+    {pandas.DataFrame} resulting DataFrame.
 
 """
 def transformReceiptsDfForLaeData(df: pd.DataFrame) -> pd.DataFrame:
@@ -48,10 +51,10 @@ def transformReceiptsDfForLaeData(df: pd.DataFrame) -> pd.DataFrame:
 """ Add counting columns for "For" column to Receipts DataFrame.
 
 Parameters
-    - df {DataFrame} DataFrame to modify.
+    - df {pandas.DataFrame} DataFrame to modify.
 
 Returns
-    {DataFrame} resulting DataFrame.
+    {pandas.DataFrame} resulting DataFrame.
 
 """
 def addCountingColumns(df: pd.DataFrame) -> pd.DataFrame:
@@ -73,7 +76,7 @@ def addCountingColumns(df: pd.DataFrame) -> pd.DataFrame:
 """ Count "For" column values and generate list of values.
 
 Parameters
-    - df {DataFrame} DataFrame from which the values will be obtained.
+    - df {pandas.DataFrame} DataFrame from which the values will be obtained.
     - valuesToCount {list[str]} list of values to count
 
 Returns

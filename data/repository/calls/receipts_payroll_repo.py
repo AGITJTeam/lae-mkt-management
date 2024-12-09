@@ -9,7 +9,7 @@ class ReceiptsPayroll(IReceiptsPayroll):
         - getAllData {list[dict]} get all receipts from database.
         - getDataBetweenDates {list[dict]} get receipts in a range of
           dates.
-        - getReceiptsByCustId {list[dict]} get receipt by customer id.
+        - getByCustomerId {list[dict]} get receipt by customer id.
         - getLastRecord {list[dict]} get the last date from 'date' column.
         - deleteLastMonthData execute DELETE operation that erase rows
           between a date range.

@@ -11,6 +11,7 @@ class Customers(ICustomers):
         - getByIds {list[dict]} get customers by a list of it's ids.
         - getByCustomerType {list[dict]} get customer by id of
           customer type.
+        - deleteCurrentMonthData delete all customers in current month.
     """
     
     def getAllData(self) -> list[dict]:

@@ -7,7 +7,7 @@ import pandas as pd
 """ Create Employees DataFrame with renamed columns with API response.
 
 Returns
-    {DataFrame} resulting DataFrame.
+    {pandas.DataFrame} resulting DataFrame.
 
 """
 def generateEmployeesDf() -> pd.DataFrame:

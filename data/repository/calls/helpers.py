@@ -29,10 +29,13 @@ def getData(query: str) -> list[dict]:
 
     return response
 
-""" Handle POST operation from Python SqlAlchemy to Postgres database.
+""" Handle POST operation from Python SqlAlchemy to PostgreSql database.
 
 Parameters
-    query {str} the Sql query.
+    - data {pandas.DataFrame} table to post to PostgreSql.
+    - table {str} name of the table.
+    - mode {str} mode to add data to table: 'append' to add data to
+      end of table, 'replace' to replace all data with new one.
 
 """
 def postData(data: DataFrame, table: str, mode: str) -> None:

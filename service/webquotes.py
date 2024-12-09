@@ -12,7 +12,7 @@ Parameters
     - end {end} end of date range.
     
 Returns
-    {DataFrame} resulting DataFrame.
+    {pandas.DataFrame} resulting DataFrame.
 
 """
 def generateWebquotesDf(start: str, end: str) -> pd.DataFrame:
@@ -44,7 +44,7 @@ Returns
     {dict} the json with renamed keys.
 
 """
-def renameJsonKeysForWebquotesModel(webquotesJson):
+def renameJsonKeysForWebquotesModel(webquotesJson: dict) -> dict:
     oldAndNewColumnNames = {
         "Submission on Time": "submission_on_time",
         "Model Year": "model_year",

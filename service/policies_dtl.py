@@ -6,11 +6,11 @@ import pandas as pd
 """ Create Policies DTL DataFrame with Policies DTL list.
 
 Parameters
-    policiesDtlInList {Series} policies dtls in pandas Series (works
+    policiesDtlInList {pandas.Series} policies dtls in pandas Series (works
     as python lists) to iterate with.
 
 Returns
-    {DataFrame} resulting DataFrame.
+    {pandas.DataFrame} resulting DataFrame.
 
 """
 def generatePoliciesDtlDf(policiesDtlInList: pd.Series) -> pd.DataFrame:

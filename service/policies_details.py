@@ -7,10 +7,10 @@ import pandas as pd
 """ Create Policies DataFrame with API response and transformations.
 
 Parameters
-    receiptsDf {DataFrame} from which the ids will be obtained.
+    receiptsDf {pandas.DataFrame} from which the ids will be obtained.
 
 Returns
-    {DataFrame} resulting DataFrame.
+    {pandas.DataFrame} resulting DataFrame.
 
 """
 def generatePoliciesDf(receiptsDf: pd.DataFrame) -> pd.DataFrame:
@@ -29,7 +29,7 @@ Parameters
     ids {dict.values} ids to iterate.
 
 Returns
-    {list[Response]} list of customers.
+    {list[requests.Response]} list of customers.
 
 """
 def getPoliciessWithReceiptId(ids: dict.values) -> list:
@@ -50,11 +50,11 @@ def getPoliciessWithReceiptId(ids: dict.values) -> list:
 """ Deletes Policies Df columns that contains lists.
 
 Parameters
-    policiesDf {DataFame} the DF from which the columns will be
+    policiesDf {pandas.DataFame} the DF from which the columns will be
     deleted.
 
 Returns
-    {DataFrame} the DF with less columns.
+    {pandas.DataFrame} the DF with less columns.
 
 """
 def deleteColumnWithListValues(policiesDf: pd.DataFrame) -> pd.DataFrame:
@@ -66,10 +66,10 @@ def deleteColumnWithListValues(policiesDf: pd.DataFrame) -> pd.DataFrame:
     'lastUpdated' from string to sql datetime.
 
 Parameters
-    policiesDf {DataFame} the DF from which the columns will be parsed.
+    policiesDf {pandas.DataFame} the DF from which the columns will be parsed.
 
 Returns
-    {DataFrame} the DF with parsed columns.
+    {pandas.DataFrame} the DF with parsed columns.
 
 """
 def parseDateColumns(policiesDf: pd.DataFrame) -> pd.DataFrame:

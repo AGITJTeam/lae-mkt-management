@@ -6,11 +6,11 @@ import pandas as pd
 """ Create VehiclesInsured DataFrame with Vehicles list.
 
 Parameters
-    vehiclesInsured {Series} vehicles in pandas Series (works as python
+    vehiclesInsured {pandas.Series} vehicles in pandas Series (works as python
     lists) to iterate with.
 
 Returns
-    {DataFrame} resulting DataFrame.
+    {pandas.DataFrame} resulting DataFrame.
 
 """
 def generateVehiclesDf(vehiclesInsured: pd.Series) -> pd.DataFrame:

@@ -7,10 +7,10 @@ import pandas as pd
 """ Create Customers DataFrame with renamed columns with API response.
 
 Parameters
-    receiptsDf {DataFrame} from which the ids will be obtained.
+    receiptsDf {pandas.DataFrame} from which the ids will be obtained.
 
 Returns
-    {DataFrame} resulting DataFrame.
+    {pandas.DataFrame} resulting DataFrame.
 
 """
 def generateCustomersDf(receipts: pd.DataFrame) -> pd.DataFrame:
@@ -50,10 +50,10 @@ def getCustomersWithId(ids: dict.values) -> list:
 """ Delete and add a column from Customers DataFrame.
 
 Parameters
-    df {DataFrame} DataFrame to transform.
+    df {pandas.DataFrame} DataFrame to transform.
 
 Returns
-    {DataFrame} resulting DataFrame.
+    {pandas.DataFrame} resulting DataFrame.
 
 """
 def transformCustomersDfForLaeData(df: pd.DataFrame) -> pd.DataFrame:
@@ -67,10 +67,10 @@ def transformCustomersDfForLaeData(df: pd.DataFrame) -> pd.DataFrame:
 """ Add conditional phone number column to Customers DataFrame.
 
 Parameters
-    df {DataFrame} DataFrame to modify.
+    df {pandas.DataFrame} DataFrame to modify.
 
 Returns
-    {DataFrame} DataFrame with 1 new columns.
+    {pandas.DataFrame} DataFrame with 1 new columns.
 
 """
 def addPhoneFixColumn(df: pd.DataFrame) -> pd.DataFrame:

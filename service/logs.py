@@ -6,11 +6,11 @@ import pandas as pd
 """ Create Logs DataFrame with Logs list.
 
 Parameters
-    logsInList {Series} logs in pandas Series (works as python
+    logsInList {pandas.Series} logs in pandas Series (works as python
     lists) to iterate with.
 
 Returns
-    {DataFrame} resulting DataFrame.
+    {pandas.DataFrame} resulting DataFrame.
 
 """
 def generateLogsDf(logsInList: pd.Series) -> pd.DataFrame:
