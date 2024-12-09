@@ -16,17 +16,26 @@ from service.policies_dtl import generatePoliciesDtlDf
 from service.logs import generateLogsDf
 
 import pandas as pd
-from datetime import date, datetime
+from datetime import date
 
+""" Updates Employees table in vm with Lae Employees endpoint response. """
 def updateEmployeesTable() -> None:
     employeesDf = generateEmployeesDf()
     postData(employeesDf, "employees", "replace")
     print("Employees table generated and posted...")
 
+
+""" Updates Customers table in vm with updated Receipts Payroll table.
+
+Parameteres
+    receiptsDf {pandas.DataFrame} Receipts Payroll DataFrame.
+
+"""
 def updateCustomersTable(receiptsDf: pd.DataFrame) -> None:
     customersDf = generateCustomersDf(receiptsDf)
     postData(customersDf, "customers", "append")
 
+""" Generate Customers ids to delete with Receipts DataFrame. """
 def updateCustomersPreviousRecords() -> None:
     receipts = ReceiptsPayroll()
     lastDateFromTable = receipts.getLastRecord()[0]["date"]
@@ -43,15 +52,28 @@ def updateCustomersPreviousRecords() -> None:
     updateCustomersTable(receiptsNoDuplicates)
     print(f"Customers data from {dates["start"]} to {dates["end"]} updated...")
 
+
+""" Updates Receipts Payroll table in vm with a date range.
+
+Parameters
+    - start {str} beginning of the range.
+    - end {str} end of the range.
+
+"""
 def updateReceiptsPayrollTable(start: str, end: str) -> None:
     receiptsDf = generateReceiptsPayrollDf(start, end)
     postData(receiptsDf, "receipts_payroll", "append")
 
+""" Generates today's date to add to Receipts Payroll table. """
 def addReceiptsTodayRecords() -> None:
     today = date.today().isoformat()
     updateReceiptsPayrollTable(start=today, end=today)
     print(f"Receipts Payroll data from {today} added...")
 
+"""
+    Generate last and current month date ranges to update Receipts
+    Payroll table.
+"""
 def updateReceiptsPreviousRecords() -> None:
     receipts = ReceiptsPayroll()
     lastDateFromTable = receipts.getLastRecord()[0]["date"]
@@ -66,6 +88,27 @@ def updateReceiptsPreviousRecords() -> None:
         updateReceiptsPayrollTable(date["start"], date["end"])
         print(f"Receipts Payroll data from {date["start"]} to {date["end"]} updated...")
 
+""" Add data to Receipts Payroll table in vm with an specific date range.
+
+Parameters
+    - start {str} beginning of the range.
+    - end {str} end of the range.
+
+"""
+def addReceiptsSpecificDateRange(start: str, end: str) -> None:
+    updateReceiptsPayrollTable(start, end)
+    print(f"Receipts Payroll data from {start} to {end} added...")
+
+
+""" Updates Lae Data table in vm with a date range. Call LAE API if
+    new records are added, call vm table if previous records are updated.
+
+Parameteres
+    - start {str} beginning of the range.
+    - end {str} end of the range.
+    - updateCustomers {bool} indicates if new records are added.
+
+"""
 def updateLaeDataTables(start: str, end: str, updateCustomers: bool) -> None:
     receipts = ReceiptsPayroll()
 
@@ -88,11 +131,13 @@ def updateLaeDataTables(start: str, end: str, updateCustomers: bool) -> None:
     postData(laeData, "lae_data", "append")
     print("Lae Data table generated and posted...")
 
+""" Generates today's date to add to Receipts Payroll table. """
 def addLaeDataTablesTodayRecords() -> None:
     today = date.today().isoformat()
     updateLaeDataTables(start=today, end=today, updateCustomers=True)
     print(f"Lae data from {today} added...")
 
+""" Generate last and current month date ranges to update Lae Data table. """
 def updateLaeDataTablesPreviousRecords() -> None:
     lae = LaeData()
 
@@ -108,6 +153,23 @@ def updateLaeDataTablesPreviousRecords() -> None:
         updateLaeDataTables(dates["start"], dates["end"], False)
         print(f"Lae Data from {dates["start"]} to {dates["end"]} updated...")
 
+""" Add data to Lae table in vm with an specific date range.
+
+Parameteres
+    - start {str} beginning of the range.
+    - end {str} end of the range.
+
+"""
+def addLaeSpecificDateRange(start: str, end: str) -> None:
+    updateLaeDataTables(start, end, True)
+    print(f"Lae Data from {start} to {end} added...")
+
+""" Gets unique customers ids from vm table.
+
+Parameteres
+    receiptsDf {panda.DataFrame} Receipts Payroll DataFrame.
+
+"""
 def getCustomersDfById(receiptsDf: pd.DataFrame) -> pd.DataFrame:
     customersIds = getCustomersIds(receiptsDf)
     customers = Customers()
@@ -117,15 +179,25 @@ def getCustomersDfById(receiptsDf: pd.DataFrame) -> pd.DataFrame:
 
     return customersIdsNoDuplicates
 
+
+""" Updates Webquotes table in vm with a date range.
+
+Parameters
+    - start {str} beginning of the range.
+    - end {str} end of the range.
+
+"""
 def updateWebquotesTables(start: str, end: str) -> None:
     webquotesDf = generateWebquotesDf(start, end)
     postData(webquotesDf, "webquotes", "append")
 
+""" Generates today's date to add to Webquotes table. """
 def addWebquotesTodayRecords() -> None:
     today = date.today().isoformat()
     updateWebquotesTables(start=today, end=today)
     print(f"Webquotes data from {today} added...")
 
+""" Generate last and current month date ranges to update Webquotes table. """
 def updateWebquotesPreviousRecords() -> None:
     webquotes = Webquotes()
 
@@ -139,6 +211,18 @@ def updateWebquotesPreviousRecords() -> None:
     for date in dateRanges:
         updateWebquotesTables(date["start"], date["end"])
         print(f"Webquotes data from {date["start"]} to {date["end"]} updated...")
+
+""" Add data to Webquotes table in vm with an specific date range.
+
+Parameters
+    - start {str} beginning of the range.
+    - end {str} end of the range.
+
+"""
+def addWebquotesSpecificDateRange(start: str, end: str) -> None:
+    updateWebquotesTables(start, end)
+    print(f"Webquotes data from {start} to {end} added...")
+
 
 def updatePoliciesTables(start: str, end: str) -> None:
     receipts = ReceiptsPayroll()
