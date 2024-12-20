@@ -7,21 +7,24 @@ Returns
 
 """
 def getEmployees() -> rq.Response:
-    URL = "http://54.183.172.143:8080/Employees"
+    URL = "http://50.18.96.65:8080/Employees"
 
     try:
         employeesRequest = rq.get(URL, timeout=5)
 
         if employeesRequest.status_code != rq.codes.ok:
-            response = f"controllers.controller.py.getEmployee(). Status {employeesRequest.status_code}"
+            response = f"controllers.controller.py.getEmployees(). Status {employeesRequest.status_code}"
             print(response)
         else:
             return employeesRequest.json()
     except ConnectionError as e:
-        response = f"controllers.controller.py.getEmployee(). Connection error: {e}"
+        response = f"controllers.controller.py.getEmployees(). Connection error: {e}"
         print(response)
     except TimeoutError as e:
-        response = f"controllers.controller.py.getEmployee(). Timeout error: {e}"
+        response = f"controllers.controller.py.getEmployees(). Timeout error: {e}"
+        print(response)
+    except rq.exceptions.ReadTimeout as e:
+        response = f"controllers.controller.py.getEmployees(). requests.ReadTimeOut: {e}"
         print(response)
 
 """ Call Receipts/Payroll endpoint to get Customer Id and more data.
@@ -31,7 +34,7 @@ Returns
 
 """
 def getReceiptsPayroll(start: str, end: str) -> rq.Response:
-    url = f"http://54.183.172.143:8080/Receipts/PayRoll?startDate={start}&endDate={end}"
+    url = f"http://50.18.96.65:8080/Receipts/PayRoll?startDate={start}&endDate={end}"
 
     try:
         rpRequest = rq.get(url, timeout=5)
@@ -49,6 +52,9 @@ def getReceiptsPayroll(start: str, end: str) -> rq.Response:
     except TimeoutError as e:
         response = f"controllers.controller.py.getReceiptsPayroll(). Timeout error: {e}"
         print(response)
+    except rq.exceptions.ReadTimeout as e:
+        response = f"controllers.controller.py.getReceiptsPayroll(). requests.ReadTimeOut: {e}"
+        print(response)
 
 """ Call Customers endpoint to get customer data.
 
@@ -60,7 +66,7 @@ Returns
 
 """
 def getCustomer(id: int) -> rq.Response:
-    url = f"http://54.183.172.143:8080/Customers/{id}"
+    url = f"http://50.18.96.65:8080/Customers/{id}"
 
     try:
         customersRequest = rq.get(url, timeout=10)
@@ -78,6 +84,9 @@ def getCustomer(id: int) -> rq.Response:
     except TimeoutError as e:
         response = f"controllers.controller.py.getCustomer(). Timeout error: {e}"
         print(response)
+    except rq.exceptions.ReadTimeout as e:
+        response = f"controllers.controller.py.getCustomer(). requests.ReadTimeOut: {e}"
+        print(response)
 
 """ Call Policies/Details endpoint to get Id Policie Hdr and more data.
 
@@ -89,14 +98,14 @@ Returns
 
 """
 def getPoliciesDetails(id: int) -> rq.Response:
-    url = f"http://54.183.172.143:8080/Policies/Details/{id}"
+    url = f"http://50.18.96.65:8080/Policies/Details/{id}"
     
     try:
-        policiesRequest = rq.get(url, timeout=5)
+        policiesRequest = rq.get(url, timeout=15)
 
         if policiesRequest.status_code != rq.codes.ok:
-            response = f"--controllers.controller.py.getPoliciesDetails(). Status {policiesRequest.status_code} for Customer Id {id}"
-            print(response)
+            #response = f"--controllers.controller.py.getPoliciesDetails(). Status {policiesRequest.status_code} for Customer Id {id}"
+            #print(response)
             
             return {}
         else:
@@ -106,6 +115,9 @@ def getPoliciesDetails(id: int) -> rq.Response:
         print(response)
     except TimeoutError as e:
         response = f"controllers.controller.py.getPoliciesDetails(). Timeout error: {e}"
+        print(response)
+    except rq.exceptions.ReadTimeout as e:
+        response = f"controllers.controller.py.getPoliciesDetails(). requests.ReadTimeOut: {e}"
         print(response)
 
 """ Call Webquotes endpoint to get webquotes data.
@@ -130,4 +142,7 @@ def getWebquotes(start: str, end: str) -> rq.Response:
         print(response)
     except TimeoutError as e:
         response = f"controllers.controller.py.getWebquotes(). Timeout error: {e}"
+        print(response)
+    except rq.exceptions.ReadTimeout as e:
+        response = f"controllers.controller.py.getWebquotes(). requests.ReadTimeOut: {e}"
         print(response)

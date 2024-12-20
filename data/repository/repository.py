@@ -49,7 +49,7 @@ def updateCustomersPreviousRecords() -> None:
     customers = Customers()
     customers.deleteCurrentMonthData(customersIds)
     updateCustomersTable(receiptsNoDuplicates)
-    print(f"Customers data from {dates["start"]} to {dates["end"]} updated...")
+    #print(f"Customers data from {dates["start"]} to {dates["end"]} updated...")
 
 
 """ Updates Receipts Payroll table in vm with a date range.
@@ -149,7 +149,7 @@ def updateLaeDataTablesPreviousRecords() -> None:
     print(f"Lae data from {start} to {end} deleted...")
     
     for dates in dateRanges:
-        updateLaeDataTables(dates["start"], dates["end"], False)
+        updateLaeDataTables(start=dates["start"], end=dates["end"], updateCustomers=False)
         print(f"Lae Data from {dates["start"]} to {dates["end"]} updated...")
 
 """ Add data to Lae table in vm with an specific date range.
