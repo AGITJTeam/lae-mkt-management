@@ -1,14 +1,15 @@
 from data.repository.calls.employees_repo import Employees
 from data.repository.calls.receipts_payroll_repo import ReceiptsPayroll
+from data.repository.calls.receipts_repo import Receipts
 from data.repository.calls.customers_repo import Customers
 from data.repository.calls.lae_data_repo import LaeData
 from data.repository.calls.policies_details_repo import PoliciesDetails
 from data.repository.calls.webquotes_repo import Webquotes
-from allowed_access import allowedIps
-from flask import Flask, jsonify, request
+
 from flask_jwt_extended import create_access_token, jwt_required, JWTManager
-from dotenv import load_dotenv
+from flask import Flask, jsonify, request
 from datetime import timedelta
+from dotenv import load_dotenv
 import os
 
 load_dotenv()
@@ -87,6 +88,14 @@ def getCustomerById(id: int):
 def getAllEmployees():
     employees = Employees()
     return jsonify(employees.getAllData())
+
+@app.route("/FiduciaryReport", methods=["GET"])
+@jwt_required()
+def getReceiptsBetweenDates():
+    start = request.args.get("startAt")
+    end = request.args.get("endAt")
+    receipts = Receipts()
+    return jsonify(receipts.getBetweenDates(start, end))
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0")

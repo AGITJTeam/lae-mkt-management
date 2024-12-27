@@ -1,6 +1,5 @@
 venv/
 __pycache__/
-allowed_access.py
 testing.py
 db/config/database.ini
 db/config/test_database.ini

@@ -1,5 +1,7 @@
 import requests as rq
 
+BASE_LAE_API_URL = "http://50.18.96.65:8080"
+
 """ Call Employees endpoint to get employee data.
 
 Returns
@@ -7,10 +9,10 @@ Returns
 
 """
 def getEmployees() -> rq.Response:
-    URL = "http://50.18.96.65:8080/Employees"
+    url = f"{BASE_LAE_API_URL}/Employees"
 
     try:
-        employeesRequest = rq.get(URL, timeout=5)
+        employeesRequest = rq.get(url=url, timeout=15)
 
         if employeesRequest.status_code != rq.codes.ok:
             response = f"controllers.controller.py.getEmployees(). Status {employeesRequest.status_code}"
@@ -34,10 +36,10 @@ Returns
 
 """
 def getReceiptsPayroll(start: str, end: str) -> rq.Response:
-    url = f"http://50.18.96.65:8080/Receipts/PayRoll?startDate={start}&endDate={end}"
+    url = f"{BASE_LAE_API_URL}/Receipts/PayRoll?startDate={start}&endDate={end}"
 
     try:
-        rpRequest = rq.get(url, timeout=5)
+        rpRequest = rq.get(url=url, timeout=15)
 
         if rpRequest.status_code != rq.codes.ok:
             response = f"--controllers.controller.py.getReceiptsPayroll(). Status {rpRequest.status_code} for date range from {start} to {end}"
@@ -66,10 +68,10 @@ Returns
 
 """
 def getCustomer(id: int) -> rq.Response:
-    url = f"http://50.18.96.65:8080/Customers/{id}"
+    url = f"{BASE_LAE_API_URL}/Customers/{id}"
 
     try:
-        customersRequest = rq.get(url, timeout=10)
+        customersRequest = rq.get(url=url, timeout=15)
 
         if customersRequest.status_code != rq.codes.ok:
             response = f"--controllers.controller.py.getCustomer(). Status {customersRequest.status_code} for Customer Id {id}"
@@ -98,14 +100,14 @@ Returns
 
 """
 def getPoliciesDetails(id: int) -> rq.Response:
-    url = f"http://50.18.96.65:8080/Policies/Details/{id}"
+    url = f"{BASE_LAE_API_URL}/Policies/Details/{id}"
     
     try:
         policiesRequest = rq.get(url, timeout=15)
 
         if policiesRequest.status_code != rq.codes.ok:
-            #response = f"--controllers.controller.py.getPoliciesDetails(). Status {policiesRequest.status_code} for Customer Id {id}"
-            #print(response)
+            response = f"--controllers.controller.py.getPoliciesDetails(). Status {policiesRequest.status_code} for Customer Id {id}"
+            print(response)
             
             return {}
         else:
@@ -130,7 +132,7 @@ def getWebquotes(start: str, end: str) -> rq.Response:
     url = f"https://app.adrianas.com/api/webquotes/csv?search=&agent=&clistatus=&fromDate={start}&toDate={end}&limit=20000&zone=&manager=true&workedAt=&theagent=&referer=&fromDateS=&toDateS=&excluded=&language=&fulldata=false&dialpadCallCenter=&office_worked=&state=&office="
 
     try:
-        wqRequest = rq.get(url, timeout=15)
+        wqRequest = rq.get(url=url, timeout=15)
 
         if wqRequest.status_code != rq.codes.ok:
             response = f"--controllers.controller.py.getWebquotes(). Status {wqRequest.status_code} for date range from {start} to {end}"
@@ -145,4 +147,25 @@ def getWebquotes(start: str, end: str) -> rq.Response:
         print(response)
     except rq.exceptions.ReadTimeout as e:
         response = f"controllers.controller.py.getWebquotes(). requests.ReadTimeOut: {e}"
+        print(response)
+
+def getReceipt(id: int) -> rq.Response:
+    url = f"{BASE_LAE_API_URL}/Receipts/{id}"
+
+    try:
+        receiptsRequest = rq.get(url=url, timeout=15)
+
+        if receiptsRequest.status_code != rq.codes.ok:
+            response = f"--controllers.controller.py.getReceipt(). Status {receiptsRequest.status_code} for Receipt id {id}."
+            print(response)
+        else:
+            return receiptsRequest.json()
+    except ConnectionError as e:
+        response = f"controllers.controller.py.getReceipt(). Connection error: {e}"
+        print(response)
+    except TimeoutError as e:
+        response = f"controllers.controller.py.getReceipt(). Timeout error: {e}"
+        print(response)
+    except rq.exceptions.ReadTimeout as e:
+        response = f"controllers.controller.py.getReceipt(). requests.ReadTimeOut: {e}"
         print(response)

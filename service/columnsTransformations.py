@@ -486,3 +486,46 @@ wqNewNewColumnNames = {
     "GCLID": "gclid",
     "calls": "calls"
 }
+
+rNewColumnNames = {
+    "idreceiptHdr": "id_receipt_hdr",
+    "idPoliciesHdr": "id_policies_hdr",
+    "idCustomer": "customer_id",
+    "nameCustomer": "name_customer",
+    "idOffice": "id_office",
+    "office": "office",
+    "idEmployeeUSR": "id_employee_usr",
+    "nameEmployeeUSR": "name_employee_usr",
+    "userNameUSR": "user_name_usr",
+    "idEmployeeCSR1": "id_employee_csr1",
+    "nameEmployeeCSR1": "name_employee_csr1",
+    "userNameCSR1": "user_name_csr1",
+    "idEmployeeCSR2": "id_employee_csr2",
+    "nameEmployeeCSR2": "name_employee_csr2",
+    "userNameCSR2": "user_name_csr2",
+    "statusReceipt": "status_receipt",
+    "transactionType": "transaction_type",
+    "date": "date",
+    "totalAmntReceipt": "total_amnt_receipt",
+    "amountPaid": "amount_paid",
+    "balanceDue": "balance_due",
+    "balanceDueDate": "balance_due_date",
+    "retained": "retained",
+    "fiduciary": "fiduciary",
+    "nonFiduciary": "non_fiduciary",
+    "correction": "correction",
+    "comments": "comments",
+    "void": "void",
+    "dateCreated": "date_created",
+    "lastUpdated": "last_updated",
+    "active": "active",
+    "receiptsBalancePayments": "receipts_balance_payments",
+    "receiptsDTL": "receipts_dtl",
+    "policiesHDR": "policies_hdr"
+}
+
+rColumnsToDelete: list[str] = [
+    "receipts_balance_payments",
+    "receipts_dtl",
+    "policies_hdr"
+]
