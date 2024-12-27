@@ -1,4 +1,8 @@
-from data.repository.repository import updateWebquotesPreviousRecords, addWebquotesTodayRecords, addWebquotesSpecificDateRange
+from data.repository.repository import (
+    updateWebquotesPreviousRecords,
+    addWebquotesTodayRecords,
+    addWebquotesSpecificDateRange
+)
 
 print("-"*50)
 updateWebquotesPreviousRecords()

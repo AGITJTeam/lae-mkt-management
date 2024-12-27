@@ -120,7 +120,7 @@ def generateStartAndEndDates(lastDate: date) -> tuple[str, str]:
 
     return start, end
 
-""" Creates 1 month date range to use in LAE API calling.
+""" Creates 1 week date range to use in LAE API calling.
 
 Parameters
     lastDate {date} the last date recovered from database table.
@@ -129,14 +129,15 @@ Returns
     {dict[str, str]} both date ranges in a dictionary.
 
 """
-def generateOneMonthsDateRange(lastDate: date) -> dict[str, str]:
-    firstDayCurrentMonth = lastDate.replace(day=1)
-    startCurrentMonth = firstDayCurrentMonth.isoformat()
-    endCurrentMonth = lastDate.isoformat()
+def generateOneWeekDateRange(lastDate: date) -> dict[str, str]:
+    sixDays = timedelta(days=6)
+    startDate = lastDate - sixDays
+    start = startDate.isoformat()
+    end = lastDate.isoformat()
 
     dateRanges = {
-        "start": startCurrentMonth,
-        "end": endCurrentMonth
+        "start": start,
+        "end": end
     }
 
     return dateRanges
