@@ -2,13 +2,13 @@ import requests as rq
 
 BASE_LAE_API_URL = "http://50.18.96.65:8080"
 
-""" Call Employees endpoint to get employee data.
-
-Returns
-    {requests.Response} api response in Json format.
-
-"""
 def getEmployees() -> rq.Response:
+    """ Call Employees endpoint to get employee data.
+
+    Returns
+        {requests.Response} api response in Json format.
+    """
+
     url = f"{BASE_LAE_API_URL}/Employees"
 
     try:
@@ -29,13 +29,13 @@ def getEmployees() -> rq.Response:
         response = f"controllers.controller.py.getEmployees(). requests.ReadTimeOut: {e}"
         print(response)
 
-""" Call Receipts/Payroll endpoint to get Customer Id and more data.
-
-Returns
-    {requests.Response} api response in Json format.
-
-"""
 def getReceiptsPayroll(start: str, end: str) -> rq.Response:
+    """ Call Receipts/Payroll endpoint to get Customer Id and more data.
+
+    Returns
+        {requests.Response} api response in Json format.
+    """
+
     url = f"{BASE_LAE_API_URL}/Receipts/PayRoll?startDate={start}&endDate={end}"
 
     try:
@@ -58,16 +58,16 @@ def getReceiptsPayroll(start: str, end: str) -> rq.Response:
         response = f"controllers.controller.py.getReceiptsPayroll(). requests.ReadTimeOut: {e}"
         print(response)
 
-""" Call Customers endpoint to get customer data.
-
-Parameters
-    id {int} the id of the customer.
-
-Returns
-    {requests.Response} api response in Json format.
-
-"""
 def getCustomer(id: int) -> rq.Response:
+    """ Call Customers endpoint to get customer data.
+
+    Parameters
+        - id {int} the id of the customer.
+
+    Returns
+        {requests.Response} api response in Json format.
+    """
+
     url = f"{BASE_LAE_API_URL}/Customers/{id}"
 
     try:
@@ -90,16 +90,16 @@ def getCustomer(id: int) -> rq.Response:
         response = f"controllers.controller.py.getCustomer(). requests.ReadTimeOut: {e}"
         print(response)
 
-""" Call Policies/Details endpoint to get Id Policie Hdr and more data.
-
-Parameters
-    id {int} the id of the policy.
-
-Returns
-    {requests.Response} api response in Json format.
-
-"""
 def getPoliciesDetails(id: int) -> rq.Response:
+    """ Call Policies/Details endpoint to get Id Policie Hdr and more data.
+
+    Parameters
+        - id {int} the id of the policy.
+
+    Returns
+        {requests.Response} api response in Json format.
+    """
+
     url = f"{BASE_LAE_API_URL}/Policies/Details/{id}"
     
     try:
@@ -122,13 +122,13 @@ def getPoliciesDetails(id: int) -> rq.Response:
         response = f"controllers.controller.py.getPoliciesDetails(). requests.ReadTimeOut: {e}"
         print(response)
 
-""" Call Webquotes endpoint to get webquotes data.
-
-Returns
-    {requests.Response} api response in Json format.
-
-"""
 def getWebquotes(start: str, end: str) -> rq.Response:
+    """ Call Webquotes endpoint to get webquotes data.
+
+    Returns
+        {requests.Response} api response in Json format.
+    """
+
     url = f"https://app.adrianas.com/api/webquotes/csv?search=&agent=&clistatus=&fromDate={start}&toDate={end}&limit=20000&zone=&manager=true&workedAt=&theagent=&referer=&fromDateS=&toDateS=&excluded=&language=&fulldata=false&dialpadCallCenter=&office_worked=&state=&office="
 
     try:
@@ -150,6 +150,15 @@ def getWebquotes(start: str, end: str) -> rq.Response:
         print(response)
 
 def getReceipt(id: int) -> rq.Response:
+    """ Call Receitps endpoint to get only receipt data with its id.
+
+    Parameters
+        - id {int} the id of the receipt.
+
+    Returns
+        {requests.Response} api response in Json format.
+    """
+
     url = f"{BASE_LAE_API_URL}/Receipts/{id}"
 
     try:

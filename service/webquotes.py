@@ -4,18 +4,18 @@ from data.models.webquotes_model import WebquotesModel
 from controllers.controller import getWebquotes
 import pandas as pd
 
-""" Create Webquotes DataFrame with renamed and parsed columns with API
+def generateWebquotesDf(start: str, end: str) -> pd.DataFrame:
+    """ Create Webquotes DataFrame with renamed and parsed columns with API
     response.
 
-Parameters
-    - start {end} beginning of date range.
-    - end {end} end of date range.
-    
-Returns
-    {pandas.DataFrame} resulting DataFrame.
+    Parameters
+        - start {end} beginning of date range.
+        - end {end} end of date range.
 
-"""
-def generateWebquotesDf(start: str, end: str) -> pd.DataFrame:
+    Returns
+        {pandas.DataFrame} resulting DataFrame.
+    """
+    
     webquotes = []
     webquotesJson = getWebquotes(start, end)
     justWebquotes = webquotesJson["data"]
@@ -33,18 +33,18 @@ def generateWebquotesDf(start: str, end: str) -> pd.DataFrame:
 
     return renamedWebquotesDf
 
-""" Delete and create renamed keys for webquote in json format to save
+def renameJsonKeysForWebquotesModel(webquotesJson: dict) -> dict:
+    """ Delete and create renamed keys for webquote in json format to save
     it in the Webquote Model.
 
-Parameters
-    webquotesJson {dict} the webquotes in python dict format (works
-    as a json object).
+    Parameters
+        - webquotesJson {dict} the webquotes in python dict format (works
+        as a json object).
 
-Returns
-    {dict} the json with renamed keys.
+    Returns
+        {dict} the json with renamed keys.
+    """
 
-"""
-def renameJsonKeysForWebquotesModel(webquotesJson: dict) -> dict:
     oldAndNewColumnNames = {
         "Submission on Time": "submission_on_time",
         "Model Year": "model_year",

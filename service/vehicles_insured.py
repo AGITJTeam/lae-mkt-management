@@ -3,17 +3,17 @@ from service.helpers import renameColumns
 from data.models.vehicles_model import VehicleInsuredModel
 import pandas as pd
 
-""" Create VehiclesInsured DataFrame with Vehicles list.
-
-Parameters
-    vehiclesInsured {pandas.Series} vehicles in pandas Series (works as python
-    lists) to iterate with.
-
-Returns
-    {pandas.DataFrame} resulting DataFrame.
-
-"""
 def generateVehiclesDf(vehiclesInsured: pd.Series) -> pd.DataFrame:
+    """ Create VehiclesInsured DataFrame with Vehicles list.
+
+    Parameters
+        - vehiclesInsured {pandas.Series} vehicles in pandas Series (works as python
+        lists) to iterate with.
+
+    Returns
+        {pandas.DataFrame} resulting DataFrame.
+    """
+
     dataclassVehicles = []
     
     for vehicles in vehiclesInsured:

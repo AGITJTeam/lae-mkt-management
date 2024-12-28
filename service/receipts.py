@@ -5,6 +5,16 @@ from controllers.controller import getReceipt
 import pandas as pd
 
 def generateReceiptsDf(receiptPayroll: pd.DataFrame) -> pd.DataFrame:
+    """ Create Receipts DataFrame with with API response.
+
+    Parameters
+        - receiptsPayroll {pandas.DataFrame} DataFrame from which the
+        ids will be obtained.
+
+    Returns
+        {pandas.DataFrame} resulting DataFrame.
+    """
+
     receipts = getReceiptById(receiptPayroll)
     receiptsDf = pd.DataFrame(receipts)
     receiptsDf["date"] = pd.to_datetime(receiptsDf["date"])
@@ -15,7 +25,18 @@ def generateReceiptsDf(receiptPayroll: pd.DataFrame) -> pd.DataFrame:
     
     return finalReceiptsDf
 
-def getReceiptById(receiptPayroll: pd.DataFrame):
+def getReceiptById(receiptPayroll: pd.DataFrame) -> list[ReceiptModel]:
+    """ Create a list of Receipts models with the API Calls.
+    
+    Parameters
+        - receiptsPayroll {pandas.DataFrame} DataFrame from which the
+        ids will be obtained.
+
+    Returns
+        {list[ReceiptModel]} list from which a DataFrame will be created.
+    """
+
+
     ids = receiptPayroll["id_receipt_hdr"].tolist()
     receipts = []
 

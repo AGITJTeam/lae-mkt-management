@@ -452,7 +452,7 @@ logsNewNewColumnNames: dict[str, str] = {
     "dateLog": "date_log"
 }
 
-wqNewNewColumnNames = {
+wqNewNewColumnNames: dict[str, str] = {
     "ID": "id",
     "Form": "form",
     "name": "name",
@@ -487,7 +487,7 @@ wqNewNewColumnNames = {
     "calls": "calls"
 }
 
-rNewColumnNames = {
+rNewColumnNames: dict[str, str] = {
     "idreceiptHdr": "id_receipt_hdr",
     "idPoliciesHdr": "id_policies_hdr",
     "idCustomer": "customer_id",

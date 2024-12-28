@@ -4,13 +4,17 @@ from data.models.receipts_payroll_model import ReceiptsPayrollModel
 from controllers.controller import getReceiptsPayroll
 import pandas as pd
 
-""" Create Receipts DataFrame with renamed columns with API response.
-
-Returns
-    {pandas.DataFrame} resulting DataFrame.
-
-"""
 def generateReceiptsPayrollDf(start: str, end: str) -> pd.DataFrame:
+    """ Create Receipts DataFrame with renamed columns with API response.
+
+    Parameters
+        - start {end} beginning of date range.
+        - end {end} end of date range.
+
+    Returns
+        {pandas.DataFrame} resulting DataFrame.
+    """
+
     receipts = []
     receiptsJson = getReceiptsPayroll(start, end)
 
@@ -30,16 +34,16 @@ def generateReceiptsPayrollDf(start: str, end: str) -> pd.DataFrame:
 
     return renamedReceiptsDf
 
-""" Delete, filter, and add columns from Receipts DataFrame.
-
-Parameters
-    df {pandas.DataFrame} DataFrame to transform.
-
-Returns
-    {pandas.DataFrame} resulting DataFrame.
-
-"""
 def transformReceiptsDfForLaeData(df: pd.DataFrame) -> pd.DataFrame:
+    """ Delete, filter, and add columns from Receipts DataFrame.
+
+    Parameters
+        - df {pandas.DataFrame} DataFrame to transform.
+
+    Returns
+        {pandas.DataFrame} resulting DataFrame.
+    """
+
     df = df.copy()
 
     df = deleteColumns(df, rpColumnsToDelete)
@@ -48,16 +52,16 @@ def transformReceiptsDfForLaeData(df: pd.DataFrame) -> pd.DataFrame:
 
     return df
 
-""" Add counting columns for "For" column to Receipts DataFrame.
-
-Parameters
-    - df {pandas.DataFrame} DataFrame to modify.
-
-Returns
-    {pandas.DataFrame} resulting DataFrame.
-
-"""
 def addCountingColumns(df: pd.DataFrame) -> pd.DataFrame:
+    """ Add counting columns for "For" column to Receipts DataFrame.
+
+    Parameters
+        - df {pandas.DataFrame} DataFrame to modify.
+
+    Returns
+        {pandas.DataFrame} resulting DataFrame.
+    """
+
     df["nb"] = countForColumnValues(df, rpValuesToFilter[0])
     df["bf"] = countForColumnValues(df, rpValuesToFilter[1:4])
     df["endos"] = countForColumnValues(df, rpValuesToFilter[4:6])
@@ -73,17 +77,17 @@ def addCountingColumns(df: pd.DataFrame) -> pd.DataFrame:
     
     return df
 
-""" Count "For" column values and generate list of values.
-
-Parameters
-    - df {pandas.DataFrame} DataFrame from which the values will be obtained.
-    - valuesToCount {list[str]} list of values to count
-
-Returns
-    {list[int]} list of counted values.
-
-"""
 def countForColumnValues(df: pd.DataFrame, valuesToCount: list[str]) -> list[int]:
+    """ Count "For" column values and generate list of values.
+
+    Parameters
+        - df {pandas.DataFrame} DataFrame from which the values will be obtained.
+        - valuesToCount {list[str]} list of values to count
+
+    Returns
+        {list[int]} list of counted values.
+    """
+
     if isString(valuesToCount):
         stringToList = [valuesToCount]
         valuesToCount = stringToList
