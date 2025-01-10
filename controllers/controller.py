@@ -1,6 +1,7 @@
 import requests as rq
 
 BASE_LAE_API_URL = "http://50.18.96.65:8080"
+TIMEOUT = 30
 
 def getEmployees() -> rq.Response:
     """ Call Employees endpoint to get employee data.
@@ -12,7 +13,7 @@ def getEmployees() -> rq.Response:
     url = f"{BASE_LAE_API_URL}/Employees"
 
     try:
-        employeesRequest = rq.get(url=url, timeout=15)
+        employeesRequest = rq.get(url=url, timeout=TIMEOUT)
 
         if employeesRequest.status_code != rq.codes.ok:
             response = f"controllers.controller.py.getEmployees(). Status {employeesRequest.status_code}"
@@ -39,7 +40,7 @@ def getReceiptsPayroll(start: str, end: str) -> rq.Response:
     url = f"{BASE_LAE_API_URL}/Receipts/PayRoll?startDate={start}&endDate={end}"
 
     try:
-        rpRequest = rq.get(url=url, timeout=15)
+        rpRequest = rq.get(url=url, timeout=TIMEOUT)
 
         if rpRequest.status_code != rq.codes.ok:
             response = f"--controllers.controller.py.getReceiptsPayroll(). Status {rpRequest.status_code} for date range from {start} to {end}"
@@ -71,7 +72,7 @@ def getCustomer(id: int) -> rq.Response:
     url = f"{BASE_LAE_API_URL}/Customers/{id}"
 
     try:
-        customersRequest = rq.get(url=url, timeout=15)
+        customersRequest = rq.get(url=url, timeout=TIMEOUT)
 
         if customersRequest.status_code != rq.codes.ok:
             response = f"--controllers.controller.py.getCustomer(). Status {customersRequest.status_code} for Customer Id {id}"
@@ -103,7 +104,7 @@ def getPoliciesDetails(id: int) -> rq.Response:
     url = f"{BASE_LAE_API_URL}/Policies/Details/{id}"
     
     try:
-        policiesRequest = rq.get(url, timeout=15)
+        policiesRequest = rq.get(url, timeout=TIMEOUT)
 
         if policiesRequest.status_code != rq.codes.ok:
             response = f"--controllers.controller.py.getPoliciesDetails(). Status {policiesRequest.status_code} for Customer Id {id}"
@@ -132,7 +133,7 @@ def getWebquotes(start: str, end: str) -> rq.Response:
     url = f"https://app.adrianas.com/api/webquotes/csv?search=&agent=&clistatus=&fromDate={start}&toDate={end}&limit=20000&zone=&manager=true&workedAt=&theagent=&referer=&fromDateS=&toDateS=&excluded=&language=&fulldata=false&dialpadCallCenter=&office_worked=&state=&office="
 
     try:
-        wqRequest = rq.get(url=url, timeout=15)
+        wqRequest = rq.get(url=url, timeout=TIMEOUT)
 
         if wqRequest.status_code != rq.codes.ok:
             response = f"--controllers.controller.py.getWebquotes(). Status {wqRequest.status_code} for date range from {start} to {end}"
@@ -162,7 +163,7 @@ def getReceipt(id: int) -> rq.Response:
     url = f"{BASE_LAE_API_URL}/Receipts/{id}"
 
     try:
-        receiptsRequest = rq.get(url=url, timeout=15)
+        receiptsRequest = rq.get(url=url, timeout=TIMEOUT)
 
         if receiptsRequest.status_code != rq.codes.ok:
             response = f"--controllers.controller.py.getReceipt(). Status {receiptsRequest.status_code} for Receipt id {id}."

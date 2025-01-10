@@ -1,9 +1,14 @@
-from data.repository.calls.helpers import postData, generateStartAndEndDates, generateOneWeekDateRange, generateTwoMonthsDateRange
 from data.repository.calls.receipts_payroll_repo import ReceiptsPayroll
 from data.repository.calls.receipts_repo import Receipts
 from data.repository.calls.customers_repo import Customers
 from data.repository.calls.lae_data_repo import LaeData
 from data.repository.calls.webquotes_repo import Webquotes
+from data.repository.calls.helpers import (
+    postData,
+    generateStartAndEndDates,
+    generateOneWeekDateRange,
+    generateTwoMonthsDateRange
+)
 
 from service.employees import generateEmployeesDf
 from service.receipts_payroll import generateReceiptsPayrollDf, transformReceiptsDfForLaeData
@@ -15,7 +20,7 @@ from service.vehicles_insured import generateVehiclesDf
 from service.policies_dtl import generatePoliciesDtlDf
 from service.receipts import generateReceiptsDf
 
-from datetime import date
+from datetime import datetime
 import pandas as pd
 
 def updateEmployeesTable() -> None:
@@ -91,7 +96,7 @@ def updateReceiptsPayrollTable(start: str, end: str) -> None:
 def addReceiptsPayrollTodayRecords() -> None:
     """ Generates today's date to add to Receipts Payroll table. """
 
-    today = date.today().isoformat()
+    today = datetime.today().date().isoformat()
     updateReceiptsPayrollTable(start=today, end=today)
     print(f"Receipts Payroll data from {today} added...")
 
@@ -156,7 +161,7 @@ def updateLaeDataTablesPreviousRecords() -> None:
     receiptsPayroll = ReceiptsPayroll()
     lae = LaeData()
 
-    lastDateFromTable = receiptsPayroll.getLastRecord()[0]
+    lastDateFromTable = receiptsPayroll.getLastRecord()[0]["date"]
     lastDate = lastDateFromTable.date()
     
     dateRanges = generateTwoMonthsDateRange(lastDate)
@@ -209,7 +214,7 @@ def updateWebquotesTables(start: str, end: str) -> None:
 
 def addWebquotesTodayRecords() -> None:
     """ Generates today's date to add to Webquotes table. """
-    today = date.today().isoformat()
+    today = datetime.today().date().isoformat()
     updateWebquotesTables(start=today, end=today)
     print(f"Webquotes data from {today} added...")
 
@@ -290,7 +295,7 @@ def updateReceiptsTable(receiptsPayrollDf: pd.DataFrame) -> None:
 def addReceiptsTodayRecords() -> None:
     """ Generates today's date to add to Receipts table. """
 
-    today = date.today().isoformat()
+    today = datetime.today().date().isoformat()
     receiptsPayrollDf = generateReceiptsPayrollDf(start=today, end=today)
     updateReceiptsTable(receiptsPayrollDf)
     print(f"Receipts Payroll data from {today} added...")

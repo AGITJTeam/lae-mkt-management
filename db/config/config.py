@@ -1,7 +1,7 @@
 from configparser import ConfigParser
 import os
 
-def loadConfig(filename="database.ini", section="postgresql") -> dict | None:
+def loadConfig(filename: str, section: str ="postgresql") -> dict | None:
     """ Load PostgreSql credentials from database.ini
 
     Parameters

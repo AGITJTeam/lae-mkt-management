@@ -3,9 +3,9 @@ from sqlalchemy import create_engine
 from pandas import DataFrame
 import psycopg2
 from psycopg2.extensions import register_type, UNICODE
-from datetime import timedelta, date
+from datetime import timedelta, datetime
 
-def getData(query: str) -> list[dict]:
+def getData(query: str, filename="main_data.ini") -> list[dict]:
     """ Handle GET operation from Python Psycopg to Postgres database.
 
     Parameters
@@ -15,7 +15,7 @@ def getData(query: str) -> list[dict]:
         {list[dict]} the result of the query in python objects format.
     """
 
-    conn_string = generateConnString()
+    conn_string = generateConnString(filename)
     conn = psycopg2.connect(conn_string)
     register_type(UNICODE, conn)
     cursor = conn.cursor()
@@ -39,7 +39,7 @@ def postData(data: DataFrame, table: str, mode: str) -> None:
         end of table, 'replace' to replace all data with new one.
     """
 
-    conn_string = generateConnString()
+    conn_string = generateConnString(filename="main_data.ini")
     db = create_engine(conn_string)
     connection = db.connect()
     data.to_sql(table, con=connection, if_exists=mode, index=False)
@@ -53,7 +53,7 @@ def executeOperation(query: str) -> None:
         - query {str} the Sql query.
     """
 
-    conn_string = generateConnString()
+    conn_string = generateConnString(filename="main_data.ini")
     conn = psycopg2.connect(conn_string)
     register_type(UNICODE, conn)
     cursor = conn.cursor()
@@ -99,7 +99,7 @@ def parseWebquoteSubmissionTime(webquoteJson: list[dict]) -> list[dict]:
 
     return webquoteJson
 
-def generateStartAndEndDates(lastDate: date) -> tuple[str, str]:
+def generateStartAndEndDates(lastDate: datetime.date) -> tuple[str, str]:
     """ Creates the start and end date that will be used for deleting last
     and current month data of a database table.
 
@@ -119,7 +119,7 @@ def generateStartAndEndDates(lastDate: date) -> tuple[str, str]:
 
     return start, end
 
-def generateOneWeekDateRange(lastDate: date) -> dict[str, str]:
+def generateOneWeekDateRange(lastDate: datetime.date) -> dict[str, str]:
     """ Creates 1 week date range to use in LAE API calling.
 
     Parameters
@@ -141,7 +141,7 @@ def generateOneWeekDateRange(lastDate: date) -> dict[str, str]:
 
     return dateRanges
 
-def generateTwoMonthsDateRange(lastDate: date) -> list[dict[str, str]]:
+def generateTwoMonthsDateRange(lastDate: datetime.date) -> list[dict[str, str]]:
     """ Creates 2 months date range to use in LAE API calling.
 
     Parameters
@@ -172,3 +172,10 @@ def generateTwoMonthsDateRange(lastDate: date) -> list[dict[str, str]]:
     ]
 
     return dateRanges
+
+def generateDateTimeUpdated() -> tuple[str, str]:
+    now = datetime.now()
+    date = now.date().isoformat()
+    time = now.time().isoformat(timespec="seconds")
+
+    return date, time

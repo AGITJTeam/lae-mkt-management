@@ -5,6 +5,7 @@ from data.repository.calls.customers_repo import Customers
 from data.repository.calls.lae_data_repo import LaeData
 from data.repository.calls.policies_details_repo import PoliciesDetails
 from data.repository.calls.webquotes_repo import Webquotes
+from data.repository.calls.compliance_offices import ComplianceOffices
 
 from flask_jwt_extended import create_access_token, jwt_required, JWTManager
 from flask import Flask, jsonify, request
@@ -96,6 +97,12 @@ def getReceiptsBetweenDates():
     end = request.args.get("endAt")
     receipts = Receipts()
     return jsonify(receipts.getBetweenDates(start, end))
+
+@app.route("/RegionalsOffices", methods=["GET"])
+@jwt_required()
+def getRegionalsByOffice():
+    offices = ComplianceOffices
+    return jsonify(offices.getRegionalsByOffices())
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0")
