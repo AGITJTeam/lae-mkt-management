@@ -130,7 +130,7 @@ def getWebquotes(start: str, end: str) -> rq.Response:
         {requests.Response} api response in Json format.
     """
 
-    url = f"https://app.adrianas.com/api/webquotes/csv?search=&agent=&clistatus=&fromDate={start}&toDate={end}&limit=20000&zone=&manager=true&workedAt=&theagent=&referer=&fromDateS=&toDateS=&excluded=&language=&fulldata=false&dialpadCallCenter=&office_worked=&state=&office="
+    url = f"https://app.adrianas.com/api/webquotes/csv?search=&agent=&clistatus=&fromDate={start}&toDate={end}&limit=all&zone=&manager=true&workedAt=&theagent=&referer=&fromDateS=&toDateS=&excluded=&language=&fulldata=false&dialpadCallCenter=&office_worked=&state=&office="
 
     try:
         wqRequest = rq.get(url=url, timeout=TIMEOUT)

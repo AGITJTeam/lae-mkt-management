@@ -300,24 +300,23 @@ def addReceiptsTodayRecords() -> None:
     updateReceiptsTable(receiptsPayrollDf)
     print(f"Receipts Payroll data from {today} added...")
 
-def updateReceiptsPreviousRecords() -> None:
-    """ Update Receipts previous records. """
+def updateReceiptsYesterdayRecords() -> None:
+    """ Update Receipts yesterday records. """
 
-    receipts = Receipts()    
+    receipts = Receipts()
 
     lastDateFromTable = receipts.getLastRecord()[0]["date"]
-    lastDate = lastDateFromTable.date()
-    dates = generateOneWeekDateRange(lastDate)
+    date = lastDateFromTable.date().isoformat()
 
-    receiptsJson = receipts.getBetweenDates(dates["start"], dates["end"])
+    receiptsJson = receipts.getBetweenDates(start=date, end=date)
     receiptsDf = pd.DataFrame(receiptsJson)
     rpNoDuplicates = receiptsDf.drop_duplicates("id_receipt_hdr")
     receiptsIds = rpNoDuplicates["id_receipt_hdr"].tolist()
 
     receipts.deleteByIds(receiptsIds)
-    print(f"Receipts data from {dates["start"]} to {dates["end"]} deleted...")
+    print(f"Receipts data from {date} to {date} deleted...")
     updateReceiptsTable(rpNoDuplicates)
-    print(f"Receipts data from {dates["start"]} to {dates["end"]} updated...")
+    print(f"Receipts data from {date} to {date} updated...")
 
 def addReceiptsSpecificRange(start: str, end: str) -> None:
     """ Add data to Receipts table in vm with an specific date range.

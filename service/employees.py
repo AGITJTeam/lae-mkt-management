@@ -20,5 +20,8 @@ def generateEmployeesDf() -> pd.DataFrame:
     
     employeesDf = pd.DataFrame(employees)
     renamedEmployeesDf = renameColumns(employeesDf, empNewColumnsNames)
+    renamedEmployeesDf.sort_values(by=["date_created"], inplace=True) 
+    renamedEmployeesDf["id"] = range(1, len(renamedEmployeesDf) + 1)
+    print(renamedEmployeesDf)
 
     return renamedEmployeesDf

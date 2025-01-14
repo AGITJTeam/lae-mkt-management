@@ -1,13 +1,13 @@
 from data.repository.calls.helpers import generateDateTimeUpdated
 from data.repository.repository import (
-    updateReceiptsPreviousRecords,
+    updateReceiptsYesterdayRecords,
     addReceiptsTodayRecords,
     addReceiptsSpecificRange
 )
 
 print("-"*50)
 
-updateReceiptsPreviousRecords()
+updateReceiptsYesterdayRecords()
 addReceiptsTodayRecords()
 date, time = generateDateTimeUpdated()
 print(f"\n{date} {time}\n")
