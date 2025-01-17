@@ -6,27 +6,11 @@ class Webquotes(IWebquotes):
     Handles every petition of webquotes table from database.
 
     Methods
-        - getById.
         - getPartialFromDateRange.
-        - getFullFromDateRange.
         - getWebquotesFromDateRange.
         - getLastRecord.
         - deleteLastMonthData.
     """
-
-    def getById(self, id):
-        """ {list[dict]} get webquote by id.
-
-        Parameters
-            - id {int} the id of the webquote.
-        """
-
-        query = f"SELECT * FROM webquotes WHERE id == {id};"
-        webquotes = getData(query)
-        parsedWebquoteDate = parseWebquotesSubmissionDate(webquotes)
-        parsedWebquoteTime = parseWebquoteSubmissionTime(parsedWebquoteDate)
-
-        return parsedWebquoteTime
     
     def getPartialFromDateRange(self, start, end):
         """ {list[dict]} get some webquotes colums from a date range.
@@ -41,21 +25,6 @@ class Webquotes(IWebquotes):
         parsedWebquoteDate = parseWebquotesSubmissionDate(webquotes)
 
         return parsedWebquoteDate
-
-    def getFullFromDateRange(self, start, end):
-        """ {list[dict]} get all webquotes columns from a date range.
-
-        Parameters
-            - start {str} the beginning of the range of dates.
-            - end {str} the end of the range of dates.
-        """
-
-        query = f"SELECT * FROM webquotes WHERE submission_date BETWEEN \'{start}\' AND \'{end}\';"
-        webquotes = getData(query)
-        parsedWebquoteDate = parseWebquotesSubmissionDate(webquotes)
-        parsedWebquoteTime = parseWebquoteSubmissionTime(parsedWebquoteDate)
-
-        return parsedWebquoteTime
 
     def getWebquotesFromDateRange(self, start, end):
         """ {list[dict]} get almost every webquote column from a

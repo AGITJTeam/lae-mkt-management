@@ -1,9 +1,5 @@
 class IWebquotes:
-    def getById(self, id: int) -> list[dict]:
-        pass
     def getPartialFromDateRange(self, start: str, end: str) -> list[dict]:
-        pass
-    def getFullFromDateRange(self, start: str, end: str) -> list[dict]:
         pass
     def getWebquotesFromDateRange(self, start: str, end: str) -> list[dict]:
         pass

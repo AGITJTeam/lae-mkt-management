@@ -6,19 +6,11 @@ class ReceiptsPayroll(IReceiptsPayroll):
     Handles every petition of receipts_payroll table from database.
 
     Methods
-        - getAllData.
         - getDataBetweenDates.
         - getByCustomerId.
         - getLastRecord.
         - deleteLastMonthData.
     """
-
-    def getAllData(self):
-        """ {list[dict]} get all receipts from database. """
-
-        query = "SELECT * FROM receipts_payroll ORDER BY date ASC;"
-
-        return getData(query)
     
     def getBetweenDates(self, start, end):
         """ {list[dict]} get receipts in a range of dates.

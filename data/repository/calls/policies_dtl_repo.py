@@ -1,5 +1,5 @@
 from data.repository.interfaces.i_policies_dtl import IPoliciesDtl
-from data.repository.calls.helpers import getData
+from data.repository.calls.helpers import executeOperation, getData
 
 class PoliciesDtl(IPoliciesDtl):
     """
@@ -54,3 +54,15 @@ class PoliciesDtl(IPoliciesDtl):
         query = f"SELECT * FROM policies_dtl WHERE id_product == {id};"
 
         return getData(query)
+
+    def deleteByIds(self, ids):
+        """ Delete customers by its ids.
+
+        Parameters
+            ids {list} list of customers ids.
+        """
+
+        values = ", ".join(str(id) for id in ids)
+        query = f"DELETE FROM policies_dtl WHERE customer_id IN ({values})"
+
+        return executeOperation(query)

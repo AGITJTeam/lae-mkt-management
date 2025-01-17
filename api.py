@@ -19,12 +19,12 @@ app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=9)
 jwt = JWTManager(app)
 
-@app.route('/Register/<string:username>', methods=["GET", "POST"])
+@app.route("/Register/<string:username>", methods=["GET", "POST"])
 def register(username: str):    
     token = create_access_token(identity=username)
     return jsonify({ "token": token })
 
-@app.route('/')
+@app.route("/")
 @jwt_required()
 def home():
     return jsonify(f"Running on port 8000.")
@@ -71,12 +71,6 @@ def getLaeBetweenDates():
     end = request.args.get("endAt")
     lae = LaeData()
     return jsonify(lae.getBetweenDates(start=start, end=end))
-
-@app.route("/Customers", methods=["GET"])
-@jwt_required()
-def getAllCustomers():
-    customers = Customers()
-    return jsonify(customers.getAllData())
 
 @app.route("/Customers/<int:id>", methods=["GET"])
 @jwt_required()

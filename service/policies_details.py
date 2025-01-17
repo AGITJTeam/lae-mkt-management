@@ -23,7 +23,7 @@ def generatePoliciesDf(receiptsDf: pd.DataFrame) -> pd.DataFrame:
     
     return newPoliciesDf
 
-def getPoliciessWithReceiptId(ids: dict.values) -> list:
+def getPoliciessWithReceiptId(ids: list) -> list:
     """ Iterate and save all policies in a list.
 
     Parameters
