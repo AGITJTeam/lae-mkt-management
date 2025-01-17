@@ -1,7 +1,9 @@
 class IReceiptsPayroll:
-    def getAllData(self) -> list[dict]:
+    def getBetweenDates(self, start: str, end: str) -> list[dict]:
         pass
-    def getDataBetweenDates(self, start: str, end: str) -> list[dict]:
+    def getByCustomerId(self, id: int) -> list[dict]:
         pass
-    def getReceiptsByCustId(self, id: int) -> list[dict]:
+    def getLastRecord(self) -> list[dict]:
+        pass
+    def deleteLastMonthData(self, start: str, end: str) -> None:
         pass

@@ -1,5 +1,7 @@
 venv/
 __pycache__/
 testing.py
-db/config/database.ini
-db/config/test_database.ini
+db/config/main_data.ini
+db/config/k_db.ini
+.env
+controllers/start_date.txt

@@ -1,7 +1,7 @@
 class ICustomers:
-    def getAllData(self):
+    def getById(self, id: int) -> list[dict]:
         pass
-    def getCustomerById(self, id: int) -> list[dict]:
+    def getByIds(self, ids: list) -> list[dict]:
         pass
-    def getCustomerByCustType(self, idType: int) -> list[dict]:
+    def deleteByIds(self, ids: list) -> None:
         pass

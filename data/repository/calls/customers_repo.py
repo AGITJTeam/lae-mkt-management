@@ -1,36 +1,47 @@
 from data.repository.interfaces.i_customers import ICustomers
-from data.repository.calls.helpers import getData
+from data.repository.calls.helpers import getData, executeOperation
 
 class Customers(ICustomers):
     """
-    Handles every GET petition of customers table from database.
+    Handles every petition of Customers table from database.
 
     Methods
-        - getAllData {list[dict]} get all customers in database.
-        - getCustomerById {list[dict]} get customer by customer id.
-        - getCustomerByCustType {list[dict]} get customer by id of
-          customer type.
+        - getById.
+        - getByIds.
+        - deleteByIds.
     """
-    
-    def getAllData(self) -> list[dict]:
-        query = "SELECT * FROM customers;"
 
-        return getData(query)
+    def getById(self, id):
+        """ {list[dict]} get customer by customer id.
 
-    def getCustomerById(self, id: int) -> list[dict]:
-        """
         Parameters
             id {int} the id of the customer.
         """
-        query = f"SELECT * FROM customers WHERE idCustomer = {id};"
+
+        query = f"SELECT DISTINCT * FROM customers WHERE customer_id = {id};"
 
         return getData(query)
+    
+    def getByIds(self, ids):
+        """ {list[dict]} get customers by a list of it's ids.
 
-    def getCustomerByCustType(self, idType: int) -> list[dict]:
-        """
         Parameters
-            idType {int} the id of the customer type.
+            id {list} list of customers ids.
         """
-        query = f"SELECT * FROM customers WHERE idCustType = {idType};"
+
+        values = ", ".join(str(id) for id in ids)
+        query = f"SELECT DISTINCT * FROM customers WHERE customer_id IN ({values});"
 
         return getData(query)
+    
+    def deleteByIds(self, ids):
+        """ Delete customers by its ids.
+
+        Parameters
+            ids {list} list of customers ids.
+        """
+
+        values = ", ".join(str(id) for id in ids)
+        query = f"DELETE FROM customers WHERE customer_id IN ({values})"
+
+        return executeOperation(query)

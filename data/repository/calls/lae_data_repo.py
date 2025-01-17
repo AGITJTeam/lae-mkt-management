@@ -1,37 +1,35 @@
 from data.repository.interfaces.i_lae_data import ILaeData
-from data.repository.calls.helpers import getData
+from data.repository.calls.helpers import getData, executeOperation
 
 class LaeData(ILaeData):
     """
-    Handles every GET petition of lae_data table from database.
+    Handles every petition of lae_data table from database.
 
     Methods
-        - getAllData {list[dict]} get all receipts from database.
-        - getDataBetweenDates {list[dict]} get receipts in a range of
-          dates.
-        - getReceiptsByCustId {list[dict]} get receipt by customer id.
+        - getBetweenDates.
+        - deleteLastMonthData.
     """
-
-    def getAllData(self) -> list[dict]:
-        query = "SELECT * FROM lae_data ORDER BY date ASC;"
-
-        return getData(query)
     
-    def getDataBetweenDates(self, start: str, end: str) -> list[dict]:
-        """
+    def getBetweenDates(self, start, end):
+        """ {list[dict]} get receipts in a range of dates.
+
         Parameters
             - start {str} the beginning of the range of dates.
             - end {str} the end of the range of dates.
         """
-        query = f"SELECT * FROM lae_data WHERE date BETWEEN \'{start}\' AND \'{end}\';"
+
+        query = f"SELECT * FROM lae_data WHERE date BETWEEN \'{start} 00:00:00.000000\' AND \'{end} 23:59:00.000000\';"
 
         return getData(query)
+    
+    def deleteLastMonthData(self, start, end):
+        """ execute DELETE operation that erase rows between a date
+        range.
 
-    def getReceiptsByCustId(self, id: int) -> list[dict]:
-        """
         Parameters
-            id {int} the id of the customer.
+            - start {str} the beginning of the range of dates.
+            - end {str} the end of the range of dates.
         """
-        query = f"SELECT * FROM lae_data WHERE customer_id = {id}"
+        query = f"DELETE FROM lae_data WHERE date BETWEEN \'{start} 00:00:00.000000\' AND \'{end} 23:59:00.000000\';"
 
-        return getData(query)
+        executeOperation(query)

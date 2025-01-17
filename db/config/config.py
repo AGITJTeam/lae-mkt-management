@@ -1,17 +1,17 @@
 from configparser import ConfigParser
 import os
 
-""" Load PostgreSql credentials from database.ini
+def loadConfig(filename: str, section: str ="postgresql") -> dict | None:
+    """ Load PostgreSql credentials from database.ini
 
-Parameters
-    - filename {str} file where the credentials are stored.
-    - section {str} PostgreSql database server.
+    Parameters
+        - filename {str} file where the credentials are stored.
+        - section {str} PostgreSql database server.
 
-Returns
-    {dict | None} database.ini credentials in dict format.
+    Returns
+        {dict | None} database.ini credentials in dict format.
+    """
 
-"""
-def loadConfig(filename="database.ini", section="postgresql") -> dict | None:
     path = os.path.dirname(os.path.abspath(__file__))
     fullPath = os.path.join(path, filename)
 

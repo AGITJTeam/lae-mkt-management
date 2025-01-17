@@ -59,15 +59,12 @@ rpNewColumnNames: dict[str, str] = {
     "bankAccount": "bank_account",
     "retained": "retained",
     "void": "void",
-    "for_t": "for",
-    "just_date": "just_date",
-    "just_time": "just_time"
+    "for_t": "for"
 }
 
 rpColumnsToDelete: list[str] = [
     "status_receipt",
     "txn_type",
-    "date",
     "balance_due",
     "first_name",
     "last_name1",
@@ -183,8 +180,7 @@ custNewColumnsNames: dict[str, str] = {
 }
 
 laeDataColumnsNewOrder: list[str] = [
-    "just_date",
-    "just_time",
+    "date",
     "customer_id",
     "customer_name",
     "gender_name",
@@ -296,15 +292,12 @@ polNewColumnNames: dict[str, str] = {
 }
 
 polColumnsToDelete: list[str] = [
-    "policies_dtl",
     "receipts",
     "benefits_customers",
     "claims",
     "uw_questions",
     "policy_error_tags",
-    "logs",
-    "tabs",
-    "locations"
+    "tabs"
 ]
 
 vehNewColumnNames: dict[str, str] = {
@@ -424,3 +417,115 @@ vehNewColumnNames: dict[str, str] = {
     "lastUpdated": "last_updated",
     "active": "active"
 }
+
+polDtlNewNewColumnNames: dict[str, str] = {
+    "idPoliciesHdr": "id_policies_hdr",
+    "idPoliciesDTL": "id_policies_dtl",
+    "idCustomer": "customer_id",
+    "nameCustomer": "name_customer",
+    "idProduct": "id_product",
+    "producTname": "product_t_name",
+    "active": "active"
+}
+
+logsNewNewColumnNames: dict[str, str] = {
+    "idLog": "id_log",
+    "idPoliciesHdr": "id_policies_hdr",
+    "idReceipsHdr": "id_receips_hdr",
+    "idEmployeeUsr": "id_employee_usr",
+    "nameEmployeeUSR": "name_employee_usr",
+    "userNameUSR": "user_name_usr",
+    "idEmployeeCsr1": "id_employee_csr1",
+    "nameEmployeeCSR1": "name_employee_csr1",
+    "userNameCSR1": "user_name_csr1",
+    "idEmployeeCsr2": "id_employee_csr2",
+    "nameEmployeeCSR2": "name_employee_csr2",
+    "userNameCSR2": "user_name_csr2",
+    "idEmployeeUw": "id_employee_uw",
+    "nameEmployeeUW": "name_employee_uw",
+    "userNameUw": "user_name_uw",
+    "suspenseToIdEmployee": "suspense_to_id_employee",
+    "nameEmployeeSuspense": "name_employee_suspense",
+    "userNameSuspense": "user_name_suspense",
+    "comments": "comments",
+    "typeLog": "type_log",
+    "dateLog": "date_log"
+}
+
+wqNewNewColumnNames: dict[str, str] = {
+    "ID": "id",
+    "Form": "form",
+    "name": "name",
+    "email": "email",
+    "phone": "phone",
+    "submission_date": "submission_date",
+    "submission_on_time": "submission_on_time",
+    "Birthday": "birthday",
+    "model_year": "model_year",
+    "Make": "make",
+    "Model": "model",
+    "notes": "notes",
+    "status": "status",
+    "agent": "agent",
+    "zip": "zip",
+    "State": "state",
+    "Preference": "preference",
+    "marital_status": "marital_status",
+    "licence_status": "licence_status",
+    "Gender": "gender",
+    "residence_status": "residence_status",
+    "Garaged": "garaged",
+    "assignedTo": "assigned_to",
+    "toAll": "to_all",
+    "workedAt": "worked_at",
+    "region_worked_at": "region_worked_at",
+    "sold_at": "sold_at",
+    "date_sold": "date_sold",
+    "Referer": "referer",
+    "campaign_id": "campaign_id",
+    "GCLID": "gclid",
+    "calls": "calls"
+}
+
+rNewColumnNames: dict[str, str] = {
+    "idreceiptHdr": "id_receipt_hdr",
+    "idPoliciesHdr": "id_policies_hdr",
+    "idCustomer": "customer_id",
+    "nameCustomer": "name_customer",
+    "idOffice": "id_office",
+    "office": "office",
+    "idEmployeeUSR": "id_employee_usr",
+    "nameEmployeeUSR": "name_employee_usr",
+    "userNameUSR": "user_name_usr",
+    "idEmployeeCSR1": "id_employee_csr1",
+    "nameEmployeeCSR1": "name_employee_csr1",
+    "userNameCSR1": "user_name_csr1",
+    "idEmployeeCSR2": "id_employee_csr2",
+    "nameEmployeeCSR2": "name_employee_csr2",
+    "userNameCSR2": "user_name_csr2",
+    "statusReceipt": "status_receipt",
+    "transactionType": "transaction_type",
+    "date": "date",
+    "totalAmntReceipt": "total_amnt_receipt",
+    "amountPaid": "amount_paid",
+    "balanceDue": "balance_due",
+    "balanceDueDate": "balance_due_date",
+    "retained": "retained",
+    "fiduciary": "fiduciary",
+    "nonFiduciary": "non_fiduciary",
+    "correction": "correction",
+    "comments": "comments",
+    "void": "void",
+    "dateCreated": "date_created",
+    "lastUpdated": "last_updated",
+    "active": "active",
+    "receiptsBalancePayments": "receipts_balance_payments",
+    "receiptsDTL": "receipts_dtl",
+    "policiesHDR": "policies_hdr"
+}
+
+rColumnsToDelete: list[str] = [
+    "receipts_balance_payments",
+    "receipts_dtl",
+    "policies_hdr"
+]
