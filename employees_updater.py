@@ -1,5 +1,5 @@
 from data.repository.calls.helpers import generateDateTimeUpdated
-from data.repository.repository import updateEmployeesTable
+from data.repository.employees import *
 
 print("-"*50)
 

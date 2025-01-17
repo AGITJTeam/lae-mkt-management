@@ -1,8 +1,5 @@
 from data.repository.calls.helpers import generateDateTimeUpdated
-from data.repository.repository import (
-    updateCustomersPreviousRecords,
-    addCustomersSpecificRange
-)
+from data.repository.customers import *
 
 print("-"*50)
 

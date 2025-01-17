@@ -1,9 +1,5 @@
 from data.repository.calls.helpers import generateDateTimeUpdated
-from data.repository.repository import (
-    updateReceiptsPayrollPreviousRecords,
-    addReceiptsPayrollTodayRecords,
-    addReceiptsPayrollSpecificDateRange
-)
+from data.repository.receipts_payroll import *
 
 print("-"*50)
 

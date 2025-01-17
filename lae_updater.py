@@ -1,8 +1,5 @@
 from data.repository.calls.helpers import generateDateTimeUpdated
-from data.repository.repository import (
-    updateLaeDataTablesPreviousRecords,
-    addLaeSpecificDateRange
-)
+from data.repository.lae import *
 
 print("-"*50)
 

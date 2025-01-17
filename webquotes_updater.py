@@ -1,9 +1,5 @@
 from data.repository.calls.helpers import generateDateTimeUpdated
-from data.repository.repository import (
-    updateWebquotesPreviousRecords,
-    addWebquotesTodayRecords,
-    addWebquotesSpecificDateRange
-)
+from data.repository.webquotes import *
 
 print("-"*50)
 
