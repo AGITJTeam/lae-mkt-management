@@ -1,5 +1,5 @@
 from data.repository.calls.helpers import generateDateTimeUpdated
-from data.repository.receipts_payroll import *
+from data.repository.flask_api.receipts_payroll import *
 
 print("-"*50)
 

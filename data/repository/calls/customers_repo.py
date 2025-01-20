@@ -6,10 +6,16 @@ class Customers(ICustomers):
     Handles every petition of Customers table from database.
 
     Methods
+        - getAllData.
         - getById.
         - getByIds.
         - deleteByIds.
     """
+
+    def getAllData(self):
+        """ {list[dict]} get all customers in database. """
+        query = "SELECT * FROM customers;"
+        return getData(query)
 
     def getById(self, id):
         """ {list[dict]} get customer by customer id.

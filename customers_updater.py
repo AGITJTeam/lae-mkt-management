@@ -1,5 +1,5 @@
 from data.repository.calls.helpers import generateDateTimeUpdated
-from data.repository.customers import *
+from data.repository.flask_api.customers import *
 
 print("-"*50)
 
