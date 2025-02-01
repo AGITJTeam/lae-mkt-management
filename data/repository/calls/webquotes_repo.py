@@ -1,5 +1,5 @@
 from data.repository.interfaces.i_webquotes import IWebquotes
-from data.repository.calls.helpers import getData, parseWebquotesSubmissionDate, parseWebquoteSubmissionTime, executeOperation
+from data.repository.calls.helpers import getData, parseWebquotesSubmissionDate, executeOperation
 
 class Webquotes(IWebquotes):
     """

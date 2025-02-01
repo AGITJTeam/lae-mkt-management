@@ -19,15 +19,11 @@ def topCarriers(start: str, end: str) -> Response:
     try:
         companySales = fetchReceipts(start, end)
         companySalesOffice, totalSums, companySalesPT = processTopCarriers(companySales)
-
-        return jsonify({
-            "daily_data": companySalesPT,
-            "daily_data_office": companySalesOffice,
-            "total_data": totalSums
-        })
     except Exception as e:
         logger.error(f"Error generating data in topCarriers: {str(e)}")
-        return jsonify({"error": "Error generating Production for Aspire, Kemper and National General data"}), 400
+        raise
+    else:
+        return companySalesPT, companySalesOffice, totalSums
 
 def processTopCarriers(companySales: pd.DataFrame) -> tuple[list[dict], list[dict], list[dict]]:
     """ Generates the top carriers data by performing several

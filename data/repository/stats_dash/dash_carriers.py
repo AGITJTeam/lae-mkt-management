@@ -1,49 +1,58 @@
 from data.repository.calls.compliance_repo import Compliance
 from service.gi_logic import normalizeStr
 from service.receipts_for_dash import fetchReceipts
-from flask import jsonify, request, Response
 import pandas as pd, logging
 
 logger = logging.getLogger(__name__)
 
-def dashCarriers(start: str, end: str, position: str, fullname: str) -> Response:
+def dashCarriers(start: str, end: str, position: str, fullname: str) -> tuple[list[dict], list[dict]] | None:
     """ Generates the company sales and total sums to be shown in
     the Production by Carrier page.
 
+    Parameters
+        - start {str} beginning of the range.
+        - end {str} end of the range.
+        - position {str} the "role" or position of the user.
+        - fullname {str} the full name of the user.
+
     Returns
-        {flask.Response} the data that will be shown.
+        {tuple[list[dict], list[dict]] | None} the data that will be
+        shown or None if exception raise an error.
     """
 
     try:
         companySales = fetchReceipts(start, end)
         companySalesPT, totalSums = processDashCarriers(companySales, position, fullname)
-
-        return jsonify({"daily_data": companySalesPT, "total_data": totalSums}), 200
     except Exception as e:
         logger.error(f"Error generating data in dashCarriers: {str(e)}")
-        return jsonify({"error": "Error generating Production by Carrier data"}), 400
+        raise
+    else:
+        return companySalesPT, totalSums
 
 def processDashCarriers(companySales: pd.DataFrame, position: str, fullname: str) -> tuple[list[dict], list[dict]]:
-    """ Generates carrier-related dashboards with company sales data.
+    """ Transform the company sales to make it ready for the Production
+    by Carrier page.
 
     Parameters
         - companySales {pandas.DataFrame} Raw company sales data.
+        - position {str} The "role" or position of the user.
+        - fullname {str} The full name of the user.
 
     Returns
-        {tuple[list[dict], list[dict]]} Two lists of dictionaries: 
-            one with company sales pivot data and another with total sums.
+        {tuple[list[dict], list[dict]]} the transformed company sales
+        and total sums.
     """
 
     POSITION_REQUIRING_FILTER = ["Regional Manager"]
     companySales = companySales.copy()
 
-    initialTransformations(companySales)
-    baseCompanySales = baseCompanySalesGroupBy(companySales)
+    addDateColumns(companySales)
+    baseCompanySales = groupByDateColumns(companySales)
 
     if position in POSITION_REQUIRING_FILTER:
-        conditionalCompanySalesMerge(baseCompanySales, fullname)
+        mergeWithOfficesDf(baseCompanySales, fullname)
     
-    companySalesFinal = generateCompanySalesFinalDf(baseCompanySales)
+    companySalesFinal = groupByDatesAndCarriers(baseCompanySales)
     totalSumsDf = generateTotalSumDf(companySalesFinal)
     companySalesPTDf = generateCompanySalesPT(companySalesFinal)
 
@@ -52,14 +61,11 @@ def processDashCarriers(companySales: pd.DataFrame, position: str, fullname: str
 
     return companySalesPT, totalSums
 
-def initialTransformations(df: pd.DataFrame):
-    """ Performs initial transformations on the DataFrame columns.
+def addDateColumns(df: pd.DataFrame) -> None:
+    """ Change 'date' column type and add some date columns.
 
     Parameters
         - df {pandas.DataFrame} Input DataFrame to be transformed.
-
-    Returns
-        {None} Resulting DataFrame.
     """
 
     df["date"] = pd.to_datetime(df["date"])
@@ -69,7 +75,7 @@ def initialTransformations(df: pd.DataFrame):
     df["week"] = df["week"].dt.strftime("%Y-%m-%d")
     df["date"] = df["date"].dt.strftime("%Y-%m-%d")
 
-def baseCompanySalesGroupBy(companySales: pd.DataFrame) -> pd.DataFrame:
+def groupByDateColumns(companySales: pd.DataFrame) -> pd.DataFrame:
     """ Groups company sales data by week, date, office, and payee.
 
     Parameters
@@ -95,12 +101,12 @@ def baseCompanySalesGroupBy(companySales: pd.DataFrame) -> pd.DataFrame:
 
     return baseDf
 
-def conditionalCompanySalesMerge(companySales: pd.DataFrame, regName: str) -> pd.DataFrame:
+def mergeWithOfficesDf(companySales: pd.DataFrame, regName: str | list) -> pd.DataFrame:
     """ Merges company sales data with office information based on conditions.
 
     Parameters
         - companySales {pandas.DataFrame} Raw company sales data.
-        - regName {str | list} List or single value for regional filter.
+        - regName {str | list} list or string for regional filter.
 
     Returns
         {pandas.DataFrame} Merged DataFrame filtered by regional name(s).
@@ -110,7 +116,7 @@ def conditionalCompanySalesMerge(companySales: pd.DataFrame, regName: str) -> pd
         regName = [regName]
         
     compliance = Compliance()
-    response = compliance.getAllOfficesInfo()
+    response = compliance.getRegionalsByOffices()
     officesInfoDf = pd.DataFrame(response)
     companySales.rename(columns={"office": "Office"}, inplace=True)
     companySales = (
@@ -125,7 +131,7 @@ def conditionalCompanySalesMerge(companySales: pd.DataFrame, regName: str) -> pd
         .loc[lambda df: df["regional"].isin(regName)]
     )
 
-def generateCompanySalesFinalDf(companySales: pd.DataFrame) -> pd.DataFrame:
+def groupByDatesAndCarriers(companySales: pd.DataFrame) -> pd.DataFrame:
     """ Generates a DataFrame with aggregated company sales data by week,
         date, and carrier.
 
@@ -134,7 +140,7 @@ def generateCompanySalesFinalDf(companySales: pd.DataFrame) -> pd.DataFrame:
 
     Returns
         {pandas.DataFrame} A DataFrame with aggregated company sales and
-            renamed columns.
+        renamed columns.
     """
 
     RENAMED_COLUMNS = {"nb_total": "nb total"}
@@ -158,7 +164,7 @@ def generateTotalSumDf(companySales: pd.DataFrame) -> pd.DataFrame:
 
     Returns
         {pandas.DataFrame} A DataFrame with a single value representing the
-            total sum.
+        total sum.
     """
 
     totalSumDf = pd.DataFrame({
@@ -176,7 +182,7 @@ def generateCompanySalesPT(companySales: pd.DataFrame) -> pd.DataFrame:
 
     Returns
         {pandas.DataFrame} A pivot table with company sales data,
-            filling missing values with 0.
+        filling missing values with 0.
     """
 
 

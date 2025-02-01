@@ -12,17 +12,21 @@ from data.repository.calls.compliance_repo import Compliance
 from data.repository.stats_dash.dash_carriers import dashCarriers
 from data.repository.stats_dash.dash_offices import dashOffices
 from data.repository.stats_dash.dash_projections import dashProjections
+from data.repository.stats_dash.gmb_calls import generateExcelReport
+from data.repository.stats_dash.ot_run import otRun
+from data.repository.stats_dash.out_of_state import outOfState
 from data.repository.stats_dash.top_carriers import topCarriers
 from data.repository.stats_dash.dash_os import dashOs
 
 from logs.config import setupLogging
 
 from flask_jwt_extended import create_access_token, jwt_required, JWTManager
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, make_response
 from flask_cors import CORS
 from datetime import timedelta
 from dotenv import load_dotenv
-import os
+import os, logging
+import pandas as pd
 
 setupLogging()
 load_dotenv()
@@ -32,6 +36,8 @@ app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=9)
 jwt = JWTManager(app)
 CORS(app)
+
+logger = logging.getLogger(__name__)
 
 @app.route("/")
 @jwt_required()
@@ -122,18 +128,164 @@ def getRegionalsByOffice():
 
 # ======================== STATS DASH ENDPOINTS =======================
 
-# @app.route("/StatsDash/Users/<string:username>", methods=["GET"])
-# @jwt_required()
-# def processLogin(username: str):
-#     compliance = Compliance()
-#     return jsonify(compliance.searchUser(username))
+@app.route("/StatsDash/User/<string:username>", methods=["GET"])
+@jwt_required()
+def getUserData(username: str):
+    compliance = Compliance()
+    response = compliance.searchUser(username)
+    if response:
+        userData = response[0]
+    else:
+        userData = {}
 
-# @app.route("/StatsDash/Users/", methods=["POST"])
-# @jwt_required()
-# def processLogin():
-#     return jsonify(processRegister())
+    return jsonify(userData)
 
-@app.route("/StatsDash/DashCarriers", methods=["POST"])
+@app.route("/StatsDash/User", methods=["POST"])
+@jwt_required()
+def postUser():
+    compliance = Compliance()
+    data = request.json
+
+    fullname = data["fullname"]
+    username = data["username"]
+    password = data["password"]
+    email = data["email"]
+    position = data["position"]
+    location = data["location"]
+    hired = data["hired"]
+
+    try:
+        if compliance.insertUser(
+            fullname,
+            username,
+            password,
+            email,
+            position,
+            location,
+            hired
+        ):
+            return jsonify({"message": f"User {username} created successfully."}), 200
+        else:
+            return jsonify({"error": f"User {username} already exists."}), 400
+    except Exception as e:
+        return jsonify({"error": f"An error occurred while posting the user: {str(e)}"}), 500
+
+@app.route("/StatsDash/OtReports/Names", methods=["GET"])
+@jwt_required()
+def getOtReportByName():
+    compliance = Compliance()
+
+    try:
+        response = compliance.getOtReportsNames()
+    except Exception as e:
+        return jsonify({"error": f"An error occurred while fetching the report names: {str(e)}"}), 500
+    else:
+        if len(response) == 0:
+            return jsonify({"error": "No OT Reports found"}), 404
+
+        return jsonify(response), 200
+
+@app.route("/StatsDash/OtReports/ID", methods=["GET"])
+@jwt_required()
+def getOtReportIdByName():
+    compliance = Compliance()
+    reportName = request.args.get("reportName")
+
+    try:
+        response = compliance.getOtReportIdByName(reportName)
+    except Exception as e:
+        return jsonify({"error": f"An error occurred while fetching the report: {str(e)}"}), 500
+    else:
+        if len(response) == 0:
+            return jsonify({"error": f"OT Report {reportName} do not exists"}), 404
+
+        id = response[0]
+        return jsonify(id), 200
+
+@app.route("/StatsDash/OtReports", methods=["POST"])
+@jwt_required()
+def postOtReport():
+    data = request.json
+
+    username = data["username"]
+    password = data["password"]
+    startDate = data["startDate"]
+    endDate = data["endDate"]
+    reportName = data["reportName"]
+
+    try:
+        return otRun(
+            start=startDate,
+            end=endDate,
+            username=username,
+            encryptedPassword=password,
+            reportName=reportName
+        )
+    except Exception as e:
+        return jsonify({"error": f"An error occurred while posting the report: {str(e)}"}), 500
+
+@app.route("/StatsDash/OtReports/<int:id>", methods=["DELETE"])
+@jwt_required()
+def delOtReport(id: int):
+    compliance = Compliance()
+
+    try:
+        if compliance.delOtReport(id):
+            return jsonify({"message": f"Report with id {id} deleted successfully."}), 200
+        else:
+            return jsonify({"error": f"Report with id {id} not found."}), 404
+    except Exception as e:
+        return jsonify({"error": f"An error occurred while deleting the report: {str(e)}"}), 500
+
+@app.route("/StatsDash/DashProjections", methods=["GET"])
+@jwt_required()
+def processDashProjections():
+    position = request.args.get("position")
+    fullname = request.args.get("fullname")
+
+    try:
+        companySales, totalSums, startDate, endDate = dashProjections(position, fullname)
+    except Exception:
+        logger.error(f"An error occurred while processing the Projections Dash data")
+        return jsonify({}), 500
+    else:
+        return jsonify({
+            "daily_data": companySales,
+            "total_data": totalSums,
+            "startDate": startDate,
+            "endDate": endDate
+        }), 200
+
+@app.route("/StatsDash/DashOffices", methods=["GET"])
+@jwt_required()
+def processDashOffices():
+    start = request.args.get("startAt")
+    end = request.args.get("endAt")
+    reportId = request.args.get("reportId")
+
+    try:
+        companySales, totalSums = dashOffices(start, end, reportId)
+    except Exception:
+        logger.error(f"An error occurred while processing the Offices Dash data")
+        return jsonify({}), 500
+    else:
+        return jsonify({"daily_data": companySales, "total_data": totalSums}), 200
+
+@app.route("/StatsDash/DashOs", methods=["GET"])
+@jwt_required()
+def processDashOs():
+    start = request.args.get("startAt")
+    end = request.args.get("endAt")
+
+    try:
+        companySales, totalSums = dashOs(start, end)
+    except Exception:
+        logger.error(f"An error occurred while processing the Online Sales Dash data")
+        return jsonify({}), 500
+    else:
+        return jsonify({"daily_data": companySales, "total_data": totalSums}), 200
+
+@app.route("/StatsDash/DashCarriers", methods=["GET"])
 @jwt_required()
 def processDashCarriers():
     start = request.args.get("startAt")
@@ -141,40 +293,61 @@ def processDashCarriers():
     position = request.args.get("position")
     fullname = request.args.get("fullname")
 
-    return dashCarriers(start, end, position, fullname)
+    try:
+        companySales, totalSums = dashCarriers(start, end, position, fullname)
+    except Exception:
+        logger.error(f"An error occurred while processing the Carrier Dash data")
+        return jsonify({}), 500
+    else:
+        return jsonify({"daily_data": companySales, "total_data": totalSums}), 200
 
-@app.route("/StatsDash/DashOffices", methods=["POST"])
-@jwt_required()
-def processDashOffices():
-    start = request.args.get("startAt")
-    end = request.args.get("endAt")
-    reportId = request.args.get("reportId")
-
-    return dashOffices(start, end, reportId)
-
-@app.route("/StatsDash/DashProjections", methods=["POST"])
-@jwt_required()
-def processDashProjections():
-    position = request.args.get("position")
-    fullname = request.args.get("fullname")
-
-    return dashProjections(position, fullname)
-
-@app.route("/StatsDash/TopCarriers", methods=["POST"])
+@app.route("/StatsDash/TopCarriers", methods=["GET"])
 @jwt_required()
 def processTopCarriers():
     start = request.args.get("startAt")
     end = request.args.get("endAt")
 
-    return topCarriers(start, end)
+    try:
+        companySales, companySalesOffices, totalSums = topCarriers(start, end)
+    except Exception:
+        logger.error(f"An error occurred while processing the Top Carrier Dash data")
+        return jsonify({}), 500
+    else:
+        return jsonify({
+            "daily_data": companySales,
+            "daily_data_office": companySalesOffices,
+            "total_data": totalSums
+        }), 200
 
-@app.route("/StatsDash/DashOs", methods=["POST"])
+@app.route("/StatsDash/OutOfState", methods=["GET"])
 @jwt_required()
-def processDashOs():
+def processOutOfState():
     start = request.args.get("startAt")
     end = request.args.get("endAt")
 
-    return dashOs(start, end)
+    try:
+        dailyData = outOfState(start, end)
+    except Exception:
+        logger.error(f"An error occurred while processing the Out Of State Dash data")
+        return jsonify({}), 500
+    else:
+        return jsonify({"daily_data": dailyData}), 200
+
+@app.route("/StatsDash/GmbReports", methods=["GET"])
+@jwt_required()
+def postGmbCallsReport():
+    start = request.form.get("startDate")
+    end = request.form.get("endDate")
+    file = request.files.get("gmbCallsFile")
+
+    try:
+        excelReport = generateExcelReport(start, end, file)
+    except Exception as e:
+        return jsonify({"error": f"An error occurred while generating the report: {str(e)}"}), 500
+    else:
+        dictReport = excelReport.to_dict(orient="records")
+        return jsonify(dictReport), 200
+
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0")

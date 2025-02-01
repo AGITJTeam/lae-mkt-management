@@ -1,21 +1,22 @@
 from data.repository.calls.customers_repo import Customers
 from data.repository.calls.receipts_payroll_repo import ReceiptsPayroll
-from data.repository.calls.helpers import generateOneWeekDateRange, postData
+from data.repository.calls.helpers import generateOneWeekDateRange, postDataframeToDb
 from service.customers import generateCustomersDf
 import pandas as pd
 
 def updateCustomersTable(receiptsDf: pd.DataFrame) -> None:
-    """ Updates Customers table in vm with updated Receipts Payroll table.
+    """ Updates Customers table in db with updated Receipts Payroll
+    dataframe.
 
     Parameteres
         - receiptsDf {pandas.DataFrame} Receipts Payroll DataFrame.
     """
 
     customersDf = generateCustomersDf(receiptsDf)
-    postData(customersDf, "customers", "append")
+    postDataframeToDb(customersDf, "customers", "append")
 
 def updateCustomersPreviousRecords() -> None:
-    """ Generate Customers ids to delete with Receipts DataFrame. """
+    """ Generates last week customers ids and updates Customers table. """
 
     receipts = ReceiptsPayroll()
     lastDateFromTable = receipts.getLastRecord()[0]["date"]
@@ -34,7 +35,7 @@ def updateCustomersPreviousRecords() -> None:
     print(f"Customers data from {dates["start"]} to {dates["end"]} updated...")
 
 def addCustomersSpecificRange(start: str, end: str) -> None:
-    """ Add data to Customers table in vm with an specific date range.
+    """ Add data to Customers table in db with an specific date range.
 
     Parameters
         - start {str} beginning of the range.

@@ -2,8 +2,30 @@ from data.repository.interfaces.i_compliance import ICompliance
 from data.repository.calls.helpers import executeOperation, getData
 
 class Compliance(ICompliance):
+    """
+    Handles every petition of different tables from Compliance database.
+
+    Methods
+        - getRegionalsByOffices.
+        - getUserEmailById.
+        - searchUser.
+        - insertUser.
+        - getOtReportsNames.
+        - getOtReportIdByName.
+        - getLastOtReportId.
+        - delOtReport.
+    """
+
     def getRegionalsByOffices():
-        query = "SELECT * FROM office_info_updated"
+        """ Retrieve the regional, manager, office and region related
+        data.
+        
+        Returns
+            {list[dict]} all data from its table.
+        """
+
+
+        query = "SELECT * FROM office_info_updated;"
 
         return getData(query=query, filename="k_db.ini")
     
@@ -22,7 +44,7 @@ class Compliance(ICompliance):
         return getData(query, filename="k_db.ini")
     
     def searchUser(self, username):
-        """ Search for a user by their username.
+        """ Search a user by their username.
 
         Parameters
             - username {str} the username of the user to search for.
@@ -36,8 +58,7 @@ class Compliance(ICompliance):
         return getData(query, filename="k_db.ini")
     
     def insertUser(self, fullname, username, password, email, position, location, hired):
-        """ Create a query and prepare the parameters for inserting a
-        new user.
+        """ Create query and parameters for inserting a new user.
 
         Parameters
             - fullname {str} the full name of the user.
@@ -58,88 +79,55 @@ class Compliance(ICompliance):
         """
         params = (fullname, username, password, email, position, location, hired)
 
-        return executeOperation(query, params)
-    
-    def getAllTableNames(self):
-        """ Retrieve all table names from the `saved_immdata` table.
+        return executeOperation(query, params, "k_db.ini")
 
+    def getOtReportsNames(self):
+        """ Retrieve all ot reports names in descending order.
+        
         Returns
-            {list[dict]} a list containing all table names.
+            {list[dict]} a list containing the names of the ot reports.
         """
-        query = "SELECT table_name FROM saved_immdata;"
+
+        query = "SELECT report_name FROM ot_reports ORDER BY date_created DESC;"
 
         return getData(query, filename="k_db.ini")
     
-    def insertTableName(self, table, data):
-        """ Create a query based on the number of columns and prepare
-        the parameters to insert a table name in a particular table
-        (saved_data or saved_immdata).
-
+    def getOtReportIdByName(self, reportName):
+        """ Retrieve the ot report id by its name.
+        
         Parameters
-            - table {str} the name of the table to query.
-            - data {dict} the data to be inserted.
-        """
-
-        columns = ", ".join(data)
-        params = tuple(data.values())
-        replacements = ", ".join(["%s"] * len(data))
-
-        query = f"INSERT INTO {table} ({columns}) VALUES ({replacements});"
-
-        return executeOperation(query, params)
-    
-    def getTableName(self, table, tableName):
-        """ Retrieves a table name from a particular table (saved_data
-        or saved_immdata).
-
-        Parameters
-            - table {str} the name of the table to query.
-            - tableName {str} the name of the specific entry in the table.
-
+            - reportName {str} the name of the report to search for.
+        
         Returns
-            {list[dict]} a list containing the data from the specified table.
+            {list[dict]} a list containing the id of the report.
         """
 
-        query = f"SELECT * FROM {table} WHERE table_name = '{tableName}';"
+        query = f"SELECT id FROM ot_reports WHERE report_name = '{reportName}';"
 
         return getData(query, filename="k_db.ini")
     
-    def deleteTableName(self, table, tableName):
-        """ Delete a table name from a particular table (saved_data
-        or saved_immdata).
-
-        Parameters
-            - table {str} the name of the table to delete from.
-            - tableName {str} the name of the table entry to delete.
-
-        Returns
-            {None} executes the deletion operation in the database.
-        """
-
-        query = f"DELETE FROM {table} WHERE table_name = '{tableName}';"
-
-        return executeOperation(query)
-
-    def getAllOfficesInfo(self):
-        """ Retrieve all office information from the `office_info` table.
-
-        Returns
-            {list[dict]} a list containing all office information.
-        """
-
-        query = f"SELECT * FROM office_info_updated;"
-
-        return getData(query, filename="k_db.ini")
-    
-    def getSavedDataByDateCreated(self):
-        """ Retrieve table names ordered by the date created from the
-        'saved_data' table.
-
+    def getLastOtReportId(self):
+        """ Retrieve the las report id of the ot reports table.
+        
         Returns
             {list[dict]} a list of table names ordered by date created.
         """
 
-        query = "SELECT table_name FROM saved_data ORDER BY datecreated DESC;"
+        query = "SELECT id FROM ot_reports ORDER BY date_created DESC LIMIT 1;"
 
         return getData(query, filename="k_db.ini")
+    
+    def delOtReport(self, id):
+        """ Deletes an ot report by its id.
+        
+        Parameters
+            - id {int} the id of the ot report to delete.
 
+        Returns
+            {None} executes the deletion operation in the database.        
+        """
+
+
+        query = f"DELETE FROM ot_reports WHERE id = {id};"
+
+        return executeOperation(query, filename="k_db.ini")

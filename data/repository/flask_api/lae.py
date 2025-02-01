@@ -1,5 +1,5 @@
 from data.repository.calls.customers_repo import Customers
-from data.repository.calls.helpers import generateStartAndEndDates, generateTwoMonthsDateRange, postData
+from data.repository.calls.helpers import generateTwoMonthsDateRange, postDataframeToDb
 from data.repository.calls.lae_data_repo import LaeData
 from data.repository.calls.receipts_payroll_repo import ReceiptsPayroll
 from service.customers import transformCustomersDfForLaeData
@@ -8,8 +8,7 @@ from service.receipts_payroll import transformReceiptsDfForLaeData
 import pandas as pd
 
 def updateLaeDataTables(start: str, end: str) -> None:
-    """ Updates Lae Data table in vm with a date range. Call LAE API if
-    new records are added, call vm table if previous records are updated.
+    """ Updates Lae Data table in db with a date range.
 
     Parameteres
         - start {str} beginning of the range.
@@ -23,13 +22,13 @@ def updateLaeDataTables(start: str, end: str) -> None:
     receiptsNoDuplicates = receiptsDf.drop_duplicates("customer_id")
     print("ReceiptsPayroll table generated..")
 
-    customersDf = getCustomersDfById(receiptsNoDuplicates)
+    customersDf = getUniqueCustomersDf(receiptsNoDuplicates)
     print("Customers table generated...")
     
     newReceipts = transformReceiptsDfForLaeData(receiptsDf)
     newCustomers = transformCustomersDfForLaeData(customersDf)
     laeData = generateLaeData(newReceipts, newCustomers)
-    postData(laeData, "lae_data", "append")
+    postDataframeToDb(laeData, "lae_data", "append")
     print("Lae Data table generated and posted...")
 
 def updateLaeDataTablesPreviousRecords() -> None:
@@ -42,7 +41,9 @@ def updateLaeDataTablesPreviousRecords() -> None:
     lastDate = lastDateFromTable.date()
     
     dateRanges = generateTwoMonthsDateRange(lastDate)
-    start, end = generateStartAndEndDates(lastDate)
+    start = dateRanges[0]["start"]
+    end = dateRanges[1]["end"]
+
     lae.deleteLastMonthData(start, end)
     print(f"Lae data from {start} to {end} deleted...")
     
@@ -51,7 +52,7 @@ def updateLaeDataTablesPreviousRecords() -> None:
         print(f"Lae Data from {dates["start"]} to {dates["end"]} updated...")
 
 def addLaeSpecificDateRange(start: str, end: str) -> None:
-    """ Add data to Lae table in vm with an specific date range.
+    """ Add data to Lae table in db with an specific date range.
 
     Parameteres
         - start {str} beginning of the range.
@@ -61,8 +62,8 @@ def addLaeSpecificDateRange(start: str, end: str) -> None:
     updateLaeDataTables(start, end)
     print(f"Lae Data from {start} to {end} added...")
 
-def getCustomersDfById(receiptsDf: pd.DataFrame) -> pd.DataFrame:
-    """ Gets unique customers ids from vm table.
+def getUniqueCustomersDf(receiptsDf: pd.DataFrame) -> pd.DataFrame:
+    """ Gets all data from unique customers.
 
     Parameteres
         receiptsDf {panda.DataFrame} Receipts Payroll DataFrame.

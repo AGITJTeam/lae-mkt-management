@@ -6,7 +6,7 @@ class Receipts(IReceipts):
     Handles every petition of Receipts table from database.
 
     Methods
-        - getByIds.
+        - getLastRecord.
         - getBetweenDates.
         - deleteByIds.
     """

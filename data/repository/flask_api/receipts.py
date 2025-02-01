@@ -1,4 +1,4 @@
-from data.repository.calls.helpers import postData
+from data.repository.calls.helpers import postDataframeToDb
 from data.repository.calls.receipts_payroll_repo import ReceiptsPayroll
 from data.repository.calls.receipts_repo import Receipts
 from service.receipts import generateReceiptsDf
@@ -7,7 +7,7 @@ from datetime import datetime
 import pandas as pd
 
 def updateReceiptsTable(receiptsPayrollDf: pd.DataFrame) -> None:
-    """ Updates Receipts table in vm.
+    """ Updates Receipts table in db.
 
     Parameters
         - receiptsPayrollDf {pandas.DataFrame} Receipts Payroll
@@ -15,7 +15,7 @@ def updateReceiptsTable(receiptsPayrollDf: pd.DataFrame) -> None:
     """
 
     receiptsDf = generateReceiptsDf(receiptsPayrollDf)
-    postData(receiptsDf, "receipts", "append")
+    postDataframeToDb(receiptsDf, "receipts", "append")
 
 def addReceiptsTodayRecords() -> None:
     """ Generates today's date to add to Receipts table. """
@@ -48,7 +48,7 @@ def updateReceiptsYesterdayRecords() -> None:
     print(f"Receipts data from {date} to {date} updated...")
 
 def addReceiptsSpecificRange(start: str, end: str) -> None:
-    """ Add data to Receipts table in vm with an specific date range.
+    """ Add data to Receipts table in db with an specific date range.
 
     Parameters
         - start {str} beginning of the range.

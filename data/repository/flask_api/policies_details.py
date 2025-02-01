@@ -1,4 +1,4 @@
-from data.repository.calls.helpers import postData
+from data.repository.calls.helpers import postDataframeToDb
 from data.repository.calls.receipts_payroll_repo import ReceiptsPayroll
 from service.policies_details import deleteColumnWithListValues, generatePoliciesDf
 from service.policies_dtl import generatePoliciesDtlDf
@@ -33,7 +33,7 @@ def updatePoliciesTables(start: str, end: str) -> None:
     newPoliciesDf = deleteColumnWithListValues(policiesDf)
     print("Policies Details table generated...")
 
-    postData(vehiclesDf, "vehicles_insured", "append")
-    postData(policiesDtlDf, "policies_dtl", "append")
-    postData(newPoliciesDf, "policies_details", "append")
+    postDataframeToDb(vehiclesDf, "vehicles_insured", "append")
+    postDataframeToDb(policiesDtlDf, "policies_dtl", "append")
+    postDataframeToDb(newPoliciesDf, "policies_details", "append")
     print("All tables posted...")

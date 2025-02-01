@@ -22,35 +22,6 @@ def fetchReceipts(start: str, end: str) -> pd.DataFrame:
 
     return rangeDf
 
-# def generateReceiptsDf(start: str, end: str) -> pd.DataFrame:
-#     """ Create Receipts DataFrame with renamed columns with API response.
-
-#     Parameters
-#         - start {end} beginning of date range.
-#         - end {end} end of date range.
-
-#     Returns
-#         {pandas.DataFrame} resulting DataFrame.
-#     """
-#     receipts = []
-#     receiptsJson = getReceipts(start, end)
-
-#     if not receiptsJson:
-#         raise Exception("There is no receipt yet...")
-    
-#     for receipt in receiptsJson:
-#         for_value = receipt["for"]
-#         receipt.pop("for")
-#         receipt.update({"for_t": for_value})
-#         receiptsModel = ReceiptsModel(**receipt)
-#         receipts.append(receiptsModel)
-    
-#     receiptsDf = pd.DataFrame(receipts)
-#     receiptsDf["date"] = pd.to_datetime(receiptsDf["date"])
-#     receiptsDf.rename(columns={"for_t": "for"}, inplace=True)
-    
-#     return receiptsDf
-
 def filterOfficeRecColumn(df: pd.DataFrame) -> pd.DataFrame:
     """ Filter 'office_rec' column from a DataFrame.
 

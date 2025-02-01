@@ -1,7 +1,7 @@
 from controllers.controller import fetchAgiReports
 import pandas as pd, csv, io
 
-def generateAgiReport(reportId) -> pd.DataFrame:
+def generateAgiReport(reportId, username=None, password=None, renamedColumns=None) -> pd.DataFrame:
     """ Generates a DataFrame from Secure2 report
 
     Parameters
@@ -10,8 +10,9 @@ def generateAgiReport(reportId) -> pd.DataFrame:
     Returns
         {pandas.DataFrame} resulting DataFrame.
     """
-    response = fetchAgiReports(reportId)
+    response = fetchAgiReports(reportId, username, password)
     reportDecoded = response.content.decode("utf-8")
+
     reportFile = io.StringIO(reportDecoded)
     csvReader = csv.reader(reportFile)
     payrollData = list(csvReader)

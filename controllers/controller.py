@@ -310,18 +310,24 @@ def getReceipt(id: int) -> rq.Response:
         response = f"controllers.controller.py.getReceipt(). requests.ReadTimeOut: {e}"
         print(response)
 
-def fetchAgiReports(reportId: int) -> rq.Response:
+def fetchAgiReports(reportId: int, username: str, password: str) -> rq.Response:
     """ Fetch AGI reports from the SECURE2 API using provided credentials.
 
     Parameters
         - reportId {int} the ID of the report to fetch.
+        - username {str} tue username of the user.
+        - password {str} the password of the user.
 
     Returns
         {requests.Response} the response object containing the fetched AGI 
             report in CSV format if the request is successful.
     """
 
-    token = generateTokenForSecure2(USERNAME, PASSWORD)
+    if username is None or password is None:
+        username = USERNAME
+        password = PASSWORD
+
+    token = generateTokenForSecure2(username, password)
     
     PARAMETERS = {
         "company:shortname": COMPANY_SHORTNAME
@@ -346,7 +352,7 @@ def fetchAgiReports(reportId: int) -> rq.Response:
     else:
         if response.status_code == rq.codes.unauthorized:
             print("Token expired, refreshing...")
-            currentToken = generateTokenForSecure2(USERNAME, PASSWORD)
+            currentToken = generateTokenForSecure2(username, password)
             if currentToken:
                 return fetchAgiReports(reportId)
             

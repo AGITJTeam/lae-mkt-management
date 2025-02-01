@@ -1,10 +1,10 @@
 from data.repository.calls.receipts_payroll_repo import ReceiptsPayroll
-from data.repository.calls.helpers import generateStartAndEndDates, generateTwoMonthsDateRange, postData
+from data.repository.calls.helpers import generateTwoMonthsDateRange, postDataframeToDb
 from service.receipts_payroll import generateReceiptsPayrollDf
 from datetime import datetime
 
 def updateReceiptsPayrollTable(start: str, end: str) -> None:
-    """ Updates Receipts Payroll table in vm with a date range.
+    """ Updates Receipts Payroll table in db with a date range.
 
     Parameters
         - start {str} beginning of the range.
@@ -12,7 +12,7 @@ def updateReceiptsPayrollTable(start: str, end: str) -> None:
     """
 
     receiptsDf = generateReceiptsPayrollDf(start, end)
-    postData(receiptsDf, "receipts_payroll", "append")
+    postDataframeToDb(receiptsDf, "receipts_payroll", "append")
 
 def addReceiptsPayrollTodayRecords() -> None:
     """ Generates today's date to add to Receipts Payroll table. """
@@ -31,7 +31,9 @@ def updateReceiptsPayrollPreviousRecords() -> None:
     lastDate = lastDateFromTable.date()
     
     dateRanges = generateTwoMonthsDateRange(lastDate)
-    start, end = generateStartAndEndDates(lastDate)
+    start = dateRanges[0]["start"]
+    end = dateRanges[1]["end"]  
+
     receipts.deleteLastMonthData(start, end)
     print(f"Receipts Payroll data from {start} to {end} deleted...")
 

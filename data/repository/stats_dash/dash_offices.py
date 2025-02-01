@@ -2,12 +2,13 @@ from data.repository.calls.compliance_repo import Compliance
 from service.payroll_report import generateAgiReport
 from service.gi_logic import normalizeStr
 from service.receipts_for_dash import fetchReceipts
-from flask import jsonify, session, request, Response
-import pandas as pd, logging
+from flask import session
+import pandas as pd
+import logging
 
 logger = logging.getLogger(__name__)
 
-def dashOffices(start: str, end: str, reportId: int) -> Response:
+def dashOffices(start: str, end: str, reportId: int) -> tuple[list[dict], list[dict]] | None:
     """ Generates the company sales and total sums to be shown in
     the Production by Office page.
 
@@ -17,7 +18,8 @@ def dashOffices(start: str, end: str, reportId: int) -> Response:
         - reportId {int} the id of the report to search for.
 
     Returns
-        {flask.Response} the data that will be shown.
+        {tuple[list[dict], list[dict]] | None} the data that will be
+        shown or None if exception raise an error.
     """
 
     compliance = Compliance()
@@ -25,17 +27,18 @@ def dashOffices(start: str, end: str, reportId: int) -> Response:
     try:
         companySales = fetchReceipts(start, end)
         agiReport = generateAgiReport(reportId)
-        offices = compliance.getAllOfficesInfo()
+        offices = compliance.getRegionalsByOffices()
 
         companySalesProcessed, totalSums = processDashOffices(companySales, agiReport, offices)
-
-        return jsonify({"daily_data": companySalesProcessed, "total_data": totalSums})
     except Exception as e:
         logger.error(f"Error generating data in dashOffices: {str(e)}")
-        return jsonify({"error": "Error generating Projection by office data"}), 400
+        raise
+    else:
+        return companySalesProcessed, totalSums
 
-def processDashOffices(companySalesDf: pd.DataFrame, agiReport: pd.DataFrame, offices: list[dict]) -> tuple[dict, dict]:
-    """ Generates office-related dashboards with company sales data.
+def processDashOffices(companySalesDf: pd.DataFrame, agiReport: pd.DataFrame, offices: list[dict]) -> tuple[list[dict], list[dict]]:
+    """ Transform the company sales and agi reports to make it ready for the Production
+    by Office page.
 
     Parameters
         - companySalesDf {pandas.DataFrame} Raw company sales data.
@@ -44,13 +47,13 @@ def processDashOffices(companySalesDf: pd.DataFrame, agiReport: pd.DataFrame, of
 
     Returns
         {tuple[dict, dict]} Two dictionaries: company sales data and
-            total sums.
+        total sums.
     """
 
     POSITION = session.get("position")
     REGNAME = session.get("fullname")
 
-    companySalesDf = transformCompanySales(companySalesDf)
+    companySalesDf = preMergeTransformations(companySalesDf)
     agentCount = generateAgentCount(agiReport)
     officeReport = generateOfficeReport(offices)
 
@@ -65,7 +68,6 @@ def processDashOffices(companySalesDf: pd.DataFrame, agiReport: pd.DataFrame, of
         regName = setRegName(REGNAME)
         companySalesDf = companySalesDf[companySalesDf["regional"].isin(regName)]
     elif POSITION == "Marketing":
-        #regName = setRegName(REGNAME)
         companySalesDf = companySalesDf[companySalesDf["district"].isin(["Paola Sanchez", "Trucking"])]
 
     totalSumsDf = generateTotalSums(companySalesDf)
@@ -75,7 +77,7 @@ def processDashOffices(companySalesDf: pd.DataFrame, agiReport: pd.DataFrame, of
 
     return companySales, totalSums
 
-def transformCompanySales(companySales: pd.DataFrame) -> pd.DataFrame:
+def preMergeTransformations(companySales: pd.DataFrame) -> pd.DataFrame:
     """ Transforms company sales data through various cleaning steps.
 
     Parameters
@@ -85,21 +87,21 @@ def transformCompanySales(companySales: pd.DataFrame) -> pd.DataFrame:
         {pandas.DataFrame} Transformed company sales data.
     """
 
-    initialTransformations(companySales)
+    addDateColumns(companySales)
     companySales = replaceOfficeValues(companySales)
-    companySales = groupCompanySales(companySales)
+    companySales = groupByOfficeAddition(companySales)
 
     return companySales
 
-def initialTransformations(companySales: pd.DataFrame) -> pd.DataFrame:
-    """ Performs initial transformations on the company sales data.
+def addDateColumns(companySales: pd.DataFrame) -> None:
+    """ Change 'date' column type and add some date columns.
 
     Parameters
         - companySales {pandas.DataFrame} Raw company sales data.
 
     Returns
         {pandas.DataFrame} Transformed company sales data with new
-            columns.
+        columns.
     """
 
     companySales["date"] = pd.to_datetime(companySales["date"])
@@ -118,7 +120,7 @@ def replaceOfficeValues(companySales: pd.DataFrame) -> pd.DataFrame:
 
     Returns
         {pandas.DataFrame} The modified company sales data with
-            replaced values.
+        replaced values.
     """
 
     REPLACEMENTS = {
@@ -131,7 +133,7 @@ def replaceOfficeValues(companySales: pd.DataFrame) -> pd.DataFrame:
 
     return companySales
 
-def groupCompanySales(companySales: pd.DataFrame) -> pd.DataFrame:
+def groupByOfficeAddition(companySales: pd.DataFrame) -> pd.DataFrame:
     """ Groups company sales data by week, date, and office, and
         calculates aggregates.
 
@@ -140,7 +142,7 @@ def groupCompanySales(companySales: pd.DataFrame) -> pd.DataFrame:
 
     Returns
         {pandas.DataFrame} A DataFrame grouped by office with
-            aggregated data.
+        aggregated data.
     """
 
     COLS_TO_RENAMME = {
@@ -183,7 +185,7 @@ def generateAgentCount(agiReport: pd.DataFrame) -> pd.DataFrame:
 
     Returns
         {pandas.DataFrame} A DataFrame with the number of agents per
-            office.
+        office.
     """
 
     COLS_TO_RENAME = {
@@ -220,11 +222,11 @@ def generateOfficeReport(officeReport: list[dict]) -> pd.DataFrame:
 
     Parameters
         - officeReport {list[dict]} List of dictionaries containing 
-            office data.
+        office data.
 
     Returns
         {pandas.DataFrame} A DataFrame with renamed columns for the 
-            report.
+        report.
     """
 
     COLS_TO_RENAME = {
@@ -265,7 +267,7 @@ def generateTotalSums(companySales: pd.DataFrame) -> pd.DataFrame:
 
     Returns
         {pandas.DataFrame} A DataFrame with the total sums for the
-            specified columns.
+        specified columns.
     """
 
     totalSums = pd.DataFrame({

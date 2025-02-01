@@ -6,7 +6,7 @@ class ReceiptsPayroll(IReceiptsPayroll):
     Handles every petition of receipts_payroll table from database.
 
     Methods
-        - getDataBetweenDates.
+        - getBetweenDates.
         - getByCustomerId.
         - getLastRecord.
         - deleteLastMonthData.

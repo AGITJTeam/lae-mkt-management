@@ -4,7 +4,7 @@ import pandas as pd, datetime, logging
 
 logger = logging.getLogger(__name__)
 
-def dashOs(start: str, end: str) -> Response:
+def dashOs(start: str, end: str) -> tuple[list[dict], list[dict]] | None:
     """ Generates the company sales and total sums to be shown in
     the Online Sales by Carrier page.
 
@@ -13,7 +13,8 @@ def dashOs(start: str, end: str) -> Response:
     - end {str} the end of the date range.
 
     Returns
-        {flask.Response} the data that will be shown.
+        {tuple[list[dict], list[dict]] | None} the data that will be
+        shown or None if exception raise an error.
     """
 
     if not start and not end:
@@ -23,25 +24,26 @@ def dashOs(start: str, end: str) -> Response:
     try:
         company_Sales = fetchReceipts(start, end)
         companySalesPt, totalSums = processDashOs(company_Sales)
-
-        return jsonify({"daily_data": companySalesPt, "total_data": totalSums})
     except Exception as e:
         logger.error(f"Error generating data in dashOs: {str(e)}")
-        return jsonify({"error": "Error generating Online Sales by Carrier data"}), 400
+        raise
+    else:
+        return companySalesPt, totalSums
 
-def processDashOs(companySales: pd.DataFrame) -> tuple[dict, dict]:
-    """ Generates office-related dashboards with company sales data.
+def processDashOs(companySales: pd.DataFrame) -> tuple[list[dict], list[dict]]:
+    """ Transform the company sales to make it ready for the Online Sales
+    by Carrier page.
 
     Parameters
         - companySales {pandas.DataFrame} Raw company sales data.
 
     Returns
         {tuple[dict, dict]} Two dictionaries: company sales pivot data
-            and total sums.
+        and total sums.
     """
 
-    companySales = initialTransformations(companySales)
-    companySales = groupCompanySalesDf(companySales)
+    companySales = filterAndAggregateCols(companySales)
+    companySales = groupByDateAndPayee(companySales)
     totalSumDf = generateTotalSumDf(companySales)
     companySalesPtDf = generateCompanySalesPt(companySales)
 
@@ -50,8 +52,9 @@ def processDashOs(companySales: pd.DataFrame) -> tuple[dict, dict]:
 
     return companySalesPt, totalSums
 
-def initialTransformations(companySales: pd.DataFrame) -> pd.DataFrame:
-    """ Performs initial transformations on the company sales data.
+def filterAndAggregateCols(companySales: pd.DataFrame) -> pd.DataFrame:
+    """ Filter 'office_rec' and 'for' columns. Change 'date' column type
+    and add some date columns.
 
     Parameters
         - companySales {pandas.DataFrame} Raw company sales data.
@@ -71,8 +74,8 @@ def initialTransformations(companySales: pd.DataFrame) -> pd.DataFrame:
 
     return companySales
 
-def groupCompanySalesDf(companySales: pd.DataFrame) -> pd.DataFrame:
-    """ Groups company sales data by date and carrier, and calculates
+def groupByDateAndPayee(companySales: pd.DataFrame) -> pd.DataFrame:
+    """ Groups company sales data by date and payee, and calculates
         aggregates.
 
     Parameters
@@ -80,7 +83,7 @@ def groupCompanySalesDf(companySales: pd.DataFrame) -> pd.DataFrame:
 
     Returns
         {pandas.DataFrame} Grouped company sales data with renamed 
-            columns.
+        columns.
     """
 
     COLS_TO_RENAME = {
@@ -106,7 +109,7 @@ def generateTotalSumDf(companySales: pd.DataFrame) -> pd.DataFrame:
 
     Returns
         {pandas.DataFrame} A DataFrame with the total sum of the 'nb'
-            column.
+        column.
     """
 
     totalSumsDf = pd.DataFrame({
@@ -124,7 +127,7 @@ def generateCompanySalesPt(companySales: pd.DataFrame) -> pd.DataFrame:
 
     Returns
         {pandas.DataFrame} A pivot table with company sales data, filling
-            missing values with 0.
+        missing values with 0.
     """
 
     companySalesPt = (

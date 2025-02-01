@@ -25,19 +25,14 @@ def dashProjections(position: str, fullname: str) -> Response:
 
     try:
         companySales = fetchReceipts(dates["start"], dates["end"])
-        offices = compliance.getAllOfficesInfo()
+        offices = compliance.getRegionalsByOffices()
             
         companySalesProcessed, totalSums = processDashProjections(companySales, offices, dates, position, fullname)
-
-        return jsonify({
-            "daily_data": companySalesProcessed,
-            "total_data": totalSums,
-            "startDate": dates["start"],
-            "endDate": dates["end"]
-        })
     except Exception as e:
         logger.error(f"Error generating projection in dashProjections: {str(e)}")
-        return jsonify({"error": "Error generating General Projection data"}), 400
+        raise
+    else:
+        return companySalesProcessed, totalSums, dates["start"], dates["end"]
 
 def processDashProjections(companySalesDf: pd.DataFrame, offices: list[dict], dates: dict, position: str, fullname: str) -> tuple[dict, dict]:
     """ Generates company sales projections and total sums based on
