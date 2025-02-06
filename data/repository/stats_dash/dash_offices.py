@@ -46,8 +46,7 @@ def processDashOffices(companySalesDf: pd.DataFrame, agiReport: pd.DataFrame, of
         - offices {list[dict]} List of office data dictionaries.
 
     Returns
-        {tuple[dict, dict]} Two dictionaries: company sales data and
-        total sums.
+        {tuple[dict, dict]} the transformed company sales and total sums.
     """
 
     POSITION = session.get("position")
@@ -67,8 +66,6 @@ def processDashOffices(companySalesDf: pd.DataFrame, agiReport: pd.DataFrame, of
     if POSITION == "Regional Manager":
         regName = setRegName(REGNAME)
         companySalesDf = companySalesDf[companySalesDf["regional"].isin(regName)]
-    elif POSITION == "Marketing":
-        companySalesDf = companySalesDf[companySalesDf["district"].isin(["Paola Sanchez", "Trucking"])]
 
     totalSumsDf = generateTotalSums(companySalesDf)
 

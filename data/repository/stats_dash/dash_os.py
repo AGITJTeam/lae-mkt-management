@@ -1,6 +1,6 @@
 from service.receipts_for_dash import fetchReceipts
-from flask import jsonify, request, Response
-import pandas as pd, datetime, logging
+import pandas as pd
+import datetime, logging
 
 logger = logging.getLogger(__name__)
 
@@ -38,8 +38,7 @@ def processDashOs(companySales: pd.DataFrame) -> tuple[list[dict], list[dict]]:
         - companySales {pandas.DataFrame} Raw company sales data.
 
     Returns
-        {tuple[dict, dict]} Two dictionaries: company sales pivot data
-        and total sums.
+        {tuple[dict, dict]} The transformed company sales and total sums.
     """
 
     companySales = filterAndAggregateCols(companySales)

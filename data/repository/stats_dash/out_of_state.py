@@ -1,6 +1,5 @@
 from service.customers_for_dash import fetchCustomersAddress
 from service.receipts_for_dash import fetchReceipts
-
 import pandas as pd
 import logging
 
@@ -42,7 +41,7 @@ def processOutOfState(companySales: pd.DataFrame) -> list[dict]:
           sales data.
 
     Returns
-        {list[dict]} A list of records with transformed and grouped data.
+        {list[dict]} the transformed company sales.
     """
 
     RENAMED_COLUMNS = {
@@ -55,7 +54,7 @@ def processOutOfState(companySales: pd.DataFrame) -> list[dict]:
     companySales = companySales.copy()
 
     companySales = transformPhysicalStateColumn(companySales)
-    transformDateColumns(companySales)
+    addDateColumns(companySales)
     companySales = groupDfByColumns(companySales)
     
     companySales = companySales.rename(columns=RENAMED_COLUMNS)
@@ -94,7 +93,7 @@ def transformPhysicalStateColumn(df: pd.DataFrame) -> pd.DataFrame:
 
     return df
 
-def transformDateColumns(df: pd.DataFrame) -> None:
+def addDateColumns(df: pd.DataFrame) -> None:
     """ Transforms date-related columns, including calculating the
         weekday, day difference, and week based on the date column.
 

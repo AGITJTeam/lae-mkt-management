@@ -3,7 +3,7 @@ import os, logging
 
 logger = logging.getLogger(__name__)
 
-BASE_LAE_API_URL = "http://50.18.96.65:8080"
+LAE_URL = "http://50.18.96.65:8080"
 SECURE2_URL = "http://secure2.saashr.com/ta/rest/v1"
 
 USERNAME = os.getenv("S2_USER")
@@ -11,143 +11,81 @@ PASSWORD = os.getenv("S2_PASS")
 COMPANY_SHORTNAME = "AGI04"
 TIMEOUT = 30
 
-def getEmployees() -> rq.Response:
-    """ Call Employees endpoint to get employee data.
+def getEmployees() -> dict | None:
+    """ Call Employees endpoint from LAE to get employee data.
 
     Returns
-        {requests.Response} api response in Json format.
+        {dict | None} api response in Json format or None if exception raise.
     """
 
-    URL = f"{BASE_LAE_API_URL}/Employees"
-
-    # try:
-    #     employeesRequest = rq.get(url=URL, timeout=TIMEOUT)
-    # except (
-    #     rq.exceptions.ConnectionError,
-    #     rq.exceptions.ReadTimeout,
-    #     rq.exceptions.RequestException
-    # ) as e:
-    #     # ====================================================================================== revisar el flujo de las excepciones...
-    #     logger.error(f"Error in getEmployees: {str(e)}")
-    #     raise
-    # else:
-    #     if employeesRequest.status_code != rq.codes.ok:
-    #         logger.error(f"Status code {employeesRequest.status_code} in getEmployees")
-    #     else:
-    #         return employeesRequest.json()
+    URL = f"{LAE_URL}/Employees"
 
     try:
         employeesRequest = rq.get(url=URL, timeout=TIMEOUT)
-
+    except (
+        rq.exceptions.ConnectionError,
+        rq.exceptions.ReadTimeout,
+        rq.exceptions.RequestException
+    ) as e:
+        logger.error(f"Error in getEmployees: {str(e)}")
+        raise
+    else:
         if employeesRequest.status_code != rq.codes.ok:
-            response = f"controllers.controller.py.getEmployees(). Status {employeesRequest.status_code}"
-            print(response)
-        else:
-            return employeesRequest.json()
-    except ConnectionError as e:
-        response = f"controllers.controller.py.getEmployees(). Connection error: {e}"
-        print(response)
-    except TimeoutError as e:
-        response = f"controllers.controller.py.getEmployees(). Timeout error: {e}"
-        print(response)
-    except rq.exceptions.ReadTimeout as e:
-        response = f"controllers.controller.py.getEmployees(). requests.ReadTimeOut: {e}"
-        print(response)
+            logger.error(f"Status code {employeesRequest.status_code} in getEmployees")
+        return employeesRequest.json()
 
-def getReceiptsPayroll(start: str, end: str) -> rq.Response:
-    """ Call Receipts/Payroll endpoint to get Customer Id and more data.
+def getReceiptsPayroll(start: str, end: str) -> dict | None:
+    """ Call Receipts/Payroll endpoint from LAE to get Receipt Payroll data.
+
+    Parameters
+        - start {end} beginning of date range.
+        - end {end} end of date range.
 
     Returns
-        {requests.Response} api response in Json format.
+        {dict | None} api response in Json format or None if exception raise.
     """
 
-    URL = f"{BASE_LAE_API_URL}/Receipts/PayRoll?startDate={start}&endDate={end}"
-
-    # try:
-    #     rpRequest = rq.get(url=URL, timeout=TIMEOUT)
-    # except (
-    #     # ====================================================================================== revisar el flujo de las excepciones...
-    #     rq.exceptions.ConnectionError,
-    #     rq.exceptions.ReadTimeout,
-    #     rq.exceptions.RequestException
-    # ) as e:
-    #     logger.error(f"Error in getReceiptsPayroll: {str(e)}")
-    #     raise
-    # else:
-    #     if rpRequest.status_code != rq.codes.ok:
-    #         logger.error(f"Status code {rpRequest.status_code} in getReceiptsPayroll from {start} to {end}.")
-    #         return {}
-    #     else:
-    #         return rpRequest.json()
+    URL = f"{LAE_URL}/Receipts/PayRoll?startDate={start}&endDate={end}"
 
     try:
         rpRequest = rq.get(url=URL, timeout=TIMEOUT)
-
+    except (
+        rq.exceptions.ConnectionError,
+        rq.exceptions.ReadTimeout,
+        rq.exceptions.RequestException
+    ) as e:
+        logger.error(f"Error in getReceiptsPayroll: {str(e)}")
+        raise
+    else:
         if rpRequest.status_code != rq.codes.ok:
-            response = f"--controllers.controller.py.getReceiptsPayroll(). Status {rpRequest.status_code} for date range from {start} to {end}"
-            print(response)
+            logger.error(f"Status code {rpRequest.status_code} in getReceiptsPayroll from {start} to {end}.")
+        return rpRequest.json()
 
-            return {}
-        else:
-            return rpRequest.json()
-    except ConnectionError as e:
-        response = f"controllers.controller.py.getReceiptsPayroll(). Connection error: {e}"
-        print(response)
-    except TimeoutError as e:
-        response = f"controllers.controller.py.getReceiptsPayroll(). Timeout error: {e}"
-        print(response)
-    except rq.exceptions.ReadTimeout as e:
-        response = f"controllers.controller.py.getReceiptsPayroll(). requests.ReadTimeOut: {e}"
-        print(response)
-
-def getCustomer(id: int) -> rq.Response:
-    """ Call Customers endpoint to get customer data.
+def getCustomer(id: int) -> dict | None:
+    """ Call Customers endpoint from LAE to get Customer data.
 
     Parameters
         - id {int} the id of the customer.
 
     Returns
-        {requests.Response} api response in Json format.
+        {dict | None} api response in Json format or None if exception raise.
     """
 
-    URL = f"{BASE_LAE_API_URL}/Customers/{id}"
-
-    # try:
-    #     customersRequest = rq.get(url=URL, timeout=TIMEOUT)
-    # except (
-    #     rq.exceptions.ConnectionError,
-    #     rq.exceptions.ReadTimeout,
-    #     rq.exceptions.RequestException
-    # ) as e:
-    #     # ====================================================================================== revisar el flujo de las excepciones...
-    #     logger.error(f"Error in getCustomer: {str(e)}")
-    #     raise
-    # else:
-    #     if customersRequest.status_code != rq.codes.ok:
-    #         logger.error(f"Error fetching customer in getCustomer with id {id}. Response status {customersRequest.status_code}")
-    #         return {}
-    #     else:
-    #         return customersRequest.json()
+    URL = f"{LAE_URL}/Customers/{id}"
 
     try:
         customersRequest = rq.get(url=URL, timeout=TIMEOUT)
-
+    except (
+        rq.exceptions.ConnectionError,
+        rq.exceptions.ReadTimeout,
+        rq.exceptions.RequestException
+    ) as e:
+        logger.error(f"Error in getCustomer: {str(e)}")
+        raise
+    else:
         if customersRequest.status_code != rq.codes.ok:
-            response = f"--controllers.controller.py.getCustomer(). Status {customersRequest.status_code} for Customer Id {id}"
-            print(response)
-
-            return {}
-        else:
-            return customersRequest.json()
-    except ConnectionError as e:
-        response = f"controllers.controller.py.getCustomer(). Connection error: {e}"
-        print(response)
-    except TimeoutError as e:
-        response = f"controllers.controller.py.getCustomer(). Timeout error: {e}"
-        print(response)
-    except rq.exceptions.ReadTimeout as e:
-        response = f"controllers.controller.py.getCustomer(). requests.ReadTimeOut: {e}"
-        print(response)
+            logger.error(f"Error fetching customer in getCustomer with id {id}. Response status {customersRequest.status_code}")
+        return customersRequest.json()
 
 def getPoliciesDetails(id: int) -> rq.Response:
     """ Call Policies/Details endpoint to get Id Policie Hdr and more data.
@@ -159,7 +97,7 @@ def getPoliciesDetails(id: int) -> rq.Response:
         {requests.Response} api response in Json format.
     """
 
-    URL = f"{BASE_LAE_API_URL}/Policies/Details/{id}"
+    URL = f"{LAE_URL}/Policies/Details/{id}"
 
     # try:
     #     policiesRequest = rq.get(url=URL, timeout=TIMEOUT)
@@ -198,11 +136,15 @@ def getPoliciesDetails(id: int) -> rq.Response:
         response = f"controllers.controller.py.getPoliciesDetails(). requests.ReadTimeOut: {e}"
         print(response)
 
-def getWebquotes(start: str, end: str) -> rq.Response:
-    """ Call Webquotes endpoint to get webquotes data.
+def getWebquotes(start: str, end: str) -> dict | None:
+    """ Call Webquotes endpoint from App.Adrianas to get Webquotes data.
+
+    Parameters
+        - start {end} beginning of date range.
+        - end {end} end of date range.
 
     Returns
-        {requests.Response} api response in Json format.
+        {dict | None} api response in Json format or None if exception raise.
     """
 
     URL = (
@@ -228,90 +170,48 @@ def getWebquotes(start: str, end: str) -> rq.Response:
         "state=&office="
     )
 
-    # try:
-    #     wqRequest = rq.get(url=URL, timeout=TIMEOUT)
-    # except (
-    #     rq.exceptions.ConnectionError, 
-    #     rq.exceptions.ReadTimeout,
-    #     rq.exceptions.RequestException
-    # ) as e:
-    #     # ====================================================================================== revisar el flujo de las excepciones...
-    #     logger.error(f"Error in getWebquotes: {str(e)}")
-    #     raise
-    # else:
-    #     if wqRequest.status_code != rq.codes.ok:
-    #         logger.error(f"Status code {wqRequest.status_code} in getWebquotes from {start} to {end}.")
-    #         return {}
-    #     else:
-    #         return wqRequest.json()
-
     try:
         wqRequest = rq.get(url=URL, timeout=TIMEOUT)
-
+    except (
+        rq.exceptions.ConnectionError, 
+        rq.exceptions.ReadTimeout,
+        rq.exceptions.RequestException
+    ) as e:
+        logger.error(f"Error in getWebquotes: {str(e)}")
+        raise
+    else:
         if wqRequest.status_code != rq.codes.ok:
-            response = f"--controllers.controller.py.getWebquotes(). Status {wqRequest.status_code} for date range from {start} to {end}"
-            print(response)
-        else:
-            return wqRequest.json()
-    except ConnectionError as e:
-        response = f"controllers.controller.py.getWebquotes(). Connection error: {e}"
-        print(response)
-    except TimeoutError as e:
-        response = f"controllers.controller.py.getWebquotes(). Timeout error: {e}"
-        print(response)
-    except rq.exceptions.ReadTimeout as e:
-        response = f"controllers.controller.py.getWebquotes(). requests.ReadTimeOut: {e}"
-        print(response)
+            logger.error(f"Status code {wqRequest.status_code} in getWebquotes from {start} to {end}.")
+        return wqRequest.json()
 
-def getReceipt(id: int) -> rq.Response:
-    """ Call Receitps endpoint to get only receipt data with its id.
+def getReceipt(id: int) -> dict | None:
+    """ Call Receitps endpoint from LAE to get one Receipt data.
 
     Parameters
         - id {int} the id of the receipt.
 
     Returns
-        {requests.Response} api response in Json format.
+        {dict | None} api response in Json format or None if exception raise.
     """
 
-    URL = f"{BASE_LAE_API_URL}/Receipts/{id}"
-
-    # try:
-    #     receiptsRequest = rq.get(url=URL, timeout=TIMEOUT)
-    # except (
-    #     rq.exceptions.ConnectionError, 
-    #     rq.exceptions.ReadTimeout,
-    #     rq.exceptions.RequestException
-    # ) as e:
-    #     # ====================================================================================== revisar el flujo de las excepciones...
-    #     logger.error(f"Error in getReceipt: {str(e)}")
-    #     raise
-    # else:
-    #     if receiptsRequest.status_code != rq.codes.ok:
-    #         logger.error(f"Error fetching receipt in getReceipt with id {id}. Response status {receiptsRequest.status_code}")
-    #         return {}
-    #     else:
-    #         return receiptsRequest.json()
+    URL = f"{LAE_URL}/Receipts/{id}"
 
     try:
         receiptsRequest = rq.get(url=URL, timeout=TIMEOUT)
-
+    except (
+        rq.exceptions.ConnectionError, 
+        rq.exceptions.ReadTimeout,
+        rq.exceptions.RequestException
+    ) as e:
+        logger.error(f"Error in getReceipt: {str(e)}")
+        raise
+    else:
         if receiptsRequest.status_code != rq.codes.ok:
-            response = f"--controllers.controller.py.getReceipt(). Status {receiptsRequest.status_code} for Receipt id {id}."
-            print(response)
-        else:
-            return receiptsRequest.json()
-    except ConnectionError as e:
-        response = f"controllers.controller.py.getReceipt(). Connection error: {e}"
-        print(response)
-    except TimeoutError as e:
-        response = f"controllers.controller.py.getReceipt(). Timeout error: {e}"
-        print(response)
-    except rq.exceptions.ReadTimeout as e:
-        response = f"controllers.controller.py.getReceipt(). requests.ReadTimeOut: {e}"
-        print(response)
+            logger.error(f"Error fetching receipt in getReceipt with id {id}. Response status {receiptsRequest.status_code}")
+        return receiptsRequest.json()
 
-def fetchAgiReports(reportId: int, username: str, password: str) -> rq.Response:
-    """ Fetch AGI reports from the SECURE2 API using provided credentials.
+def fetchAgiReports(reportId: int, username: str, password: str) -> rq.Response | None:
+    """ Call Secure2 to get AGI reports.
 
     Parameters
         - reportId {int} the ID of the report to fetch.
@@ -319,8 +219,8 @@ def fetchAgiReports(reportId: int, username: str, password: str) -> rq.Response:
         - password {str} the password of the user.
 
     Returns
-        {requests.Response} the response object containing the fetched AGI 
-            report in CSV format if the request is successful.
+        {requests.Response} fetched AGI report in CSV format or None if
+        exception raise.
     """
 
     if username is None or password is None:
@@ -347,7 +247,6 @@ def fetchAgiReports(reportId: int, username: str, password: str) -> rq.Response:
         rq.exceptions.RequestException
     ) as e:
         logger.error(f"Error fetching Agi Report in fetchReportOne: {str(e)}")
-        # ====================================================================================== revisar el flujo de las excepciones...
         raise
     else:
         if response.status_code == rq.codes.unauthorized:
@@ -360,15 +259,16 @@ def fetchAgiReports(reportId: int, username: str, password: str) -> rq.Response:
         
         return response
 
-def generateTokenForSecure2(username: str, password: str) -> str:
-    """ Call Secure2 endpoint to get user token for current session.
+def generateTokenForSecure2(username: str, password: str) -> str | None:
+    """ Call Secure2 to get user token for current session.
 
     Parameters
         - username {str}.
         - password {str} password of user.
 
     Returns
-        {str} token for the session.
+        {str} token for the session or None if exception raise or status
+        code is different from 200.
     """
 
     API_KEY = os.getenv("API_KEY")
@@ -389,7 +289,6 @@ def generateTokenForSecure2(username: str, password: str) -> str:
 
     try:
         response = rq.post(url=URL, json=DATA, headers=HEADERS)
-        # ====================================================================================== revisar el flujo de las excepciones...
     except (
         rq.exceptions.ConnectionError,
         rq.exceptions.ReadTimeout,

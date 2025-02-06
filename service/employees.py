@@ -5,7 +5,7 @@ from controllers.controller import getEmployees
 import pandas as pd
 
 def generateEmployeesDf() -> pd.DataFrame:
-    """ Create Employees DataFrame with renamed columns with API response.
+    """ Create Employees DataFrame with API response.
 
     Returns
         {pandas.DataFrame} resulting DataFrame.
@@ -13,6 +13,9 @@ def generateEmployeesDf() -> pd.DataFrame:
     
     employees = []
     employeesJson = getEmployees()
+
+    if not employeesJson:
+        raise Exception("No employees found")
 
     for employee in employeesJson:
         employeeModel = EmployeeModel(**employee)

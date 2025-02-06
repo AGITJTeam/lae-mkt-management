@@ -1,32 +1,32 @@
+# ======================= INTERNAL PACKAGES ======================
 from data.repository.calls.employees_repo import Employees
 from data.repository.calls.receipts_payroll_repo import ReceiptsPayroll
 from data.repository.calls.receipts_repo import Receipts
 from data.repository.calls.customers_repo import Customers
 from data.repository.calls.lae_data_repo import LaeData
-from data.repository.calls.policies_details_repo import PoliciesDetails
 from data.repository.calls.webquotes_repo import Webquotes
-
+# from data.repository.calls.policies_details_repo import PoliciesDetails
 from data.repository.calls.compliance_repo import Compliance
-#from data.repository.stats_dash.register import processRegister
-
 from data.repository.stats_dash.dash_carriers import dashCarriers
 from data.repository.stats_dash.dash_offices import dashOffices
 from data.repository.stats_dash.dash_projections import dashProjections
-from data.repository.stats_dash.gmb_calls import generateExcelReport
+from data.repository.stats_dash.gmb_calls import generateGmbCallsReport
 from data.repository.stats_dash.ot_run import otRun
 from data.repository.stats_dash.out_of_state import outOfState
 from data.repository.stats_dash.top_carriers import topCarriers
 from data.repository.stats_dash.dash_os import dashOs
-
 from logs.config import setupLogging
 
+# ======================== OTHER PACKAGES ========================
+
 from flask_jwt_extended import create_access_token, jwt_required, JWTManager
-from flask import Flask, jsonify, request, make_response
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 from datetime import timedelta
 from dotenv import load_dotenv
 import os, logging
-import pandas as pd
+
+# ===================== FLASK CONFIGURATION ======================
 
 setupLogging()
 load_dotenv()
@@ -202,6 +202,23 @@ def getOtReportIdByName():
         id = response[0]
         return jsonify(id), 200
 
+@app.route("/StatsDash/OtReports/<int:id>", methods=["GET"])
+@jwt_required()
+def getOtReport(id: int):
+    compliance = Compliance()
+
+    try:
+        dateCreated, sales, weekSales = compliance.getOtReportById(id)
+    except Exception:
+        logger.error("An error occurred while processing the Projections Dash data")
+        return jsonify({}), 500
+    else:
+        return jsonify({
+            "data": sales,
+            "weekdata": weekSales,
+            "created": dateCreated,
+        }), 200
+
 @app.route("/StatsDash/OtReports", methods=["POST"])
 @jwt_required()
 def postOtReport():
@@ -212,6 +229,7 @@ def postOtReport():
     startDate = data["startDate"]
     endDate = data["endDate"]
     reportName = data["reportName"]
+    dashUsername = data["dashUsername"]
 
     try:
         return otRun(
@@ -219,7 +237,8 @@ def postOtReport():
             end=endDate,
             username=username,
             encryptedPassword=password,
-            reportName=reportName
+            reportName=reportName,
+            dashUsername=dashUsername
         )
     except Exception as e:
         return jsonify({"error": f"An error occurred while posting the report: {str(e)}"}), 500
@@ -341,13 +360,14 @@ def postGmbCallsReport():
     file = request.files.get("gmbCallsFile")
 
     try:
-        excelReport = generateExcelReport(start, end, file)
+        excelReport = generateGmbCallsReport(start, end, file)
     except Exception as e:
         return jsonify({"error": f"An error occurred while generating the report: {str(e)}"}), 500
     else:
         dictReport = excelReport.to_dict(orient="records")
         return jsonify(dictReport), 200
 
+# ========================= FLASK EXECUTER =======================
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0")

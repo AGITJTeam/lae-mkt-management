@@ -5,11 +5,13 @@ from service.receipts_for_dash import fetchReceipts
 from service.gi_logic import *
 from flask import jsonify, Response
 from Crypto.Cipher import AES
-import pandas as pd, numpy as np, logging, base64, os, datetime
+import pandas as pd
+import numpy as np
+import logging, base64, os, datetime
 
 logger = logging.getLogger(__name__)
 
-def otRun(start: str, end: str, username: str, encryptedPassword: str, reportName: str) -> Response:
+def otRun(start: str, end: str, username: str, encryptedPassword: str, reportName: str, dashUsername: str) -> Response | None:
     """ Process the data to generate an OT Report and post it in the database.
     
     Parameters
@@ -18,9 +20,11 @@ def otRun(start: str, end: str, username: str, encryptedPassword: str, reportNam
         - username {str} username of Secure2 platform.
         - encryptedPassword {str} encrypted password of Secure2 platform.
         - reportName {str} the name of the report to be created.
+        - dashUsername {str} the username of the StatsDash webpage.
 
     Returns
-        {flask.Response} the response of the process.
+        {flask.Response} success response or None if exception raise
+        an error.
     """ 
 
     try:
@@ -28,24 +32,22 @@ def otRun(start: str, end: str, username: str, encryptedPassword: str, reportNam
         sales, weekSales = generateOtSalesAndWeeksales(start, end, username, password)
     except Exception as e:
         logger.error(f"Error generating OT Report data in otRun: {str(e)}")
-        return jsonify({"error": "Error generating Overtime Report"}), 500
+        raise
 
     if sales.empty or weekSales.empty:
         logger.error(f"Error with generated OT Report data in otRun. Empty data")
-        return jsonify({"error": "Error with generated Overtime Report"}), 500
+        raise
 
     try:
-        postOtReport(reportName)
-
-        response = getLastOtReportId()
-        id = response[0]["id"]
+        postOtReport(reportName, dashUsername)
+        id = getLastOtReportId()
 
         postOtReportSales(sales, id, "ot_reports_sales")
         postOtReportSales(weekSales, id, "ot_reports_weeksales")
         return jsonify({"msg": "Success"}), 200
     except Exception as e:
         logger.error(f"Error posting OT Report data in otRun: {str(e)}")
-        return jsonify({"error": "Error posting Overtime Report"}), 500
+        raise
 
 def dencryptPassword(encryptedPassword: str) -> str:
     """ Decrypts a text using the AES encryption system.
@@ -70,39 +72,6 @@ def generateOtSalesAndWeeksales(start: str, end: str, username: str, password: s
         {flask.Response} the data that will be shown.
     """
 
-    REPORT_ONE_ID = 91065101
-    REPORT_TWO_ID = 91065102
-
-    if not start or not end or not username or not password:
-        return jsonify({"error": "Start Date, End Date, Username or Password is empty"}), 400
-
-    try:
-        reportOneDf = generateAgiReport(REPORT_TWO_ID, username, password)
-        reportTwoDf = generateAgiReport(REPORT_ONE_ID, username, password)
-        receiptsDf = fetchReceipts(start, end)
-
-        params = {
-            "reportOne": reportOneDf,
-            "reportTwo": reportTwoDf,
-            "receipts": receiptsDf,
-            "start": start,
-            "end": end
-        }
-        sales, weekSales = processOtRun(params)
-            
-        return sales, weekSales
-    except Exception as e:
-        logger.error(f"Error generating data in otRun: {str(e)}")
-        raise
-
-def processOtRun(params: dict[str: any]) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """ Generates the company sales and week sales to be saved on
-    'saved_data' table.
-
-    Returns
-        {tuple[dict, dict]} the data that will be saved.
-    """
-
     REPORT_ONE_COLUMNS = {
         "reghours": "reg_hours",
         "salhours": "sal_hours",
@@ -112,32 +81,38 @@ def processOtRun(params: dict[str: any]) -> tuple[pd.DataFrame, pd.DataFrame]:
         "hrpay": "hr_pay",
         "paytype": "pay_type"
     }
+    REPORT_ONE_ID = 91065101
+    REPORT_TWO_ID = 91065102
 
-    receipts = params["receipts"]
-    reportOne = params["reportOne"]
-    reportTwo = params["reportTwo"]
-    start = params["start"]
-    end = params["end"]
+    reportOneDf = generateAgiReport(REPORT_TWO_ID, username, password)
+    reportTwoDf = generateAgiReport(REPORT_ONE_ID, username, password)
+    receiptsDf = fetchReceipts(start, end)
 
-    reportOne = transformAgiReports(reportOne, start, end, REPORT_ONE_COLUMNS)
-    reportTwo = transformAgiReports(reportTwo, start, end)
-    receipts = transformReceiptsDf(receipts)
+    reportOne = transformAgiReports(reportOneDf, start, end, REPORT_ONE_COLUMNS)
+    reportTwo = transformAgiReports(reportTwoDf, start, end)
+    receipts = transformReceiptsDf(receiptsDf)
 
     uniqueReportOne = generateUniqueReportOne(reportOne, reportTwo)
-    uniqueReportOne = addRoleColumnToReportOne(uniqueReportOne)
+    uniqueReportOne = addRoleToReportOne(uniqueReportOne)
     
     sales = generateSalesDf(uniqueReportOne, receipts)
     weekSales = generateWeekSales(sales)
 
     return sales, weekSales
 
-def transformAgiReports(report: pd.DataFrame, start: str, end: str, renamedColumns: dict = None) -> None:
-    """  Make different transform the AGI Report DataFrame.
+def transformAgiReports(report: pd.DataFrame, start: str, end: str, renamedColumns: dict = None) -> pd.DataFrame:
+    """ Transform the AGI Report DataFrame by normalizing column names,
+    filtering date column, replacing values and filling NA values.
 
-    Parameters
-        - report {pandas.DataFrame} The report to transform.
+    Parameters:
+        - report (pandas.DataFrame): The report to transform.
         - start {str} The start date for filtering the report.
         - end {str} The end date for filtering the report.
+        - renamedColumns {dict}: A dictionary to rename columns 
+        in the DataFrame if its neccesary.
+
+    Returns:
+        {pandas.DataFrame} Resulting DataFrame.
     """
 
     report = report.copy()
@@ -154,7 +129,8 @@ def transformAgiReports(report: pd.DataFrame, start: str, end: str, renamedColum
     return report
 
 def transformReceiptsDf(receipts: pd.DataFrame) -> pd.DataFrame:
-    """  Make different transform the Receipts DataFrame.
+    """ Transform the Receipts DataFrame by grouping it and adding GI
+    and date columns.
 
     Parameters
         - receipts {pandas.DataFrame} The receipts data to transform.
@@ -184,7 +160,7 @@ def transformReceiptsDf(receipts: pd.DataFrame) -> pd.DataFrame:
     return receipts
 
 def generateUniqueReportOne(reportOne: pd.DataFrame, reportTwo: pd.DataFrame) -> pd.DataFrame:
-    """  Generate the Unique Report by merging Report One and Two.
+    """  Generate the Unique AGI Report by merging Report One and Two.
 
     Parameters
         - reportOne {pandas.DataFrame} The first report to merge.
@@ -207,12 +183,13 @@ def generateUniqueReportOne(reportOne: pd.DataFrame, reportTwo: pd.DataFrame) ->
         how="outer",
         on=COLUMNS_TO_DROP_DUPLICATES
     )
-    uniqueReportOneDf = transformUniqueReportOneDf(uniqueReportOneDf, counts)
+    uniqueReportOneDf = addRegionalColumns(uniqueReportOneDf, counts)
 
     return uniqueReportOneDf
 
 def generateMissedCountValues(reportTwo: pd.DataFrame) -> dict:
-    """  Generate a dictionary with counts of missed values in Report Two.
+    """  Generate a dictionary with counts of missed values for 'missed'
+    column in Report Two.
 
     Parameters
         - reportTwo {pandas.DataFrame} The report containing "Missed" data.
@@ -231,16 +208,16 @@ def generateMissedCountValues(reportTwo: pd.DataFrame) -> dict:
 
     return counts
 
-def transformUniqueReportOneDf(reportOne: pd.DataFrame, counts: dict) -> pd.DataFrame:
-    """  Transform Unique Report One by applying data transformations.
+def addRegionalColumns(reportOne: pd.DataFrame, counts: dict) -> pd.DataFrame:
+    """ Add columns to report one related to regional information, add
+    date related columns and normalize emails.
 
     Parameters
         - reportOne {pandas.DataFrame} The report to transform.
         - counts {dict} A dictionary of counts to use.
 
     Returns
-        {pandas.DataFrame} A transformed DataFrame with additional
-                    columns like "Missing", "weekday", and "Week".
+        {pandas.DataFrame} Resulting DataFrame.
     """
 
     reportOne = reportOne.copy()
@@ -258,13 +235,13 @@ def transformUniqueReportOneDf(reportOne: pd.DataFrame, counts: dict) -> pd.Data
 
     return reportOne
 
-def addRoleColumnToReportOne(uniqueReportOne: pd.DataFrame) -> pd.DataFrame:
+def addRoleToReportOne(uniqueReportOne: pd.DataFrame) -> pd.DataFrame:
     """ Adds a 'Role' column to the report by renaming specific columns
         and categorizing data based on conditions.
 
     Parameters
         - uniqueReportOne {pandas.DataFrame} A DataFrame containing the
-          initial report data.
+        initial report data.
 
     Returns
         {pandas.DataFrame} The modified DataFrame with a new 'Role' column.
@@ -304,7 +281,7 @@ def generateSalesDf(uniqueReportOne: pd.DataFrame, receipts: pd.DataFrame) -> pd
 
     Parameters
         - uniqueReportOne {pandas.DataFrame} A DataFrame containing the
-          report data.
+        report data.
         - receipts {pandas.DataFrame} A DataFrame containing receipt data.
 
     Returns
@@ -342,8 +319,8 @@ def generateSalesDf(uniqueReportOne: pd.DataFrame, receipts: pd.DataFrame) -> pd
         .fillna("")
     )
 
-    sales["date"] = pd.to_datetime(arg=sales["date"], format="%Y-%m-%d")
-    sales["week"] = pd.to_datetime(arg=sales["week"], format="%Y-%m-%d")
+    # sales["date"] = pd.to_datetime(arg=sales["date"], format="%Y-%m-%d")
+    # sales["week"] = pd.to_datetime(arg=sales["week"], format="%Y-%m-%d")
 
     return sales
 
@@ -354,11 +331,11 @@ def generateWeekSales(resultSales: pd.DataFrame) -> pd.DataFrame:
 
     Parameters
         - resultSales {pandas.DataFrame} A DataFrame containing the sales
-          data.
+        data.
 
     Returns
         {pandas.DataFrame} The aggregated weekly sales data with calculated
-            columns.
+        columns.
     """
 
     COLS_TO_CONVERT = [
@@ -401,27 +378,71 @@ def generateWeekSales(resultSales: pd.DataFrame) -> pd.DataFrame:
     
     return weekSales
 
-def getLastOtReportId() -> int:
-    compliance = Compliance()
-
-    id = compliance.getLastOtReportId()
-
-    if not id:
-        return {"error": "Blank Id"}
+def postOtReport(reportName: str, dashUsername: str) -> None:
+    """ Post the OT Report name and date created in the database.
     
-    return id
+    Parameters
+        - reportName {str} The name of the report to be created.
+        - dashUsername {str} The username of the StatsDash webpage.
+    """
 
-def postOtReport(reportName: str) -> Response:
     now = datetime.datetime.now()
     data = {
         "report_name": reportName,
-        "date_created": now
+        "date_created": now,
+        "created_by": dashUsername
     }
 
     otReportDf = pd.DataFrame(data=[data])
     postDataframeToDb(otReportDf, "ot_reports", "append", "k_db.ini")
 
+def getLastOtReportId() -> int:
+    """ Once the OT Report is created, get its id.
+    
+    Returns
+        {int} The id of the OT Report just created.
+    """
+
+    compliance = Compliance()
+
+    try:
+        response = compliance.getLastOtReportId()
+    except Exception as e:
+        logger.error(f"Error in getLastOtReportId: {str(e)}")
+        raise
+    else:
+        if not response:
+            raise Exception("No OT Report Id found")
+        
+        id = response[0]["id"]
+        return id
+
+def getNumberOfOtReports() -> int:
+    """ Retrieve the number of OT Reports in the database.
+    
+    Returns
+        {int} the number of OT Reports in the database.
+    """
+
+    compliance = Compliance()
+
+    try:
+        response = compliance.getNumberOfOtReports()
+    except Exception as e:
+        logger.error(f"Error in getNumberOfOtReports: {str(e)}")
+        raise
+    else:        
+        return response[0]["count"]
+
 def postOtReportSales(df: pd.DataFrame, otReportId: int, table: str) -> Response:
+    """ Post all the sales registered for the OT Report in the database.
+    
+    Parameters
+        - df {pandas.DataFrame} The sales data to be posted.
+        - otReportId {int} The id of the OT Report just created.
+        - table {str} The table where the data will be posted.
+    """
+
     df["id_ot_report"] = otReportId
 
     postDataframeToDb(df, table, "append", "k_db.ini")

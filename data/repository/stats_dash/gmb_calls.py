@@ -1,9 +1,8 @@
 
-from flask import flash, jsonify, make_response, request, Response
-from werkzeug.datastructures import FileStorage
-import pandas as pd, io, logging
-
 from data.repository.calls.lae_data_repo import LaeData
+from werkzeug.datastructures import FileStorage
+import pandas as pd
+import io, logging
 
 logger = logging.getLogger(__name__)
 
@@ -22,26 +21,38 @@ GMB_COLUMN_NAMES: dict[str, str] = {
     "11": "immigration",
 }
 
-def generateExcelReport(start: str, end: str, file: FileStorage) -> pd.DataFrame:
-    """  Generate a PDF response containing a GMB calls report.
+def generateGmbCallsReport(start: str, end: str, file: FileStorage) -> pd.DataFrame:
+    """ Generate the DataFrame containing a GMB calls report.
 
     Parameters
         - start {str} The start date for generating the report.
         - end {str} The end date for generating the report.
-        - file {FileStorage} The uploaded file containing GMB calls data.
+        - file {werkzeug.datastructures.FileStorage} The uploaded file
+        containing GMB calls data.
 
     Returns
-        {Response} A Flask response object.
-            Contains the generated Excel report as a downloadable file.
+        {pandas.DataFrame} resulting DataFrame.
     """
 
     try:
         return generateGmbCrossDf(start, end, file)
     except Exception as e:
-        logger.error(f"Error generating GMB calls report in generateExcelReport: {str(e)}")
+        logger.error(f"Error generating GMB calls report in generateGmbCallsReport: {str(e)}")
         raise
 
-def generateGmbCrossDf(start: str, end: str, file) -> pd.DataFrame:
+def generateGmbCrossDf(start: str, end: str, file: FileStorage) -> pd.DataFrame:
+    """ Transform the lae phone data and GMB calls file data to cross
+    them for GMB Calls Report Creation page.
+    
+    Parameters
+        - start {str} The start date for generating the report.
+        - end {str} The end date for generating the report.
+        - file {werkzeug.datastructures.FileStorage} The uploaded file
+        containing GMB calls data.
+
+    Returns
+        {pandas.DataFrame} resulting DataFrame.
+    """
     onePhoneDf = generateLaeOnePhoneDf(start, end)
     twoPhoneDf = generateLaeTwoPhoneDf(start, end)
     gmbDf = generateGmbDf(file)
@@ -68,7 +79,7 @@ def generateLaeOnePhoneDf(start: str, end: str) -> pd.DataFrame:
 
     Returns
         {pd.DataFrame} a pivot table DataFrame indexed by "phone fix" 
-            containing aggregated LAE data.
+        containing aggregated LAE data.
     """
 
     laeDf = generateLaeDataDf(start, end)
@@ -93,7 +104,7 @@ def generateLaeTwoPhoneDf(start: str, end: str) -> pd.DataFrame:
 
     Returns
         {pd.DataFrame} a pivot table DataFrame indexed by "cell phone"
-            and "phone" for aggregated LAE data with two phones.
+        and "phone" for aggregated LAE data with two phones.
     """
 
     laeDf = generateLaeDataDf(start, end)
@@ -110,12 +121,33 @@ def generateLaeTwoPhoneDf(start: str, end: str) -> pd.DataFrame:
 
 
 def generateLaeDataDf(start: str, end: str) -> pd.DataFrame:
+    """ Gets the LAE data between the start and end dates.
+    
+    Parameters
+        - start {str} the start date for retrieving LAE data.
+        - end {str} the end date for retrieving LAE data.
+    
+    Returns
+        {pandas.DataFrame} Lae Data in the given date range.
+    """
+
+
     lae = LaeData()
     response = lae.getBetweenDates(start, end)
 
     return pd.DataFrame(response)
 
-def generateGmbDf(file) -> pd.DataFrame:
+def generateGmbDf(file: FileStorage) -> pd.DataFrame:
+    """ Generates a DataFrame from the GMB calls file.
+
+    Parameters
+        - file {werkzeug.datastructures.FileStorage} The uploaded file
+        containing GMB calls data.
+    
+    Returns
+        {pandas.DataFrame} resulting DataFrame.
+    """
+
     fileStream = io.TextIOWrapper(file.stream, encoding="utf-8")
     gmbDf = pd.read_csv(fileStream, skiprows=9, delimiter=",")
     fileStream.close()
@@ -123,6 +155,19 @@ def generateGmbDf(file) -> pd.DataFrame:
     return gmbDf
 
 def searchGmbNumberInLaeData(number: str, onePhonePv: pd.DataFrame, twoPhonePv: pd.DataFrame) -> list:
+    """ Search number from GMB calls file in LAE one phone or two phones DataFrames.
+    
+    Parameters
+        - number {str} The number to search.
+        - onePhonePv {pandas.DataFrame} Pivot table DataFrame indexed
+        by "phone fix".
+        - twoPhonePv {pandas.DataFrame} Pivot table DataFrame indexed
+        by "cell phone" and "phone".
+    
+    Returns
+        {list} List of values for the number.
+    """
+
     if number in onePhonePv.index:
         #print("Founded in Lae Phone Fix column")
         rows = onePhonePv.loc[number]

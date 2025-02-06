@@ -2,13 +2,14 @@ from data.repository.calls.compliance_repo import Compliance
 from service.gi_logic import normalizeStr
 from service.receipts_for_dash import fetchReceipts
 from dateutil.relativedelta import relativedelta
-from flask import jsonify, session, Response
 from datetime import datetime, timedelta
-import pandas as pd, numpy as np, logging
+import pandas as pd
+import numpy as np
+import logging
 
 logger = logging.getLogger(__name__)
 
-def dashProjections(position: str, fullname: str) -> Response:
+def dashProjections(position: str, fullname: str) -> tuple[list[dict], list[dict], str, str] | None:
     """ Generates the company sales and total sums to be shown in
     the Projection's Dashboard page.
 
@@ -17,7 +18,8 @@ def dashProjections(position: str, fullname: str) -> Response:
         - fullname {str} the complete name of the user.
 
     Returns
-        {flask.Response} the data that will be shown.
+        {tuple[list[dict], list[dict], str, str] | None} the data that
+        will be shown or None if exception raise an error.
     """
 
     compliance = Compliance()
@@ -34,9 +36,9 @@ def dashProjections(position: str, fullname: str) -> Response:
     else:
         return companySalesProcessed, totalSums, dates["start"], dates["end"]
 
-def processDashProjections(companySalesDf: pd.DataFrame, offices: list[dict], dates: dict, position: str, fullname: str) -> tuple[dict, dict]:
-    """ Generates company sales projections and total sums based on
-        positions.
+def processDashProjections(companySalesDf: pd.DataFrame, offices: list[dict], dates: dict, position: str, fullname: str) -> tuple[list[dict], list[dict]]:
+    """ Transforms the company sales and offices data to make it ready
+    for the Projections's Dashboard.
 
     Parameters
         - companySalesDf {pandas.DataFrame} Company sales data.
@@ -47,11 +49,11 @@ def processDashProjections(companySalesDf: pd.DataFrame, offices: list[dict], da
         - fullname {str} the complete name of the user.
 
     Returns
-        {tuple[dict, dict]} A tuple containing two dictionaries: one
-            with company sales data and another with total sums.
+        {tuple[list[dict], list[dict]]} the transformed company sales
+        and total sums.
     """
 
-    companySalesDf = generateFinalCompanySales(companySalesDf, dates["firstDayCurrentMonth"], dates["workingDays"], dates["totalDays"])
+    companySalesDf = transformCompanySales(companySalesDf, dates["firstDayCurrentMonth"], dates["workingDays"], dates["totalDays"])
     officeReport = generateOfficeReport(offices)
 
     companySalesDf = (
@@ -63,9 +65,6 @@ def processDashProjections(companySalesDf: pd.DataFrame, offices: list[dict], da
     if position == "Regional Manager":
         regName = setRegName(fullname)
         companySalesDf = companySalesDf[companySalesDf["regional"].isin(regName)]
-    elif position == "Marketing":
-        regName = setRegName(fullname)
-        companySalesDf = companySalesDf[companySalesDf["district"].isin(["Paola Sanchez", "Trucking"])]
     
     totalSumsDf = generateTotalSums(companySalesDf, dates["workingDays"], dates["totalDays"])
 
@@ -80,7 +79,7 @@ def generateDates() -> dict:
 
     Returns
         {dict} Dictionary with date ranges and working day counts for
-            the month.
+        the month.
     """
     
     today = datetime.today().date()
@@ -114,9 +113,10 @@ def generateDates() -> dict:
 
     return dates
 
-def generateFinalCompanySales(companySales: pd.DataFrame, start: str, workDays: int, totalDays: int) -> pd.DataFrame:
-    """ Generates final company sales data by applying transformations
-        and projections.
+def transformCompanySales(companySales: pd.DataFrame, start: str, workDays: int, totalDays: int) -> pd.DataFrame:
+    """ Generates company sales data by applying addition of columns,
+    merging last and current month sales data and calculating
+    projections of NB and GI.
 
     Parameters
         - companySales {pandas.DataFrame} Raw company sales data.
@@ -126,26 +126,26 @@ def generateFinalCompanySales(companySales: pd.DataFrame, start: str, workDays: 
 
     Returns
         {pandas.DataFrame} Transformed company sales data with projected
-            values and differences.
+        values and differences.
     """
 
-    companySales = baseCompanySales(companySales)
-    companySalesLm = generateCompanySalesLm(companySales, start)
-    companySalesCm = generateCompanySalesCm(companySales, start)
+    companySales = addGiSumAndCount(companySales)
+    companySalesLm = generateLastMonthSales(companySales, start)
+    companySalesCm = generateCurrentMonthSales(companySales, start)
     companySales = addProjAndDiffColumns(companySalesLm, companySalesCm, workDays, totalDays)
 
     return companySales
 
-def baseCompanySales(companySales: pd.DataFrame) -> pd.DataFrame:
-    """ Generates base company sales data by applying transformations
-        and aggregations.
+def addGiSumAndCount(companySales: pd.DataFrame) -> pd.DataFrame:
+    """ Group company sales by date columns, 'office_rec' and for columns
+    and add GI sum and count columns.
 
     Parameters
         - companySales {pandas.DataFrame} Raw company sales data.
 
     Returns
         {pandas.DataFrame} Aggregated company sales data with renamed
-            columns.
+        columns.
     """
 
     COLS_TO_RENAME = {
@@ -154,7 +154,7 @@ def baseCompanySales(companySales: pd.DataFrame) -> pd.DataFrame:
         "row_count": "receipts"
     }
 
-    initialTransformations(companySales)
+    addDateColumns(companySales)
     companySales = replaceOfficeValues(companySales)
 
     companySales = (
@@ -170,15 +170,11 @@ def baseCompanySales(companySales: pd.DataFrame) -> pd.DataFrame:
 
     return companySales
 
-def initialTransformations(companySales: pd.DataFrame) -> pd.DataFrame:
-    """ Applies initial transformations to the company sales data.
+def addDateColumns(companySales: pd.DataFrame) -> None:
+    """ Change 'date' column type and add some date columns.
 
     Parameters
-        - companySales {pandas.DataFrame} Raw company sales data.
-
-    Returns
-        {pandas.DataFrame} Transformed company sales data with date
-            and week columns.
+        - df {pandas.DataFrame} Input DataFrame to be transformed.
     """
 
     companySales["date"] = pd.to_datetime(companySales["date"])
@@ -189,7 +185,7 @@ def initialTransformations(companySales: pd.DataFrame) -> pd.DataFrame:
     companySales["week"] = companySales["week"].dt.strftime("%Y-%m-%d")
 
 def replaceOfficeValues(companySales: pd.DataFrame) -> pd.DataFrame:
-    """ Replaces specific values in the office_rec column of company
+    """ Replaces specific values in 'office_rec' column of company
         sales data.
 
     Parameters
@@ -209,8 +205,9 @@ def replaceOfficeValues(companySales: pd.DataFrame) -> pd.DataFrame:
 
     return companySales
 
-def generateCompanySalesLm(companySales: pd.DataFrame, start: str) -> pd.DataFrame:
-    """ Generates last month company sales data.
+def generateLastMonthSales(companySales: pd.DataFrame, start: str) -> pd.DataFrame:
+    """ Generates last month company sales data by filtering DataFrame
+    data and adding GI new columns.
 
     Parameters
         - companySales {pandas.DataFrame} Raw company sales data.
@@ -225,12 +222,13 @@ def generateCompanySalesLm(companySales: pd.DataFrame, start: str) -> pd.DataFra
         "nb_total": "nb last month"
     }
     companySalesLm = companySales[(companySales["date"] < start)]
-    companySalesLm = transformCompanySales(companySalesLm, colsToRename)
+    companySalesLm = addGiSumAndNbTotal(companySalesLm, colsToRename)
 
     return companySalesLm
 
-def generateCompanySalesCm(companySales: pd.DataFrame, start: str) -> pd.DataFrame:
-    """ Generates current moonth company sales.
+def generateCurrentMonthSales(companySales: pd.DataFrame, start: str) -> pd.DataFrame:
+    """ Generates current month company sales by filtering DataFrame
+    data and adding GI new columns.
 
     Parameters
         - companySales {pandas.DataFrame} Raw company sales data.
@@ -245,13 +243,12 @@ def generateCompanySalesCm(companySales: pd.DataFrame, start: str) -> pd.DataFra
         "nb_total": "nb"
     }
     companySalesCm = companySales[(companySales["date"] >= start)]
-    companySalesCm = transformCompanySales(companySalesCm, colsToRename)
+    companySalesCm = addGiSumAndNbTotal(companySalesCm, colsToRename)
 
     return companySalesCm
 
-def transformCompanySales(companySales: pd.DataFrame, columns: dict[str: str]) -> pd.DataFrame:
-    """ Transforms company sales data by aggregating and renaming
-        columns.
+def addGiSumAndNbTotal(companySales: pd.DataFrame, columns: dict[str: str]) -> pd.DataFrame:
+    """ Groups data by the 'office' column and adds GI sum and count.
 
     Parameters
         - companySales {pandas.DataFrame} Raw company sales data.

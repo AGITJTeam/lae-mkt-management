@@ -1,7 +1,7 @@
 from datetime import datetime
 
 class ICompliance:
-    def getRegionalsByOffices() -> list[dict]:
+    def getRegionalsByOffices(self) -> list[dict]:
         pass
     def getUserEmailById(self, id: int) -> list[dict]:
         pass

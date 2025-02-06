@@ -3,13 +3,14 @@ from data.repository.calls.receipts_payroll_repo import ReceiptsPayroll
 import pandas as pd
 
 def fetchReceipts(start: str, end: str) -> pd.DataFrame:
-    """ 
+    """ Generates Receipts Payroll DataFrame with extra transformations
+    for the Stats Dashboard project.
     
     Parameters
         - start {end} beginning of date range.
         - end {end} end of date range.
     Returns
-        {pandas.DataFrame} 
+        {pandas.DataFrame} Resulting DataFrame.
     """
     
     receiptsPayroll = ReceiptsPayroll()
@@ -23,7 +24,7 @@ def fetchReceipts(start: str, end: str) -> pd.DataFrame:
     return rangeDf
 
 def filterOfficeRecColumn(df: pd.DataFrame) -> pd.DataFrame:
-    """ Filter 'office_rec' column from a DataFrame.
+    """ Filter values from 'office_rec' column.
 
     Parameters
         - df {pandas.DataFrame} DataFrame to filter.
@@ -31,6 +32,7 @@ def filterOfficeRecColumn(df: pd.DataFrame) -> pd.DataFrame:
     Returns
         {pandas.DataFrame} resulting DataFrame.
     """
+    
     UNWANTED_OFFICES = ["Training Center", "Rancho","Refunds"]
 
     filteredDf = df[~df["office_rec"].str.contains("|".join(UNWANTED_OFFICES))]
@@ -46,6 +48,7 @@ def filterForColumn(df: pd.DataFrame) -> pd.DataFrame:
     Returns
         {pandas.DataFrame} resulting DataFrame.
     """
+
     FILTERS = {
         "bf_inv": "BF",
         "pay_inv": "Payment Fee",
@@ -55,14 +58,14 @@ def filterForColumn(df: pd.DataFrame) -> pd.DataFrame:
         "Imm_inv": "Immigration"
     }
 
-    filteredForDf = {key: df[df["for"].str.contains(value)].copy() for key, value in FILTERS.items()}
+    filteredForDf = { key: df[df["for"].str.contains(value)].copy() for key, value in FILTERS.items() }
     filteredForDf["NB_inv"]["gi"] = 0
     rangeDf = pd.concat(filteredForDf.values(), ignore_index=True)
 
     return rangeDf
 
 def addEmailColumns(df: pd.DataFrame) -> pd.DataFrame:
-    """ Add 'usr_email' and 'csr_email' column to DataFrame.
+    """ Add 'usr' and 'cs' columns according to Employees DataFrame.
 
     Parameters
         - df {pandas.DataFrame} DataFrame to filter.

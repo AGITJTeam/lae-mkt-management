@@ -16,14 +16,13 @@ class Compliance(ICompliance):
         - delOtReport.
     """
 
-    def getRegionalsByOffices():
+    def getRegionalsByOffices(self):
         """ Retrieve the regional, manager, office and region related
         data.
         
         Returns
             {list[dict]} all data from its table.
         """
-
 
         query = "SELECT * FROM office_info_updated;"
 
@@ -117,6 +116,27 @@ class Compliance(ICompliance):
 
         return getData(query, filename="k_db.ini")
     
+    def getOtReportById(self, id) -> list[dict]:
+        """ Retrieve an ot report by its id.
+        
+        Parameters
+            - id {int} the id of the ot report.
+
+        Returns
+            {list[dict]} the ot report.
+        """
+
+        dateCreatedQuery = f"SELECT date_created FROM ot_reports WHERE id = {id};"
+        salesQuery = f"SELECT * FROM ot_reports_sales WHERE id_ot_report = {id};"
+        weeksalesQuery = f"SELECT * FROM ot_reports_weeksales WHERE id_ot_report = {id};"
+
+        dateJson = getData(dateCreatedQuery, filename="k_db.ini")
+        sales = getData(salesQuery, filename="k_db.ini")
+        weeksales = getData(weeksalesQuery, filename="k_db.ini")
+        dateCreated = dateJson[0]["date_created"]
+
+        return dateCreated, sales, weeksales
+    
     def delOtReport(self, id):
         """ Deletes an ot report by its id.
         
@@ -131,3 +151,14 @@ class Compliance(ICompliance):
         query = f"DELETE FROM ot_reports WHERE id = {id};"
 
         return executeOperation(query, filename="k_db.ini")
+    
+    def getNumberOfOtReports(self):
+        """ Retrieve the number of ot reports in the database.
+        
+        Returns
+            {list[dict]} a list containing the number of ot reports.
+        """
+
+        query = "SELECT COUNT(*) FROM ot_reports;"
+
+        return getData(query, filename="k_db.ini")

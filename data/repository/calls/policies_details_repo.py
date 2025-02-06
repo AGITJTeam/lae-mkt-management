@@ -22,8 +22,6 @@ class PoliciesDetails(IPoliciesDetails):
         values = ", ".join(str(id) for id in ids)
         query = f"SELECT * FROM policies_details WHERE id_customer IN ({values})"
 
-        print(query)
-
         return getData(query)
 
     def deleteByIds(self, ids):

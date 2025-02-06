@@ -1,7 +1,8 @@
 from data.repository.calls.compliance_repo import Compliance
 from service.gi_logic import normalizeStr
 from service.receipts_for_dash import fetchReceipts
-import pandas as pd, logging
+import pandas as pd
+import logging
 
 logger = logging.getLogger(__name__)
 
@@ -118,12 +119,12 @@ def mergeWithOfficesDf(companySales: pd.DataFrame, regName: str | list) -> pd.Da
     compliance = Compliance()
     response = compliance.getRegionalsByOffices()
     officesInfoDf = pd.DataFrame(response)
-    companySales.rename(columns={"office": "Office"}, inplace=True)
+
     companySales = (
         pd.merge(
             left=companySales,
             right=officesInfoDf,
-            on=["Office"],
+            on=["office"],
             how="outer"
         )
         .fillna(0)

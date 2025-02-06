@@ -1,6 +1,6 @@
 from data.repository.calls.customers_repo import Customers
 
-def fetchCustomersAddress(ids: list):
+def fetchCustomersAddress(ids: list) -> list[dict]:
     """ Gets customer data and retrieves only the physical address
     fields.
     

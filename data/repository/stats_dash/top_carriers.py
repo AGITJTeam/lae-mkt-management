@@ -1,10 +1,10 @@
 from service.receipts_for_dash import fetchReceipts
-from flask import jsonify, request, Response
-import pandas as pd, logging
+import pandas as pd
+import logging
 
 logger = logging.getLogger(__name__)
 
-def topCarriers(start: str, end: str) -> Response:
+def topCarriers(start: str, end: str) -> tuple[list[dict], list[dict], list[dict]] | None:
     """ Generates the regular company sales, by office total sums to be shown in
     the Production for Aspire, Kemper and NatGen page.
 
@@ -13,7 +13,8 @@ def topCarriers(start: str, end: str) -> Response:
         - end {str} the end of the date range.
 
     Returns
-        {flask.Response} the data that will be shown.
+        {tuple[list[dict], list[dict], list[dict]] | None} the data that
+        will be shown or None if exception raise an error.
     """
 
     try:
@@ -26,27 +27,23 @@ def topCarriers(start: str, end: str) -> Response:
         return companySalesPT, companySalesOffice, totalSums
 
 def processTopCarriers(companySales: pd.DataFrame) -> tuple[list[dict], list[dict], list[dict]]:
-    """ Generates the top carriers data by performing several
-        transformations and aggregations on the company sales data,
-        returning three separate lists of dictionaries: company sales
-        office, total sums, and company sales pivot table.
+    """ Transforms the company sales and offices data to make it ready
+    for the Production for Aspire, Kemper & National General page.
 
     Parameters
         - companySales {pandas.DataFrame} A DataFrame containing company
           sales data.
 
     Returns
-        {tuple} A tuple containing three lists of dictionaries:
-        - companySalesOffice {list[dict]} Company sales office data.
-        - totalSums {list[dict]} Total sums data for each carrier.
-        - companySalesPT {list[dict]} Pivoted company sales data.
+        {tuple[list[dict], list[dict], list[dict]]} the transformed company
+        sales,company sales by office and total sums.
     """
 
     companySales = companySales.copy()
 
-    initialTransformations(companySales)
+    addDateColumns(companySales)
     companySalesOfficeDf = generateCompanySalesOfficeDf(companySales)
-    companySalesFinalDf = generateCompanySalesFinalDf(companySales)
+    companySalesFinalDf = prepareCompanySales(companySales)
     totalSumsDf = generateTotalSumDf(companySalesFinalDf)
     companySalesPTDf = generateCompanySalesPT(companySalesFinalDf)
 
@@ -56,12 +53,11 @@ def processTopCarriers(companySales: pd.DataFrame) -> tuple[list[dict], list[dic
 
     return companySalesOffice, totalSums, companySalesPT
 
-def initialTransformations(df: pd.DataFrame) -> None:
-    """ Performs initial transformations on the company sales data,
-        including renaming, date parsing, and generating week information.
+def addDateColumns(df: pd.DataFrame) -> None:
+    """ Change 'date' column type and add some date columns.
 
     Parameters
-        - df {pandas.DataFrame} A DataFrame containing company sales data.
+        - df {pandas.DataFrame} Input DataFrame to be transformed.
     """
 
     df["payee"] = df["payee"].str.replace("National General", "NationalGeneral")
@@ -73,52 +69,50 @@ def initialTransformations(df: pd.DataFrame) -> None:
     df["date"] = df["date"].dt.strftime("%Y-%m-%d")
 
 def generateCompanySalesOfficeDf(df: pd.DataFrame) -> pd.DataFrame:
-    """ Generates a company sales office DataFrame by grouping the data
-        by date, carrier, and office, and aggregating the 'nb total'
-        values for each group.
+    """ Generates a company sales by office DataFrame by grouping,
+    filtering data and adding columns.
 
     Parameters
         - df {pandas.DataFrame} A DataFrame containing company sales data.
 
     Returns
         {pandas.DataFrame} A DataFrame with aggregated company sales data
-            by office.
+        by office.
     """
 
 
     RENAMED_COLUMNS = {"nb_total": "nb total"}
     
     df = df.copy()
-    company_Sales = baseCompanySalesGroup(df)
+    companySales = addGiCountByGroupDf(df)
 
-    company_Sales_office = (
-        company_Sales
+    companySalesOffice = (
+        companySales
         .groupby(by=["date", "carrier", "office"])
-        .agg(nb_total=("row_count", lambda x: x[company_Sales["for"] == "NewB - EFT To Company"].sum()))
+        .agg(nb_total=("row_count", lambda x: x[companySales["for"] == "NewB - EFT To Company"].sum()))
         .reset_index()
         .rename(columns=RENAMED_COLUMNS)
         .query(expr="`nb total` >= 1")
     )
 
-    return company_Sales_office
+    return companySalesOffice
 
-def generateCompanySalesFinalDf(df: pd.DataFrame) -> pd.DataFrame:
-    """ Generates the final company sales DataFrame by aggregating data 
-        at the date and carrier level, renaming columns, and filtering
-        results based on the 'nb total' value.
+def prepareCompanySales(df: pd.DataFrame) -> pd.DataFrame:
+    """ Prepare company sales df before pivoting it by grouping,
+    filteringand adding columns.
 
     Parameters
         - df {pandas.DataFrame} A DataFrame containing company sales data.
 
     Returns
         {pandas.DataFrame} The final DataFrame with aggregated and filtered
-            company sales data.
+        company sales data.
     """
 
     RENAMED_COLUMNS = {"nb_total": "nb total"}
 
     df = df.copy()
-    company_Sales = baseCompanySalesGroup(df)
+    company_Sales = addGiCountByGroupDf(df)
 
     company_Sales_final = (
         company_Sales
@@ -131,10 +125,8 @@ def generateCompanySalesFinalDf(df: pd.DataFrame) -> pd.DataFrame:
 
     return company_Sales_final
 
-def baseCompanySalesGroup(company_Sales: pd.DataFrame) -> pd.DataFrame:
-    """ Generates a base company sales DataFrame by grouping the data by
-        week, date, office, user, and other relevant columns, and
-        aggregating the row count.
+def addGiCountByGroupDf(company_Sales: pd.DataFrame) -> pd.DataFrame:
+    """ Group company sales by different columns to generate GI count.
 
     Parameters
         - company_Sales {pandas.DataFrame} A DataFrame containing company
