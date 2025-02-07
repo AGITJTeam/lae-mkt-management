@@ -4,6 +4,7 @@ import os, logging
 logger = logging.getLogger(__name__)
 
 LAE_URL = "http://50.18.96.65:8080"
+ADRIANAS_URL = "https://app.adrianas.com/api"
 SECURE2_URL = "http://secure2.saashr.com/ta/rest/v1"
 
 USERNAME = os.getenv("S2_USER")
@@ -148,7 +149,7 @@ def getWebquotes(start: str, end: str) -> dict | None:
     """
 
     URL = (
-        "https://app.adrianas.com/api/webquotes/csv?"
+        f"{ADRIANAS_URL}/webquotes/csv?"
         "search=&"
         "agent=&"
         "clistatus=&"
@@ -182,6 +183,30 @@ def getWebquotes(start: str, end: str) -> dict | None:
     else:
         if wqRequest.status_code != rq.codes.ok:
             logger.error(f"Status code {wqRequest.status_code} in getWebquotes from {start} to {end}.")
+        return wqRequest.json()
+
+def getDynamicForm() -> dict | None:
+    """ Call DynamicFroms endpoint from App.Adrianas to get Home Owners
+    Dynamic Form data.
+
+    Returns
+        {dict | None} api response in Json format or None if exception raise.
+    """
+
+    URL = f"{ADRIANAS_URL}/dynamicforms/filtered?idform=16"
+
+    try:
+        wqRequest = rq.get(url=URL, timeout=TIMEOUT)
+    except (
+        rq.exceptions.ConnectionError, 
+        rq.exceptions.ReadTimeout,
+        rq.exceptions.RequestException
+    ) as e:
+        logger.error(f"Error in getDynamicForm: {str(e)}")
+        raise
+    else:
+        if wqRequest.status_code != rq.codes.ok:
+            logger.error(f"Status code {wqRequest.status_code} in getDynamicForm.")
         return wqRequest.json()
 
 def getReceipt(id: int) -> dict | None:

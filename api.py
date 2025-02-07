@@ -15,6 +15,7 @@ from data.repository.stats_dash.ot_run import otRun
 from data.repository.stats_dash.out_of_state import outOfState
 from data.repository.stats_dash.top_carriers import topCarriers
 from data.repository.stats_dash.dash_os import dashOs
+from service.dynamic_form import generateDynamicFormDf
 from logs.config import setupLogging
 
 # ======================== OTHER PACKAGES ========================
@@ -86,6 +87,11 @@ def getWebquotesDetails():
     
     return jsonify(webquotes.getWebquotesFromDateRange(start, end))
 
+@app.route("/DynamicForms", methods=["GET"])
+@jwt_required()
+def getHomeOwnersDF():
+    return jsonify(generateDynamicFormDf())
+
 @app.route("/Lae", methods=["GET"])
 @jwt_required()
 def getLaeBetweenDates():
@@ -123,7 +129,7 @@ def getReceiptsBetweenDates():
 @app.route("/RegionalsOffices", methods=["GET"])
 @jwt_required()
 def getRegionalsByOffice():
-    offices = Compliance
+    offices = Compliance()
     return jsonify(offices.getRegionalsByOffices())
 
 # ======================== STATS DASH ENDPOINTS =======================
