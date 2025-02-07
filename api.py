@@ -17,13 +17,13 @@ from data.repository.stats_dash.top_carriers import topCarriers
 from data.repository.stats_dash.dash_os import dashOs
 from service.dynamic_form import generateDynamicFormDf
 from logs.config import setupLogging
+from config import Config
 
 # ======================== OTHER PACKAGES ========================
 
 from flask_jwt_extended import create_access_token, jwt_required, JWTManager
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-from datetime import timedelta
 from dotenv import load_dotenv
 import os, logging
 
@@ -33,8 +33,7 @@ setupLogging()
 load_dotenv()
 
 app = Flask(__name__)
-app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
-app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=9)
+app.config.from_object(Config)
 jwt = JWTManager(app)
 CORS(app)
 
@@ -90,7 +89,10 @@ def getWebquotesDetails():
 @app.route("/DynamicForms", methods=["GET"])
 @jwt_required()
 def getHomeOwnersDF():
-    return jsonify(generateDynamicFormDf())
+    start = request.args.get("fromDate")
+    end = request.args.get("toDate")
+
+    return jsonify(generateDynamicFormDf(start, end))
 
 @app.route("/Lae", methods=["GET"])
 @jwt_required()
@@ -360,15 +362,16 @@ def processOutOfState():
 
 @app.route("/StatsDash/GmbReports", methods=["GET"])
 @jwt_required()
-def postGmbCallsReport():
+def getGmbCallsReport():
     start = request.form.get("startDate")
     end = request.form.get("endDate")
     file = request.files.get("gmbCallsFile")
 
     try:
         excelReport = generateGmbCallsReport(start, end, file)
-    except Exception as e:
-        return jsonify({"error": f"An error occurred while generating the report: {str(e)}"}), 500
+    except Exception:
+        logger.error(f"An error occurred while generating the report.")
+        return jsonify({}), 500
     else:
         dictReport = excelReport.to_dict(orient="records")
         return jsonify(dictReport), 200

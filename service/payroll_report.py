@@ -1,5 +1,8 @@
 from controllers.controller import fetchAgiReports
-import pandas as pd, csv, io
+import pandas as pd
+import csv, io, logging
+
+logger = logging.getLogger(__name__)
 
 def generateAgiReport(reportId: int, username: str = None, password: str = None) -> pd.DataFrame:
     """ Generates a DataFrame from Secure2 report.
@@ -12,6 +15,7 @@ def generateAgiReport(reportId: int, username: str = None, password: str = None)
     Returns
         {pandas.DataFrame} resulting DataFrame.
     """
+
     response = fetchAgiReports(reportId, username, password)
     reportDecoded = response.content.decode("utf-8")
 

@@ -1,3 +1,4 @@
+from config import Config
 import requests as rq
 import os, logging
 
@@ -6,9 +7,6 @@ logger = logging.getLogger(__name__)
 LAE_URL = "http://50.18.96.65:8080"
 ADRIANAS_URL = "https://app.adrianas.com/api"
 SECURE2_URL = "http://secure2.saashr.com/ta/rest/v1"
-
-USERNAME = os.getenv("S2_USER")
-PASSWORD = os.getenv("S2_PASS")
 COMPANY_SHORTNAME = "AGI04"
 TIMEOUT = 30
 
@@ -168,7 +166,8 @@ def getWebquotes(start: str, end: str) -> dict | None:
         "fulldata=false&"
         "dialpadCallCenter=&"
         "office_worked=&"
-        "state=&office="
+        "state=&"
+        "office="
     )
 
     try:
@@ -185,15 +184,30 @@ def getWebquotes(start: str, end: str) -> dict | None:
             logger.error(f"Status code {wqRequest.status_code} in getWebquotes from {start} to {end}.")
         return wqRequest.json()
 
-def getDynamicForm() -> dict | None:
+def getDynamicForm(start: str, end: str) -> dict | None:
     """ Call DynamicFroms endpoint from App.Adrianas to get Home Owners
     Dynamic Form data.
+
+    Parameters
+        - start {str} the beginning of the date range.
+        - end {str} the end of the date range.
 
     Returns
         {dict | None} api response in Json format or None if exception raise.
     """
 
-    URL = f"{ADRIANAS_URL}/dynamicforms/filtered?idform=16"
+    URL = (
+        f"{ADRIANAS_URL}/dynamicforms/filtered?"
+        "limit=1000&"
+        "status=&"
+        "purpose=&"
+        "searchForm=&"
+        f"fromDate={start}&"
+        f"toDate={end}&"
+        "agent=&"
+        "agent_office=&"
+        "idform=16"
+    )
 
     try:
         wqRequest = rq.get(url=URL, timeout=TIMEOUT)
@@ -249,9 +263,8 @@ def fetchAgiReports(reportId: int, username: str, password: str) -> rq.Response 
     """
 
     if username is None or password is None:
-        username = USERNAME
-        password = PASSWORD
-
+        username = Config.get_username()
+        password = Config.get_password()
     token = generateTokenForSecure2(username, password)
     
     PARAMETERS = {

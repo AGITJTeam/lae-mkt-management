@@ -4,8 +4,12 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-def generateDynamicFormDf() -> list[dict]:
+def generateDynamicFormDf(start: str, end: str) -> list[dict]:
     """ Create Home Owners Dynamic FormDataFrame with API response.
+
+    Parameters
+        - start {str} the beginning of the date range.
+        - end {str} the end of the date range.
 
     Returns
         {pandas.DataFrame} resulting DataFrame.
@@ -14,7 +18,7 @@ def generateDynamicFormDf() -> list[dict]:
     homeOwners = []
     
     try:
-        response = getDynamicForm()
+        response = getDynamicForm(start, end)
     except Exception:
         logger.error("An error occurred while fetching the dynamic form.")
         raise

@@ -64,7 +64,7 @@ def generateGmbCrossDf(start: str, end: str, file: FileStorage) -> pd.DataFrame:
         num = "".join(number.split("-"))
         founded = searchGmbNumberInLaeData(num, onePhoneDf, twoPhoneDf)
         result.append(founded)
-    
+
     gmbCountedFor = pd.DataFrame(data=result, columns=GMB_COLUMN_NAMES.values())
     crossedGmb = pd.concat([gmbDf, gmbCountedFor], axis=1)
 
