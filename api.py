@@ -15,6 +15,7 @@ from data.repository.stats_dash.ot_run import otRun
 from data.repository.stats_dash.out_of_state import outOfState
 from data.repository.stats_dash.top_carriers import topCarriers
 from data.repository.stats_dash.dash_os import dashOs
+from data.repository.stats_dash.yelp_calls import generateYelpCallsReport
 from service.dynamic_form import generateDynamicFormDf
 from logs.config import setupLogging
 from config import Config
@@ -374,6 +375,23 @@ def getGmbCallsReport():
         return jsonify({}), 500
     else:
         dictReport = excelReport.to_dict(orient="records")
+        return jsonify(dictReport), 200
+
+@app.route("/StatsDash/YelpReports", methods=["GET"])
+@jwt_required()
+def getYelpCallsReport():
+    start = request.form.get("startDate")
+    end = request.form.get("endDate")
+    yelpCalls = request.files.get("yelpCallsFile")
+    yelpCodes = request.files.get("yelpCodesFile")
+
+    try:
+        yelpReport = generateYelpCallsReport(start, end, yelpCalls, yelpCodes)
+    except Exception as e:
+        logger.error(f"An error occurred while generating the report.")
+        return jsonify({}), 500
+    else:
+        dictReport = yelpReport.to_dict(orient="records")
         return jsonify(dictReport), 200
 
 # ========================= FLASK EXECUTER =======================
