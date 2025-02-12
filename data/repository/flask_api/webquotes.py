@@ -26,15 +26,22 @@ def updateWebquotesPreviousRecords() -> None:
     Webquotes table. """
 
     webquotes = Webquotes()
-
     lastDate = webquotes.getLastRecord()[0]["submission_date"]
-    
     dateRanges = generateTwoMonthsDateRange(lastDate)
-    start = dateRanges[0]["start"]
-    end = dateRanges[1]["end"]
+    
+    dataAvailable = any(
+        not generateWebquotesDf(date["start"], date["end"]).empty
+        for date in dateRanges
+    )
+    
+    if not dataAvailable:
+        print(f"No data from {dateRanges[0]['start']} to {dateRanges[0]['end']} to update.")
+        raise Exception("No data found")
 
-    webquotes.deleteLastMonthData(start, end)
-    print(f"Webquotes data from {start} to {end} deleted...")
+    firstDayLastMonth = dateRanges[0]["start"]
+    yesterday = dateRanges[1]["end"]
+    webquotes.deleteLastMonthData(firstDayLastMonth, yesterday)
+    print(f"Webquotes data from {firstDayLastMonth} to {yesterday} deleted...")
 
     for date in dateRanges:
         updateWebquotesTables(date["start"], date["end"])

@@ -1,14 +1,19 @@
 from data.repository.calls.helpers import generateDateTimeUpdated
 from data.repository.flask_api.webquotes import *
+import os, sys
 
-print("-"*50)
-
-updateWebquotesPreviousRecords()
-addWebquotesTodayRecords()
-date, time = generateDateTimeUpdated()
-print(f"\n{date} {time}\n")
-
-print("-"*50)
+try:
+    print("-"*50)
+    updateWebquotesPreviousRecords()
+    addWebquotesTodayRecords()
+except Exception as e:
+    print(f"Error updating Webquotes in webquotes_updater.py: {str(e)}.")
+    os.system(f'echo ""$PYTHON $SCRIPTS/webquotes_updater.py >> $LOGS/webquotes.log 2>&1" | at now + 5 minutes"')
+    sys.exit(1)
+else:
+    date, time = generateDateTimeUpdated()
+    print(f"\n{date} {time}\n")
+    print("-"*50)
 
 # add data from a specific date range, substitute 'start' and 'end'
 # with a date in YYYY-MM-DD format.

@@ -28,8 +28,26 @@ def updateLaeDataTables(start: str, end: str) -> None:
     newReceipts = transformReceiptsDfForLaeData(receiptsDf)
     newCustomers = transformCustomersDfForLaeData(customersDf)
     laeData = generateLaeData(newReceipts, newCustomers)
+    
     postDataframeToDb(laeData, "lae_data", "append")
     print("Lae Data table generated and posted...")
+
+def getUniqueCustomersDf(receiptsDf: pd.DataFrame) -> pd.DataFrame:
+    """ Gets all data from unique customers.
+
+    Parameteres
+        receiptsDf {panda.DataFrame} Receipts Payroll DataFrame.
+
+    """
+
+    customers = Customers()
+
+    customersIds = receiptsDf["customer_id"].tolist()
+    customersJson = customers.getByIds(customersIds)
+    customerDf = pd.DataFrame(customersJson)
+    customersIdsNoDuplicates = customerDf.drop_duplicates("customer_id").reset_index(drop=True)
+
+    return customersIdsNoDuplicates
 
 def updateLaeDataTablesPreviousRecords() -> None:
     """ Generate last and current month date ranges to update Lae Data table. """
@@ -39,13 +57,13 @@ def updateLaeDataTablesPreviousRecords() -> None:
 
     lastDateFromTable = receiptsPayroll.getLastRecord()[0]["date"]
     lastDate = lastDateFromTable.date()
-    
     dateRanges = generateTwoMonthsDateRange(lastDate)
-    start = dateRanges[0]["start"]
-    end = dateRanges[1]["end"]
 
-    lae.deleteLastMonthData(start, end)
-    print(f"Lae data from {start} to {end} deleted...")
+    firstDayLastMonth = dateRanges[0]["start"]
+    today = dateRanges[1]["end"]
+
+    lae.deleteLastMonthData(firstDayLastMonth, today)
+    print(f"Lae data from {firstDayLastMonth} to {today} deleted...")
     
     for dates in dateRanges:
         updateLaeDataTables(start=dates["start"], end=dates["end"])
@@ -61,19 +79,3 @@ def addLaeSpecificDateRange(start: str, end: str) -> None:
 
     updateLaeDataTables(start, end)
     print(f"Lae Data from {start} to {end} added...")
-
-def getUniqueCustomersDf(receiptsDf: pd.DataFrame) -> pd.DataFrame:
-    """ Gets all data from unique customers.
-
-    Parameteres
-        receiptsDf {panda.DataFrame} Receipts Payroll DataFrame.
-
-    """
-
-    customersIds = receiptsDf["customer_id"].tolist()
-    customers = Customers()
-    customersJson = customers.getByIds(customersIds)
-    customerDf = pd.DataFrame(customersJson)
-    customersIdsNoDuplicates = customerDf.drop_duplicates("customer_id").reset_index(drop=True)
-
-    return customersIdsNoDuplicates

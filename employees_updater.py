@@ -1,17 +1,15 @@
 from data.repository.calls.helpers import generateDateTimeUpdated
 from data.repository.flask_api.employees import *
-import logging
-
-logger = logging.getLogger(__name__)
-
-print("-"*50)
+import os, sys
 
 try:
+    print("-"*50)
     updateEmployeesTable()
 except Exception as e:
-    logger.error(f"Error updating employees: {str(e)}")
+    print(f"Error updating receipts in employees_updater.py: {str(e)}.")
+    os.system(f'echo ""$PYTHON $SCRIPTS/employee_updater.py >> $LOGS/employees.log 2>&1" | at now + 5 minutes"')
+    sys.exit(1)
 finally:
     date, time = generateDateTimeUpdated()
     print(f"\n{date} {time}\n")
-
-print("-"*50)
+    print("-"*50)

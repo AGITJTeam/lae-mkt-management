@@ -35,6 +35,11 @@ def updateReceiptsYesterdayRecords() -> None:
     lastDateFromTable = receipts.getLastRecord()[0]["date"]
     date = lastDateFromTable.date().isoformat()
     receiptsJson = receipts.getBetweenDates(start=date, end=date)
+    
+    if len(receiptsJson) == 0:
+        print(f"No data from {date} to update.")
+        raise Exception("No data found")
+    
     receiptsDf = pd.DataFrame(receiptsJson)
     receiptsIds = receiptsDf["id_receipt_hdr"].tolist()
     receipts.deleteByIds(receiptsIds)

@@ -19,6 +19,8 @@ def updateCustomersPreviousRecords() -> None:
     """ Generates last week customers ids and updates Customers table. """
 
     receipts = ReceiptsPayroll()
+    customers = Customers()
+    
     lastDateFromTable = receipts.getLastRecord()[0]["date"]
     lastDate = lastDateFromTable.date()
     dates = generateOneWeekDateRange(lastDate)
@@ -28,7 +30,6 @@ def updateCustomersPreviousRecords() -> None:
     receiptsNoDuplicates = receiptsDf.drop_duplicates("customer_id")
     customersIds = receiptsNoDuplicates["customer_id"].tolist()
 
-    customers = Customers()
     customers.deleteByIds(customersIds)
     print(f"Customers data from {dates["start"]} to {dates["end"]} deleted...")
     updateCustomersTable(receiptsNoDuplicates)

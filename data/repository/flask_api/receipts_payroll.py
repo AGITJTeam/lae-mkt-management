@@ -27,15 +27,24 @@ def updateReceiptsPayrollPreviousRecords() -> None:
     """
 
     receipts = ReceiptsPayroll()
+    
     lastDateFromTable = receipts.getLastRecord()[0]["date"]
     lastDate = lastDateFromTable.date()
-    
     dateRanges = generateTwoMonthsDateRange(lastDate)
-    start = dateRanges[0]["start"]
-    end = dateRanges[1]["end"]  
-
-    receipts.deleteLastMonthData(start, end)
-    print(f"Receipts Payroll data from {start} to {end} deleted...")
+    
+    dataAvailable = any(
+        not generateReceiptsPayrollDf(date["start"], date["end"]).empty
+        for date in dateRanges
+    )
+    
+    if not dataAvailable:
+        print(f"No data from {dateRanges[0]['start']} to {dateRanges[0]['end']} to update.")
+        raise Exception("No data found")
+    
+    firstDayLastMonth = dateRanges[0]["start"]
+    yesterday = dateRanges[1]["end"]
+    receipts.deleteLastMonthData(firstDayLastMonth, yesterday)
+    print(f"Receipts Payroll data from {firstDayLastMonth} to {yesterday} deleted...")
 
     for date in dateRanges:
         updateReceiptsPayrollTable(date["start"], date["end"])
@@ -49,5 +58,6 @@ def addReceiptsPayrollSpecificDateRange(start: str, end: str) -> None:
         - start {str} beginning of the range.
         - end {str} end of the range.
     """
+
     updateReceiptsPayrollTable(start, end)
     print(f"Receipts Payroll data from {start} to {end} added...")

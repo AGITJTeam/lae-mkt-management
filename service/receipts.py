@@ -44,6 +44,7 @@ def getReceiptById(receiptPayroll: pd.DataFrame) -> list[ReceiptModel]:
         receipt = getReceipt(id)
 
         if not receipt:
+            print(f"- ID {id} searched in LAE API not found.")
             continue
 
         receiptModel = ReceiptModel(**receipt)
