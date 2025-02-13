@@ -58,7 +58,10 @@ def filterForColumn(df: pd.DataFrame) -> pd.DataFrame:
         "Imm_inv": "Immigration"
     }
 
-    filteredForDf = { key: df[df["for"].str.contains(value)].copy() for key, value in FILTERS.items() }
+    filteredForDf = { key: df[df["for"].str.contains(pat=value, na=False)].copy() for key, value in FILTERS.items() }
+    for key in filteredForDf:
+        filteredForDf[key] = filteredForDf[key][~filteredForDf[key]["for"].str.contains("MK|Commercial", na=False)]
+    
     filteredForDf["NB_inv"]["gi"] = 0
     rangeDf = pd.concat(filteredForDf.values(), ignore_index=True)
 
