@@ -8,6 +8,7 @@ from data.repository.calls.webquotes_repo import Webquotes
 # from data.repository.calls.policies_details_repo import PoliciesDetails
 from data.repository.calls.compliance_repo import Compliance
 from data.repository.stats_dash.dash_carriers import dashCarriers
+from data.repository.stats_dash.dash_final_sales import dashFinalSales
 from data.repository.stats_dash.dash_offices import dashOffices
 from data.repository.stats_dash.dash_projections import dashProjections
 from data.repository.stats_dash.gmb_calls import generateGmbCallsReport
@@ -393,6 +394,20 @@ def getYelpCallsReport():
     else:
         dictReport = yelpReport.to_dict(orient="records")
         return jsonify(dictReport), 200
+
+@app.route("/StatsDash/FinalSales", methods=["GET"])
+@jwt_required()
+def processFinalSales():
+    start = request.args.get("startAt")
+    end = request.args.get("endAt")
+
+    try:
+        finalSales = dashFinalSales(start, end)
+    except Exception:
+        logger.error(f"An error occurred while processing the Final Sales data")
+        return jsonify({}), 500
+    else:
+        return jsonify({"finalSales": finalSales}), 200
 
 # ========================= FLASK EXECUTER =======================
 
