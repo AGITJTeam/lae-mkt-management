@@ -27,7 +27,7 @@ from flask_jwt_extended import create_access_token, jwt_required, JWTManager
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from dotenv import load_dotenv
-import os, logging
+import logging
 
 # ===================== FLASK CONFIGURATION ======================
 

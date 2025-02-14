@@ -8,7 +8,7 @@ try:
     addReceiptsPayrollTodayRecords()
 except Exception as e:
     print(f"Error updating receipts in receipts_updater.py: {str(e)}.")
-    os.system(f'echo ""$PYTHON $SCRIPTS/receipts_payroll_updater.py >> $LOGS/receipts_payroll.log 2>&1" | at now + 5 minutes"')
+    os.system('echo "$PYTHON $SCRIPTS/receipts_payroll_updater.py >> $LOGS/receipts_payroll.log 2>&1" | at now + 5 minutes')
     sys.exit(1)
 finally:
     date, time = generateDateTimeUpdated()

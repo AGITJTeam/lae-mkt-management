@@ -24,7 +24,7 @@ def addReceiptsTodayRecords() -> None:
     receiptsPayrollDf = generateReceiptsPayrollDf(start=today, end=today)
     rpNoDuplicates = receiptsPayrollDf.drop_duplicates("id_receipt_hdr")
     updateReceiptsTable(rpNoDuplicates)
-    print(f"Receipts Payroll data from {today} added...")
+    print(f"Receipts data from {today} added...")
 
 def updateReceiptsYesterdayRecords() -> None:
     """ Update Receipts yesterday records. """

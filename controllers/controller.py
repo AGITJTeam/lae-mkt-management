@@ -58,6 +58,7 @@ def getReceiptsPayroll(start: str, end: str) -> dict | None:
     else:
         if rpRequest.status_code != rq.codes.ok:
             logger.error(f"Status code {rpRequest.status_code} in getReceiptsPayroll from {start} to {end}.")
+            print(f"response when status code is not ok at 7am: {rpRequest.json()}")
         return rpRequest.json()
 
 def getCustomer(id: int) -> dict | None:
