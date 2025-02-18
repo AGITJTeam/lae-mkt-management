@@ -20,7 +20,7 @@ def generateWebquotesDf(start: str, end: str) -> pd.DataFrame:
     webquotesJson = getWebquotes(start, end)
 
     if not webquotesJson:
-        raise Exception("No webquotes found")
+        raise Exception(f"No webquotes found from {start} to {end}")
 
     justWebquotes = webquotesJson["data"]
 

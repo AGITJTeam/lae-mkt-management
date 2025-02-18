@@ -4,10 +4,12 @@ import os, sys
 
 try:
     print("-"*50)
-    updateReceiptsPayrollPreviousRecords()
     addReceiptsPayrollTodayRecords()
+    updateReceiptsPayrollPreviousRecords()
+    
+    os.system('echo "$PYTHON $SCRIPTS/customers_updater.py >> $LOGS/customers.log 2>&1" | at now + 3 minutes')
 except Exception as e:
-    print(f"Error updating receipts in receipts_updater.py: {str(e)}.")
+    print(f"Error updating receipts in receipts_payroll_updater.py: {str(e)}.")
     os.system('echo "$PYTHON $SCRIPTS/receipts_payroll_updater.py >> $LOGS/receipts_payroll.log 2>&1" | at now + 5 minutes')
     sys.exit(1)
 finally:

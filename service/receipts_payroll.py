@@ -19,7 +19,7 @@ def generateReceiptsPayrollDf(start: str, end: str) -> pd.DataFrame:
     receiptsJson = getReceiptsPayroll(start, end)
 
     if not receiptsJson:
-        raise Exception("No receipt payroll found")
+        raise Exception(f"No receipt payroll found from {start} to {end}")
 
     for receipt in receiptsJson:
         for_value = receipt["for"]

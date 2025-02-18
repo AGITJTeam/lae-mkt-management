@@ -8,7 +8,7 @@ LAE_URL = "http://50.18.96.65:8080"
 ADRIANAS_URL = "https://app.adrianas.com/api"
 SECURE2_URL = "http://secure2.saashr.com/ta/rest/v1"
 COMPANY_SHORTNAME = "AGI04"
-TIMEOUT = 30
+TIMEOUT = 60
 
 def getEmployees() -> dict | None:
     """ Call Employees endpoint from LAE to get employee data.
@@ -58,7 +58,9 @@ def getReceiptsPayroll(start: str, end: str) -> dict | None:
     else:
         if rpRequest.status_code != rq.codes.ok:
             logger.error(f"Status code {rpRequest.status_code} in getReceiptsPayroll from {start} to {end}.")
-            print(f"response when status code is not ok at 7am: {rpRequest.json()}")
+            print(f"response text: {rpRequest.text}")
+            print(f"response content: {rpRequest.content}")
+            return {}
         return rpRequest.json()
 
 def getCustomer(id: int) -> dict | None:
@@ -85,6 +87,9 @@ def getCustomer(id: int) -> dict | None:
     else:
         if customersRequest.status_code != rq.codes.ok:
             logger.error(f"Error fetching customer in getCustomer with id {id}. Response status {customersRequest.status_code}")
+            print(f"response text: {customersRequest.text}")
+            print(f"response content: {customersRequest.content}")
+            return {}
         return customersRequest.json()
 
 def getPoliciesDetails(id: int) -> rq.Response:
@@ -183,6 +188,9 @@ def getWebquotes(start: str, end: str) -> dict | None:
     else:
         if wqRequest.status_code != rq.codes.ok:
             logger.error(f"Status code {wqRequest.status_code} in getWebquotes from {start} to {end}.")
+            print(f"response text: {wqRequest.text}")
+            print(f"response content: {wqRequest.content}")
+            return {}
         return wqRequest.json()
 
 def getDynamicForm(start: str, end: str) -> dict | None:
@@ -248,6 +256,9 @@ def getReceipt(id: int) -> dict | None:
     else:
         if receiptsRequest.status_code != rq.codes.ok:
             logger.error(f"Error fetching receipt in getReceipt with id {id}. Response status {receiptsRequest.status_code}")
+            print(f"response text: {receiptsRequest.text}")
+            print(f"response content: {receiptsRequest.content}")
+            return {}
         return receiptsRequest.json()
 
 def fetchAgiReports(reportId: int, username: str, password: str) -> rq.Response | None:
