@@ -7,7 +7,7 @@ try:
     updateLaeDataTablesPreviousRecords()
 except Exception as e:
     print(f"Error updating lae data in lae_updater.py: {str(e)}.")
-    os.system(f'echo ""$PYTHON $SCRIPTS/lae_updater.py >> $LOGS/lae.log 2>&1" | at now + 5 minutes"')
+    os.system('echo "$PYTHON $SCRIPTS/lae_updater.py >> $LOGS/lae.log 2>&1" | at now + 5 minutes')
     sys.exit(1)
 finally:
     date, time = generateDateTimeUpdated()
