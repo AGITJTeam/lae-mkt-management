@@ -5,5 +5,5 @@ def updateEmployeesTable() -> None:
     """ Updates Employees table in db. """
 
     employeesDf = generateEmployeesDf()
-    postDataframeToDb(employeesDf, "employees", "replace")
+    postDataframeToDb(data=employeesDf, table="employees", mode="replace", filename="flask_api.ini")
     print("Employees table generated and posted...")

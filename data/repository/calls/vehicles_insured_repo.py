@@ -12,4 +12,4 @@ class VehiclesInsured(IVehiclesInsured):
         values = ", ".join(str(id) for id in ids)
         query = f"DELETE FROM vehicles_insured WHERE id_vehicle_insured IN ({values})"
 
-        return executeOperation(query)
+        return executeOperation(query=query, filename="flask_api.ini")

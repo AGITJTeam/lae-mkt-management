@@ -394,7 +394,7 @@ def postOtReport(reportName: str, dashUsername: str) -> None:
     }
 
     otReportDf = pd.DataFrame(data=[data])
-    postDataframeToDb(otReportDf, "ot_reports", "append", "k_db.ini")
+    postDataframeToDb(data=otReportDf, table="ot_reports", mode="append", filename="k_db.ini")
 
 def getLastOtReportId() -> int:
     """ Once the OT Report is created, get its id.
@@ -445,4 +445,4 @@ def postOtReportSales(df: pd.DataFrame, otReportId: int, table: str) -> Response
 
     df["id_ot_report"] = otReportId
 
-    postDataframeToDb(df, table, "append", "k_db.ini")
+    postDataframeToDb(data=df, table=table, mode="append", filename="k_db.ini")

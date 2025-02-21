@@ -17,6 +17,7 @@ from data.repository.stats_dash.out_of_state import outOfState
 from data.repository.stats_dash.top_carriers import topCarriers
 from data.repository.stats_dash.dash_os import dashOs
 from data.repository.stats_dash.yelp_calls import generateYelpCallsReport
+from data.repository.stats_dash.dialpad_calls import countDialpadCallsByDateRange
 from service.dynamic_form import generateDynamicFormDf
 from logs.config import setupLogging
 from config import Config
@@ -400,14 +401,35 @@ def getYelpCallsReport():
 def processFinalSales():
     start = request.args.get("startAt")
     end = request.args.get("endAt")
+    yesterday = request.args.get("yesterday")
 
     try:
-        finalSales = dashFinalSales(start, end)
+        yesterdayData, lastWeekData = dashFinalSales(start, end, yesterday)
     except Exception:
         logger.error(f"An error occurred while processing the Final Sales data")
         return jsonify({}), 500
     else:
-        return jsonify({"finalSales": finalSales}), 200
+        return jsonify({
+            "yesterdayData": yesterdayData,
+            "lastWeekData": lastWeekData
+        }), 200
+
+@app.route("/CountDialpadCalls", methods=["GET"])
+@jwt_required()
+def countDialpadCalls():
+    start = request.args.get("startAt")
+    end = request.args.get("endAt")
+
+    try:
+        allCalls, uniqueCalls = countDialpadCallsByDateRange(start, end)
+    except Exception:
+        logger.error(f"An error occurred while getting the Dialpad Calls")
+        return jsonify({}), 500
+    else:
+        return jsonify({
+            "allCalls": allCalls,
+            "uniqueCalls": uniqueCalls
+        }), 200
 
 # ========================= FLASK EXECUTER =======================
 

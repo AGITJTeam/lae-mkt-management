@@ -20,7 +20,7 @@ class LaeData(ILaeData):
 
         query = f"SELECT * FROM lae_data WHERE date BETWEEN \'{start} 00:00:00.000000\' AND \'{end} 23:59:00.000000\';"
 
-        return getData(query)
+        return getData(query=query, filename="flask_api.ini")
     
     def deleteLastMonthData(self, start, end):
         """ execute DELETE operation that erase rows between a date
@@ -32,4 +32,4 @@ class LaeData(ILaeData):
         """
         query = f"DELETE FROM lae_data WHERE date BETWEEN \'{start} 00:00:00.000000\' AND \'{end} 23:59:00.000000\';"
 
-        executeOperation(query)
+        return executeOperation(query=query, filename="flask_api.ini")

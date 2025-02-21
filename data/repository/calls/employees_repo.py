@@ -14,4 +14,4 @@ class Employees(IEmployees):
 
         query = "SELECT * FROM employees;"
 
-        return getData(query)
+        return getData(query=query, filename="flask_api.ini")

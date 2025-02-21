@@ -8,11 +8,12 @@ import psycopg2, logging
 
 logger = logging.getLogger(__name__)
 
-def getData(query: str, filename="main_data.ini") -> list[dict] | None:
+def getData(query: str, filename: str) -> list[dict] | None:
     """ Handle GET operation from Python Psycopg to Postgres database.
 
     Parameters
         - query {str} the Sql query.
+        - filename {str} the name of the .ini file to get the connection.
 
     Returns
         {list[dict] | None} the result of the query in python objects or
@@ -38,16 +39,15 @@ def getData(query: str, filename="main_data.ini") -> list[dict] | None:
         cursor.close()
         conn.close()
 
-def executeOperation(query: str, params: tuple = None , filename: str = "main_data.ini") -> bool | None:
+def executeOperation(query: str, filename: str, params: tuple = None) -> bool | None:
     """ Handle other Sql operations from Python Psycopg to Postgres
     database.
 
     Parameters
         - query {str} the Sql query.
+        - filename {str} the name of the .ini file to get the connection.
         - params {tuple} the parameters to be used in the query. Default
         value is None and it can be a tuple of values.
-        - filename {str} the name of the .ini file to get the connection.
-        Default value is 'main_data.ini'. and it can be 'k_db.ini'.
 
     Returns
         {bool | None} bool after execution or None if exception raise
@@ -77,7 +77,7 @@ def executeOperation(query: str, params: tuple = None , filename: str = "main_da
         cursor.close()
         conn.close()
 
-def postDataframeToDb(data: DataFrame, table: str, mode: str, filename: str = "main_data.ini") -> bool | None:
+def postDataframeToDb(data: DataFrame, table: str, mode: str, filename: str) -> bool | None:
     """ Handle POST operation from Python SqlAlchemy to PostgreSql database.
 
     Parameters
@@ -86,7 +86,6 @@ def postDataframeToDb(data: DataFrame, table: str, mode: str, filename: str = "m
         - mode {str} mode to add data to table: 'append' to add data to
         end of table, 'replace' to replace all data with new one.
         - filename {str} the name of the .ini file to get the connection.
-        Default value is 'main_data.ini'. and it can be 'k_db.ini'.
     
     Returns
         bool | None} bool after execution or None if exception raise

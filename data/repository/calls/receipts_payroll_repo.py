@@ -22,7 +22,7 @@ class ReceiptsPayroll(IReceiptsPayroll):
 
         query = f"SELECT * FROM receipts_payroll WHERE date BETWEEN \'{start} 00:00:00.000000\' AND \'{end} 23:59:00.000000\';"
 
-        return getData(query)
+        return getData(query=query, filename="flask_api.ini")
 
     def getByCustomerId(self, id):
         """ {list[dict]} get receipt by customer id.
@@ -33,14 +33,14 @@ class ReceiptsPayroll(IReceiptsPayroll):
 
         query = f"SELECT * FROM receipts_payroll WHERE customer_id = {id};"
 
-        return getData(query)
+        return getData(query=query, filename="flask_api.ini")
     
     def getLastRecord(self):
         """ {list[dict]} get the last date from 'date' column. """
 
         query = "SELECT date FROM receipts_payroll ORDER BY date DESC LIMIT 1;"
 
-        return getData(query)
+        return getData(query=query, filename="flask_api.ini")
     
     def deleteLastMonthData(self, start, end):
         """ execute DELETE operation that erase rows between a
@@ -53,4 +53,4 @@ class ReceiptsPayroll(IReceiptsPayroll):
         
         query = f"DELETE FROM receipts_payroll WHERE date BETWEEN \'{start} 00:00:00.000000\' AND \'{end} 23:59:00.000000\';"
 
-        executeOperation(query)
+        return executeOperation(query=query, filename="flask_api.ini")

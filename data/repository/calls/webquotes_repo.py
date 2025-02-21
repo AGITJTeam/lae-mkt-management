@@ -21,7 +21,7 @@ class Webquotes(IWebquotes):
         """
 
         query = f"SELECT name, email, phone, submission_date, status, agent, referer, campaign_id FROM webquotes WHERE submission_date BETWEEN \'{start}\' AND \'{end}\';"
-        webquotes = getData(query)
+        return getData(query=query, filename="flask_api.ini")
         parsedWebquoteDate = parseWebquotesSubmissionDate(webquotes)
 
         return parsedWebquoteDate
@@ -36,7 +36,7 @@ class Webquotes(IWebquotes):
         """
 
         query = f"SELECT name, email, phone, submission_date, birthday, model_year, make, model, status, agent, state, marital_status, gender, referer, campaign_id FROM webquotes WHERE submission_date BETWEEN \'{start}\' AND \'{end}\';"
-        webquotes = getData(query)
+        webquotes = getData(query=query, filename="flask_api.ini")
         parsedWebquoteDate = parseWebquotesSubmissionDate(webquotes)
 
         return parsedWebquoteDate
@@ -46,7 +46,7 @@ class Webquotes(IWebquotes):
 
         query = "SELECT submission_date FROM webquotes ORDER BY submission_date DESC LIMIT 1;"
 
-        return getData(query)
+        return getData(query=query, filename="flask_api.ini")
     
     def deleteLastMonthData(self, start, end):
         """ execute DELETE operation that erase rows between a
@@ -59,4 +59,4 @@ class Webquotes(IWebquotes):
 
         query = f"DELETE FROM webquotes WHERE submission_date BETWEEN \'{start}\' AND \'{end}\';"
 
-        executeOperation(query)
+        return executeOperation(query=query, filename="flask_api.ini")

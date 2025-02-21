@@ -12,7 +12,7 @@ def updateReceiptsPayrollTable(start: str, end: str) -> None:
     """
 
     receiptsDf = generateReceiptsPayrollDf(start, end)
-    postDataframeToDb(receiptsDf, "receipts_payroll", "append")
+    postDataframeToDb(data=receiptsDf, table="receipts_payroll", mode="append", filename="flask_api.ini")
 
 def addReceiptsPayrollTodayRecords() -> None:
     """ Generates today's date to add to Receipts Payroll table. """
@@ -38,8 +38,7 @@ def updateReceiptsPayrollPreviousRecords() -> None:
     )
     
     if not dataAvailable:
-        print(f"No data from {dateRanges[0]['start']} to {dateRanges[0]['end']} to update.")
-        raise Exception("No data found")
+        raise Exception(f"No data from {dateRanges[0]['start']} to {dateRanges[0]['end']} to update.")
     
     firstDayLastMonth = dateRanges[0]["start"]
     yesterday = dateRanges[1]["end"]

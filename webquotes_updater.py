@@ -8,7 +8,6 @@ LOGS="/home/berenice/Documents/cron-logs"
 
 try:
     print("-"*50)
-    addWebquotesTodayRecords()
     updateWebquotesPreviousRecords()
 
     os.system(f'echo "{PYTHON} {SCRIPTS}/receipts_payroll_updater.py >> {LOGS}/receipts_payroll.log 2>&1" | at now + 3 minutes')

@@ -15,7 +15,7 @@ class Customers(ICustomers):
     def getAllData(self):
         """ {list[dict]} get all customers in database. """
         query = "SELECT * FROM customers;"
-        return getData(query)
+        return getData(query=query, filename="flask_api.ini")
 
     def getById(self, id):
         """ {list[dict]} get customer by customer id.
@@ -26,7 +26,7 @@ class Customers(ICustomers):
 
         query = f"SELECT DISTINCT * FROM customers WHERE customer_id = {id};"
 
-        return getData(query)
+        return getData(query=query, filename="flask_api.ini")
     
     def getByIds(self, ids):
         """ {list[dict]} get customers by a list of it's ids.
@@ -38,7 +38,7 @@ class Customers(ICustomers):
         values = ", ".join(str(id) for id in ids)
         query = f"SELECT DISTINCT * FROM customers WHERE customer_id IN ({values});"
 
-        return getData(query)
+        return getData(query=query, filename="flask_api.ini")
     
     def deleteByIds(self, ids):
         """ Delete customers by its ids.
@@ -50,4 +50,4 @@ class Customers(ICustomers):
         values = ", ".join(str(id) for id in ids)
         query = f"DELETE FROM customers WHERE customer_id IN ({values})"
 
-        return executeOperation(query)
+        return executeOperation(query=query, filename="flask_api.ini")

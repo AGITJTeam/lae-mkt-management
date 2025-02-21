@@ -78,7 +78,7 @@ class Compliance(ICompliance):
         """
         params = (fullname, username, password, email, position, location, hired)
 
-        return executeOperation(query, params, "k_db.ini")
+        return executeOperation(query=query, filename="k_db.ini", params=params)
 
     def getOtReportsNames(self):
         """ Retrieve all ot reports names in descending order.
@@ -150,7 +150,7 @@ class Compliance(ICompliance):
 
         query = f"DELETE FROM ot_reports WHERE id = {id};"
 
-        return executeOperation(query, filename="k_db.ini")
+        return executeOperation(query=query, filename="k_db.ini")
     
     def getNumberOfOtReports(self):
         """ Retrieve the number of ot reports in the database.

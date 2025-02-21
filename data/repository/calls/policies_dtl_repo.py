@@ -21,7 +21,7 @@ class PoliciesDtl(IPoliciesDtl):
 
         query = f"SELECT * FROM policies_dtl WHERE id_policies_dtl == {id};"
 
-        return getData(query)
+        return getData(query=query, filename="flask_api.ini")
     
     def getByPoliciesHdrId(self, id):
         """ {list[dict]} get policie dtl by policie hrd id.
@@ -32,7 +32,7 @@ class PoliciesDtl(IPoliciesDtl):
 
         query = f"SELECT * FROM policies_dtl WHERE id_policies_hrd == {id};"
 
-        return getData(query)
+        return getData(query=query, filename="flask_api.ini")
         
     def getByCustomerId(self, id):
         """ {list[dict]} get policie dtl by customer id.
@@ -43,7 +43,7 @@ class PoliciesDtl(IPoliciesDtl):
 
         query = f"SELECT * FROM policies_dtl WHERE customer_id == {id};"
 
-        return getData(query)
+        return getData(query=query, filename="flask_api.ini")
         
     def getByProductId(self, id):
         """ {list[dict]} get policie dtl by product id.
@@ -53,7 +53,7 @@ class PoliciesDtl(IPoliciesDtl):
         """
         query = f"SELECT * FROM policies_dtl WHERE id_product == {id};"
 
-        return getData(query)
+        return getData(query=query, filename="flask_api.ini")
 
     def deleteByIds(self, ids):
         """ Delete customers by its ids.
@@ -65,4 +65,4 @@ class PoliciesDtl(IPoliciesDtl):
         values = ", ".join(str(id) for id in ids)
         query = f"DELETE FROM policies_dtl WHERE customer_id IN ({values})"
 
-        return executeOperation(query)
+        return executeOperation(query=query, filename="flask_api.ini")

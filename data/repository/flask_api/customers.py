@@ -13,7 +13,7 @@ def updateCustomersTable(receiptsDf: pd.DataFrame) -> None:
     """
 
     customersDf = generateCustomersDf(receiptsDf)
-    postDataframeToDb(customersDf, "customers", "append")
+    postDataframeToDb(data=customersDf, table="customers", mode="append", filename="flask_api.ini")
 
 def updateCustomersPreviousRecords() -> None:
     """ Generates last week customers ids and updates Customers table. """

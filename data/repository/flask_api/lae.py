@@ -29,7 +29,7 @@ def updateLaeDataTables(start: str, end: str) -> None:
     newCustomers = transformCustomersDfForLaeData(customersDf)
     laeData = generateLaeData(newReceipts, newCustomers)
     
-    postDataframeToDb(laeData, "lae_data", "append")
+    postDataframeToDb(data=laeData, table="lae_data", mode="append", filename="flask_api.ini")
     print("Lae Data table generated and posted...")
 
 def getUniqueCustomersDf(receiptsDf: pd.DataFrame) -> pd.DataFrame:

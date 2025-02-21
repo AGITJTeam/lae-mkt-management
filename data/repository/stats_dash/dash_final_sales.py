@@ -1,37 +1,46 @@
 from data.repository.calls.compliance_repo import Compliance
 from service.receipts_for_dash import fetchReceipts
-from datetime import datetime
+from datetime import datetime, timedelta
 import pandas as pd
 import numpy as np
 import logging
 
 logger = logging.getLogger(__name__)
 
-def dashFinalSales(start: str, end: str) -> list[dict] | None:
+def dashFinalSales(start: str, end: str, yesterday: str) -> list[dict] | None:
     """ Generates the company sales and total sums to be shown in
     the Production by Office page.
 
     Parameters
         - start {str} the beginning of the date range.
         - end {str} the end of the date range.
+        - yesterday {str} yesterday's date.
 
     Returns
         {list[dict] | None} the data that will be
         shown or None if exception raise an error.
     """
 
-    compliance = Compliance()
-
     try:
-        companySales = fetchReceipts(start, end)
-        offices = compliance.getRegionalsByOffices()
-
-        companySalesProcessed = processDashOffices(companySales, offices)
+        yesterdayData = getDataRange(yesterday, yesterday)
+        lastWeekData = getDataRange(start, end)
     except Exception as e:
         logger.error(f"Error generating data in dashFinalSales: {str(e)}")
         raise
     else:
-        return companySalesProcessed
+        return yesterdayData, lastWeekData
+
+def getDataRange(start: str, end: str = None) -> list[dict] | None:
+    compliance = Compliance()
+    
+    offices = compliance.getRegionalsByOffices()
+    
+    if end == None:
+        companySales = fetchReceipts(start, start)
+    else:
+        companySales = fetchReceipts(start, end)
+    
+    return processDashOffices(companySales, offices)
 
 def processDashOffices(companySalesDf: pd.DataFrame, offices: list[dict]) -> list[dict]:
     """ Transform the company sales and agi reports to make it ready for the Production

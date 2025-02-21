@@ -12,7 +12,7 @@ def updateWebquotesTables(start: str, end: str) -> None:
     """
 
     webquotesDf = generateWebquotesDf(start, end)
-    postDataframeToDb(webquotesDf, "webquotes", "append")
+    postDataframeToDb(data=webquotesDf, table="webquotes", mode="append", filename="flask_api.ini")
 
 def addWebquotesTodayRecords() -> None:
     """ Generates today's date to add to Webquotes table. """
@@ -35,8 +35,7 @@ def updateWebquotesPreviousRecords() -> None:
     )
     
     if not dataAvailable:
-        print(f"No data from {dateRanges[0]['start']} to {dateRanges[0]['end']} to update.")
-        raise Exception("No data found")
+        raise Exception(f"No data from {dateRanges[0]['start']} to {dateRanges[0]['end']} to update.")
 
     firstDayLastMonth = dateRanges[0]["start"]
     yesterday = dateRanges[1]["end"]
