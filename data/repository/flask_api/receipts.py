@@ -3,7 +3,7 @@ from data.repository.calls.receipts_payroll_repo import ReceiptsPayroll
 from data.repository.calls.receipts_repo import Receipts
 from service.receipts import generateReceiptsDf
 from service.receipts_payroll import generateReceiptsPayrollDf
-from datetime import datetime
+from datetime import timedelta
 import pandas as pd
 
 def updateReceiptsTable(receiptsPayrollDf: pd.DataFrame) -> None:
@@ -15,42 +15,30 @@ def updateReceiptsTable(receiptsPayrollDf: pd.DataFrame) -> None:
     """
 
     receiptsDf = generateReceiptsDf(receiptsPayrollDf)
-    postDataframeToDb(receiptsDf, "receipts", "append")
+    postDataframeToDb(data=receiptsDf, table="receipts", mode="append", filename="flask_api.ini")
 
-def addReceiptsTodayRecords() -> None:
-    """ Generates today's date to add to Receipts table. """
-
-    today = datetime.today().date().isoformat()
-    receiptsPayrollDf = generateReceiptsPayrollDf(start=today, end=today)
-    rpNoDuplicates = receiptsPayrollDf.drop_duplicates("id_receipt_hdr")
-    updateReceiptsTable(rpNoDuplicates)
-    print(f"Receipts data from {today} added...")
-
-def updateReceiptsYesterdayRecords() -> None:
+def updateReceiptsPreviousRecords() -> None:
     """ Update Receipts yesterday records. """
 
     receiptsPayroll = ReceiptsPayroll()
     receipts = Receipts()
 
-    lastDateFromTable = receipts.getLastRecord()[0]["date"]
-    date = lastDateFromTable.date().isoformat()
-    receiptsJson = receipts.getBetweenDates(start=date, end=date)
-    
-    if len(receiptsJson) == 0:
-        print(f"No data from {date} to update.")
-        raise Exception("No data found")
-    
-    receiptsDf = pd.DataFrame(receiptsJson)
-    receiptsIds = receiptsDf["id_receipt_hdr"].tolist()
-    receipts.deleteByIds(receiptsIds)
+    lastDateFromTable = receiptsPayroll.getLastRecord()[0]["date"]
+    todayDate = lastDateFromTable.date()
+    yesterdayDate = todayDate - timedelta(days=1)
+    today = todayDate.isoformat()
+    yesterday = yesterdayDate.isoformat()
 
-    receiptsPayrollJson = receiptsPayroll.getBetweenDates(start=date, end=date)
+    receiptsPayrollJson = receiptsPayroll.getBetweenDates(start=yesterday, end=today)
     receiptsPayrollDf = pd.DataFrame(receiptsPayrollJson)
-    rpNoDuplicates = receiptsPayrollDf.drop_duplicates("id_receipt_hdr")
+    receiptsPayrollDf.drop_duplicates(subset=["id_receipt_hdr"], inplace=True)
+    receiptsIds = receiptsPayrollDf["id_receipt_hdr"].tolist()
+    
+    receipts.deleteByIds(receiptsIds)
+    print(f"Receipts data from {yesterday} to {today} deleted...")
 
-    print(f"Receipts data from {date} to {date} deleted...")
-    updateReceiptsTable(rpNoDuplicates)
-    print(f"Receipts data from {date} to {date} updated...")
+    updateReceiptsTable(receiptsPayrollDf)
+    print(f"Receipts data from {yesterday} to {today} updated...")
 
 def addReceiptsSpecificRange(start: str, end: str) -> None:
     """ Add data to Receipts table in db with an specific date range.
