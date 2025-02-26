@@ -14,6 +14,7 @@ from data.repository.stats_dash.dash_projections import dashProjections
 from data.repository.stats_dash.gmb_calls import generateGmbCallsReport
 from data.repository.stats_dash.ot_run import otRun
 from data.repository.stats_dash.out_of_state import outOfState
+from data.repository.stats_dash.pvc import dashPvc
 from data.repository.stats_dash.top_carriers import topCarriers
 from data.repository.stats_dash.dash_os import dashOs
 from data.repository.stats_dash.yelp_calls import generateYelpCallsReport
@@ -267,6 +268,38 @@ def delOtReport(id: int):
     except Exception as e:
         return jsonify({"error": f"An error occurred while deleting the report: {str(e)}"}), 500
 
+@app.route("/StatsDash/FinalSales", methods=["GET"])
+@jwt_required()
+def processFinalSales():
+    start = request.args.get("startAt")
+    end = request.args.get("endAt")
+    yesterday = request.args.get("yesterday")
+
+    try:
+        yesterdayData, lastWeekData = dashFinalSales(start, end, yesterday)
+    except Exception:
+        logger.error(f"An error occurred while processing the Final Sales data")
+        return jsonify({}), 500
+    else:
+        return jsonify({
+            "yesterdayData": yesterdayData,
+            "lastWeekData": lastWeekData
+        }), 200
+
+@app.route("/StatsDash/Pvc", methods=["GET"])
+@jwt_required()
+def processPvc():
+    try:
+        yesterdayData, lastWeekData = dashPvc()
+    except Exception:
+        logger.error(f"An error occurred while processing the Pvc data")
+        return jsonify({}), 500
+    else:
+        return jsonify({
+            "yesterdayData": yesterdayData,
+            "lastWeekData": lastWeekData
+        }), 200
+
 @app.route("/StatsDash/DashProjections", methods=["GET"])
 @jwt_required()
 def processDashProjections():
@@ -395,24 +428,6 @@ def getYelpCallsReport():
     else:
         dictReport = yelpReport.to_dict(orient="records")
         return jsonify(dictReport), 200
-
-@app.route("/StatsDash/FinalSales", methods=["GET"])
-@jwt_required()
-def processFinalSales():
-    start = request.args.get("startAt")
-    end = request.args.get("endAt")
-    yesterday = request.args.get("yesterday")
-
-    try:
-        yesterdayData, lastWeekData = dashFinalSales(start, end, yesterday)
-    except Exception:
-        logger.error(f"An error occurred while processing the Final Sales data")
-        return jsonify({}), 500
-    else:
-        return jsonify({
-            "yesterdayData": yesterdayData,
-            "lastWeekData": lastWeekData
-        }), 200
 
 @app.route("/CountDialpadCalls", methods=["GET"])
 @jwt_required()

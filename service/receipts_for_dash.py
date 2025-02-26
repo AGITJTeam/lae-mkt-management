@@ -77,8 +77,11 @@ def addEmailColumns(df: pd.DataFrame) -> pd.DataFrame:
         {pandas.DataFrame} resulting DataFrame.
     """
     employeesDf = employeesDfToLower()
+    df["usr"] = df["usr"].str.lower()
+    df["csr"] = df["csr"].str.lower()
 
     usernameAndEmail = { row["username"]: row["email_work"] for index, row in employeesDf.iterrows() }
+
     df["usr_email"] = df["usr"].map(usernameAndEmail).fillna("No Email")
     df["csr_email"] = df["csr"].map(usernameAndEmail).fillna("No Email")
 
