@@ -78,7 +78,7 @@ def getWebquotesFromDateRange():
 
     if start == None:
         return jsonify(webquotes.getPartialFromDateRange("2024-01-01", end))
-    
+
     return jsonify(webquotes.getPartialFromDateRange(start, end))
 
 @app.route("/Webquotes/Details", methods=["GET"])
@@ -87,7 +87,7 @@ def getWebquotesDetails():
     start = request.args.get("fromDate")
     end = request.args.get("toDate")
     webquotes = Webquotes()
-    
+
     return jsonify(webquotes.getWebquotesFromDateRange(start, end))
 
 @app.route("/DynamicForms", methods=["GET"])
@@ -290,6 +290,7 @@ def processFinalSales():
 @jwt_required()
 def processPvc():
     try:
+        yesterdayData = dashPvc()
         yesterdayData, lastWeekData = dashPvc()
     except Exception:
         logger.error(f"An error occurred while processing the Pvc data")
