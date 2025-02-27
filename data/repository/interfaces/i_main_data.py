@@ -3,5 +3,3 @@ class IMainData:
         pass
     def getAllDialpadCalls(self, start: str, end: str) -> list[dict]:
         pass
-    def getAgentRegionAndOffice(self) -> list[dict]:
-        pass

@@ -65,20 +65,3 @@ class MainData(IMainData):
         )
 
         return getData(query=query, filename="main_data.ini")
-
-    def getAgentRegionAndOffice(self):
-        """ Retrieve region, office and agents email.
-        
-        Returns
-            {list[dict]} agents region, office and email.
-        """
-        
-        query = (
-            "SELECT agentOffice.region AS regionName, agentOffice.name AS officeName, users.user_email AS usr_email "
-            'from "Aoffices" agentOffice '
-            "LEFT JOIN users_offices userOffices ON agentOffice.id = userOffices.office_id "
-            "LEFT JOIN users users ON userOffices.user_id = users.id "
-            "GROUP BY regionName, officeName, usr_email;"
-        )
-        
-        return getData(query=query, filename="main_data.ini")
