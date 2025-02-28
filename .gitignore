@@ -1,7 +1,9 @@
 venv/
 __pycache__/
 testing.py
+db/config/flask_api.ini
 db/config/main_data.ini
 db/config/k_db.ini
 .env
 controllers/start_date.txt
+/logs/app.log

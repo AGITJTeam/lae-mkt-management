@@ -52,18 +52,3 @@ def reorderColumns(df: DataFrame, columnsOrder: list[str]) -> DataFrame:
     """
 
     return df.loc[:, columnsOrder]
-
-def getCustomersIds(df: DataFrame) -> dict.values:
-    """ Get all ids from the Receipt DataFrame.
-
-    Parameters
-        - df {pandas.DataFrame} Receipts DataFrame.
-
-    Returns
-        {dict.values} the ids. It can be iterated as a list.
-    """
-
-    idsColumnValues = df["customer_id"]
-    dictCustomersIds = idsColumnValues.to_dict()
-    
-    return dictCustomersIds.values()

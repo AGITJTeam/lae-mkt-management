@@ -27,7 +27,7 @@ def getPoliciessWithReceiptId(ids: list) -> list:
     """ Iterate and save all policies in a list.
 
     Parameters
-        - ids {dict.values} ids to iterate.
+        - ids {list} ids to iterate.
 
     Returns
         {list[requests.Response]} list of customers.

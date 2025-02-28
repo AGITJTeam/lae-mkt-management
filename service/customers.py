@@ -1,11 +1,11 @@
 from service.columnsTransformations import custColumnsToDelete, custNewColumnsNames
-from service.helpers import deleteColumns, renameColumns, getCustomersIds
+from service.helpers import deleteColumns, renameColumns
 from data.models.customers_model import CustomerModel
 from controllers.controller import getCustomer
 import pandas as pd
 
 def generateCustomersDf(receipts: pd.DataFrame) -> pd.DataFrame:
-    """ Create Customers DataFrame with renamed columns with API response.
+    """ Create Customers DataFrame with API response.
 
     Parameters
         - receiptsDf {pandas.DataFrame} from which the ids will be obtained.
@@ -14,8 +14,8 @@ def generateCustomersDf(receipts: pd.DataFrame) -> pd.DataFrame:
         {pandas.DataFrame} resulting DataFrame.
     """
 
-    customersIds = getCustomersIds(receipts)
-    customers = getCustomersWithId(customersIds)
+    customersIds = receipts["customer_id"].tolist()
+    customers = getCustomersData(customersIds)
     customersDf = pd.DataFrame(customers)
     customersDf["dateCreated"] = pd.to_datetime(customersDf["dateCreated"])
     customersDf["lastUpdated"] = pd.to_datetime(customersDf["lastUpdated"])
@@ -24,14 +24,14 @@ def generateCustomersDf(receipts: pd.DataFrame) -> pd.DataFrame:
     
     return renamedCustomersDf
 
-def getCustomersWithId(ids: dict.values) -> list:
-    """ Iterate and save all customers in a list.
+def getCustomersData(ids: list) -> list[CustomerModel]:
+    """ Iterate over customers ids and save them in a list.
 
     Parameters
         - ids {dict.values} ids to iterate.
 
     Returns
-        {list} list of customers.
+        {list[CustomerModel]} list of customers.
     """
 
     customers = []

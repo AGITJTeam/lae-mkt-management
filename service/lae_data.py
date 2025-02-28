@@ -6,9 +6,8 @@ def generateLaeData(receipts: pd.DataFrame, customers: pd.DataFrame) -> pd.DataF
     """ Create Lae DataFrame with Receipts and Customers DataFrames.
 
     Parameters
-        - receipts {pandas.DataFrame} main DataFrame to merge with Customers.
-        - customers {DataFrame} secundary DataFrame to merge and get
-        additional data.
+        - receipts {pandas.DataFrame} Receipts Payroll DataFrame.
+        - customers {DataFrame} Customers DataFrame.
 
     Returns
         {pandas.DataFrame} resulting DataFrame.

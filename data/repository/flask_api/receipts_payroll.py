@@ -1,10 +1,10 @@
 from data.repository.calls.receipts_payroll_repo import ReceiptsPayroll
-from data.repository.calls.helpers import generateStartAndEndDates, generateTwoMonthsDateRange, postData
+from data.repository.calls.helpers import generateTwoMonthsDateRange, postDataframeToDb
 from service.receipts_payroll import generateReceiptsPayrollDf
 from datetime import datetime
 
 def updateReceiptsPayrollTable(start: str, end: str) -> None:
-    """ Updates Receipts Payroll table in vm with a date range.
+    """ Updates Receipts Payroll table in db with a date range.
 
     Parameters
         - start {str} beginning of the range.
@@ -12,7 +12,7 @@ def updateReceiptsPayrollTable(start: str, end: str) -> None:
     """
 
     receiptsDf = generateReceiptsPayrollDf(start, end)
-    postData(receiptsDf, "receipts_payroll", "append")
+    postDataframeToDb(data=receiptsDf, table="receipts_payroll", mode="append", filename="flask_api.ini")
 
 def addReceiptsPayrollTodayRecords() -> None:
     """ Generates today's date to add to Receipts Payroll table. """
@@ -27,13 +27,23 @@ def updateReceiptsPayrollPreviousRecords() -> None:
     """
 
     receipts = ReceiptsPayroll()
+    
     lastDateFromTable = receipts.getLastRecord()[0]["date"]
     lastDate = lastDateFromTable.date()
-    
     dateRanges = generateTwoMonthsDateRange(lastDate)
-    start, end = generateStartAndEndDates(lastDate)
-    receipts.deleteLastMonthData(start, end)
-    print(f"Receipts Payroll data from {start} to {end} deleted...")
+    
+    dataAvailable = any(
+        not generateReceiptsPayrollDf(date["start"], date["end"]).empty
+        for date in dateRanges
+    )
+    
+    if not dataAvailable:
+        raise Exception(f"No data from {dateRanges[0]['start']} to {dateRanges[0]['end']} to update.")
+    
+    firstDayLastMonth = dateRanges[0]["start"]
+    yesterday = dateRanges[1]["end"]
+    receipts.deleteLastMonthData(firstDayLastMonth, yesterday)
+    print(f"Receipts Payroll data from {firstDayLastMonth} to {yesterday} deleted...")
 
     for date in dateRanges:
         updateReceiptsPayrollTable(date["start"], date["end"])
@@ -47,5 +57,6 @@ def addReceiptsPayrollSpecificDateRange(start: str, end: str) -> None:
         - start {str} beginning of the range.
         - end {str} end of the range.
     """
+
     updateReceiptsPayrollTable(start, end)
     print(f"Receipts Payroll data from {start} to {end} added...")

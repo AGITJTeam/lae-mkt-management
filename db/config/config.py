@@ -1,5 +1,7 @@
 from configparser import ConfigParser
-import os
+import os, logging
+
+logger = logging.getLogger(__name__)
 
 def loadConfig(filename: str, section: str ="postgresql") -> dict | None:
     """ Load PostgreSql credentials from database.ini
@@ -24,9 +26,8 @@ def loadConfig(filename: str, section: str ="postgresql") -> dict | None:
             params = parser.items(section)
             for param in params:
                 config[param[0]] = param[1]
+            return config
         else:
-            print(f"back.internal.config.config.py. loadConfig() - config from {fullPath} do not have sections.")
-
-        return config
+            logger.error(f"Error in loadConfig. Config from {fullPath} do not have sections.")
     except Exception as e:
-        print(f"back.internal.config.config.py. loadConfig() - Error al conectarse a la db: {e}")
+        logger.error(f"Error in loadConfig. {str(e)}")

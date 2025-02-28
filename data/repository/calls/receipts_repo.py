@@ -6,7 +6,7 @@ class Receipts(IReceipts):
     Handles every petition of Receipts table from database.
 
     Methods
-        - getByIds.
+        - getLastRecord.
         - getBetweenDates.
         - deleteByIds.
     """
@@ -16,7 +16,7 @@ class Receipts(IReceipts):
 
         query = "SELECT date FROM receipts ORDER BY date DESC LIMIT 1;"
 
-        return getData(query)
+        return getData(query=query, filename="flask_api.ini")
 
     def getBetweenDates(self, start, end):
         """ {list[dict]} get receipts in a range of dates.
@@ -28,7 +28,7 @@ class Receipts(IReceipts):
 
         query = f"SELECT id_receipt_hdr, date, customer_id, id_employee_usr, id_employee_csr1, total_amnt_receipt, amount_paid, fiduciary, non_fiduciary, office FROM receipts WHERE date BETWEEN \'{start} 00:00:00.000000\' AND \'{end} 23:59:00.000000\';"
 
-        return getData(query)
+        return getData(query=query, filename="flask_api.ini")
 
     def deleteByIds(self, ids):
         """ Delete receipts by its ids.
@@ -40,4 +40,4 @@ class Receipts(IReceipts):
         values = ", ".join(str(id) for id in ids)
         query = f"DELETE FROM receipts WHERE id_receipt_hdr IN ({values})"
 
-        return executeOperation(query)
+        return executeOperation(query=query, filename="flask_api.ini")

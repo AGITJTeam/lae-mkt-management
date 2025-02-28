@@ -16,15 +16,13 @@ class PoliciesDetails(IPoliciesDetails):
 
         query = "SELECT * FROM policies_details;"
 
-        return getData(query)
+        return getData(query=query, filename="flask_api.ini")
     
     def getDataByCustId(self, ids):
         values = ", ".join(str(id) for id in ids)
         query = f"SELECT * FROM policies_details WHERE id_customer IN ({values})"
 
-        print(query)
-
-        return getData(query)
+        return getData(query=query, filename="flask_api.ini")
 
     def deleteByIds(self, ids):
         """ Delete customers by its ids.
@@ -36,4 +34,4 @@ class PoliciesDetails(IPoliciesDetails):
         values = ", ".join(str(id) for id in ids)
         query = f"DELETE FROM policies_details WHERE id_customer IN ({values})"
 
-        return executeOperation(query)
+        return executeOperation(query=query, filename="flask_api.ini")

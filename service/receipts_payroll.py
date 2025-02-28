@@ -5,7 +5,7 @@ from controllers.controller import getReceiptsPayroll
 import pandas as pd
 
 def generateReceiptsPayrollDf(start: str, end: str) -> pd.DataFrame:
-    """ Create Receipts DataFrame with renamed columns with API response.
+    """ Create Receipts DataFrame with API response.
 
     Parameters
         - start {end} beginning of date range.
@@ -19,7 +19,7 @@ def generateReceiptsPayrollDf(start: str, end: str) -> pd.DataFrame:
     receiptsJson = getReceiptsPayroll(start, end)
 
     if not receiptsJson:
-        raise Exception("There is no receipt yet...")
+        raise Exception(f"No receipt payroll found from {start} to {end}")
 
     for receipt in receiptsJson:
         for_value = receipt["for"]
@@ -48,12 +48,12 @@ def transformReceiptsDfForLaeData(df: pd.DataFrame) -> pd.DataFrame:
 
     df = deleteColumns(df, rpColumnsToDelete)
     df = filterRows(df, "for", rpValuesToFilter)
-    df = addCountingColumns(df)
+    df = addServiceCountingColumns(df)
 
     return df
 
-def addCountingColumns(df: pd.DataFrame) -> pd.DataFrame:
-    """ Add counting columns for "For" column to Receipts DataFrame.
+def addServiceCountingColumns(df: pd.DataFrame) -> pd.DataFrame:
+    """ Add counting service columns for "For" column to Receipts DataFrame.
 
     Parameters
         - df {pandas.DataFrame} DataFrame to modify.
@@ -62,22 +62,22 @@ def addCountingColumns(df: pd.DataFrame) -> pd.DataFrame:
         {pandas.DataFrame} resulting DataFrame.
     """
 
-    df["nb"] = countForColumnValues(df, rpValuesToFilter[0])
-    df["bf"] = countForColumnValues(df, rpValuesToFilter[1:4])
-    df["endos"] = countForColumnValues(df, rpValuesToFilter[4:6])
-    df["payments"] = countForColumnValues(df, rpValuesToFilter[6:9])
-    df["invoice"] = countForColumnValues(df, rpValuesToFilter[9:11])
-    df["dmv"] = countForColumnValues(df, rpValuesToFilter[11:17])
-    df["towing"] = countForColumnValues(df, rpValuesToFilter[17])
-    df["permit"] = countForColumnValues(df, rpValuesToFilter[18])
-    df["traffic_school"] = countForColumnValues(df, rpValuesToFilter[19])
-    df["renewal"] = countForColumnValues(df, rpValuesToFilter[20])
-    df["trucking"] = countForColumnValues(df, rpValuesToFilter[21])
-    df["immigration"] = countForColumnValues(df, rpValuesToFilter[22])
+    df["nb"] = countForValues(df, rpValuesToFilter[0])
+    df["bf"] = countForValues(df, rpValuesToFilter[1:4])
+    df["endos"] = countForValues(df, rpValuesToFilter[4:6])
+    df["payments"] = countForValues(df, rpValuesToFilter[6:9])
+    df["invoice"] = countForValues(df, rpValuesToFilter[9:11])
+    df["dmv"] = countForValues(df, rpValuesToFilter[11:17])
+    df["towing"] = countForValues(df, rpValuesToFilter[17])
+    df["permit"] = countForValues(df, rpValuesToFilter[18])
+    df["traffic_school"] = countForValues(df, rpValuesToFilter[19])
+    df["renewal"] = countForValues(df, rpValuesToFilter[20])
+    df["trucking"] = countForValues(df, rpValuesToFilter[21])
+    df["immigration"] = countForValues(df, rpValuesToFilter[22])
     
     return df
 
-def countForColumnValues(df: pd.DataFrame, valuesToCount: list[str]) -> list[int]:
+def countForValues(df: pd.DataFrame, valuesToCount: list[str]) -> list[int]:
     """ Count "For" column values and generate list of values.
 
     Parameters
@@ -88,7 +88,7 @@ def countForColumnValues(df: pd.DataFrame, valuesToCount: list[str]) -> list[int
         {list[int]} list of counted values.
     """
 
-    if isString(valuesToCount):
+    if type(valuesToCount) == str:
         stringToList = [valuesToCount]
         valuesToCount = stringToList
 
@@ -102,6 +102,3 @@ def countForColumnValues(df: pd.DataFrame, valuesToCount: list[str]) -> list[int
             countValues.append(0)
     
     return countValues
-
-def isString(value) -> bool:
-    return type(value) == str
