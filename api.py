@@ -20,6 +20,7 @@ from data.repository.stats_dash.dash_os import dashOs
 from data.repository.stats_dash.yelp_calls import generateYelpCallsReport
 from data.repository.stats_dash.dialpad_calls import countDialpadCallsByDateRange
 from service.dynamic_form import generateDynamicFormDf
+from utils.validations import *
 from logs.config import setupLogging
 from config import Config
 
@@ -60,12 +61,29 @@ def register(username: str):
 def getDataBetweenDates():
     start = request.args.get("startAt")
     end = request.args.get("endAt")
+    
+    if not validateStringDate(start) or not validateStringDate(end):
+        return jsonify({
+            "status": 400,
+            "label": "Bad request",
+            "error": "Invalid date format"
+        }), 400
+    
     receiptsPayroll = ReceiptsPayroll()
     return jsonify(receiptsPayroll.getBetweenDates(start, end))
 
-@app.route("/ReceiptsPayroll/<int:id>", methods=["GET"])
+@app.route("/ReceiptsPayroll/<string:id>", methods=["GET"])
 @jwt_required()
 def getReceiptsByCustId(id: int):
+    if not validateNumber(id):
+        return jsonify({
+            "status": 400,
+            "label": "Bad request",
+            "error": "Invalid Customer ID"
+        }), 400
+    
+    print(f"id: {id}")
+    
     receiptsPayroll = ReceiptsPayroll()
     return jsonify(receiptsPayroll.getByCustomerId(id))
 
@@ -74,11 +92,15 @@ def getReceiptsByCustId(id: int):
 def getWebquotesFromDateRange():
     start = request.args.get("fromDate")
     end = request.args.get("toDate")
+    
+    if not validateStringDate(start) and not validateStringDate(end):
+        return jsonify({
+            "status": 400,
+            "label": "Bad request",
+            "error": "Invalid date format"
+        }), 400
+    
     webquotes = Webquotes()
-
-    if start == None:
-        return jsonify(webquotes.getPartialFromDateRange("2024-01-01", end))
-
     return jsonify(webquotes.getPartialFromDateRange(start, end))
 
 @app.route("/Webquotes/Details", methods=["GET"])
@@ -86,8 +108,15 @@ def getWebquotesFromDateRange():
 def getWebquotesDetails():
     start = request.args.get("fromDate")
     end = request.args.get("toDate")
+    
+    if not validateStringDate(start) and not validateStringDate(end):
+        return jsonify({
+            "status": 400,
+            "label": "Bad request",
+            "error": "Invalid date format"
+        }), 400
+        
     webquotes = Webquotes()
-
     return jsonify(webquotes.getWebquotesFromDateRange(start, end))
 
 @app.route("/DynamicForms", methods=["GET"])
@@ -95,6 +124,13 @@ def getWebquotesDetails():
 def getHomeOwnersDF():
     start = request.args.get("fromDate")
     end = request.args.get("toDate")
+    
+    if not validateStringDate(start) and not validateStringDate(end):
+        return jsonify({
+            "status": 400,
+            "label": "Bad request",
+            "error": "Invalid date format"
+        }), 400
 
     return jsonify(generateDynamicFormDf(start, end))
 
@@ -103,6 +139,14 @@ def getHomeOwnersDF():
 def getLaeBetweenDates():
     start = request.args.get("startAt")
     end = request.args.get("endAt")
+    
+    if not validateStringDate(start) and not validateStringDate(end):
+        return jsonify({
+            "status": 400,
+            "label": "Bad request",
+            "error": "Invalid date format"
+        }), 400
+    
     lae = LaeData()
     return jsonify(lae.getBetweenDates(start=start, end=end))
 
@@ -115,6 +159,13 @@ def getAllCustomers():
 @app.route("/Customers/<int:id>", methods=["GET"])
 @jwt_required()
 def getCustomerById(id: int):
+    if not validateNumber(id):
+        return jsonify({
+            "status": 400,
+            "label": "Bad request",
+            "error": "Invalid Customer ID"
+        }), 400
+    
     customers = Customers()
     return jsonify(customers.getById(id))
 
@@ -129,6 +180,14 @@ def getAllEmployees():
 def getReceiptsBetweenDates():
     start = request.args.get("startAt")
     end = request.args.get("endAt")
+    
+    if not validateStringDate(start) and not validateStringDate(end):
+        return jsonify({
+            "status": 400,
+            "label": "Bad request",
+            "error": "Invalid date format"
+        }), 400
+    
     receipts = Receipts()
     return jsonify(receipts.getBetweenDates(start, end))
 
@@ -137,6 +196,25 @@ def getReceiptsBetweenDates():
 def getRegionalsByOffice():
     offices = Compliance()
     return jsonify(offices.getRegionalsByOffices())
+
+@app.route("/CountDialpadCalls", methods=["GET"])
+@jwt_required()
+def countDialpadCalls():
+    start = request.args.get("startAt")
+    end = request.args.get("endAt")
+    
+    if not validateStringDate(start) and not validateStringDate(end):
+        return jsonify({
+            "status": 400,
+            "label": "Bad request",
+            "error": "Invalid date format"
+        }), 400
+
+    allCalls, uniqueCalls = countDialpadCallsByDateRange(start, end)
+    return jsonify({
+        "allCalls": allCalls,
+        "uniqueCalls": uniqueCalls
+    }), 200
 
 # ======================== STATS DASH ENDPOINTS =======================
 
@@ -290,7 +368,7 @@ def processFinalSales():
 @jwt_required()
 def processPvc():
     try:
-        yesterdayData = dashPvc()
+        #yesterdayData = dashPvc()
         yesterdayData, lastWeekData = dashPvc()
     except Exception:
         logger.error(f"An error occurred while processing the Pvc data")
@@ -429,23 +507,6 @@ def getYelpCallsReport():
     else:
         dictReport = yelpReport.to_dict(orient="records")
         return jsonify(dictReport), 200
-
-@app.route("/CountDialpadCalls", methods=["GET"])
-@jwt_required()
-def countDialpadCalls():
-    start = request.args.get("startAt")
-    end = request.args.get("endAt")
-
-    try:
-        allCalls, uniqueCalls = countDialpadCallsByDateRange(start, end)
-    except Exception:
-        logger.error(f"An error occurred while getting the Dialpad Calls")
-        return jsonify({}), 500
-    else:
-        return jsonify({
-            "allCalls": allCalls,
-            "uniqueCalls": uniqueCalls
-        }), 200
 
 # ========================= FLASK EXECUTER =======================
 
