@@ -3,6 +3,7 @@ from data.repository.calls.receipts_payroll_repo import ReceiptsPayroll
 from data.repository.calls.helpers import generateOneWeekDateRange, postDataframeToDb
 from service.customers import generateCustomersDf
 import pandas as pd
+import json, redis
 
 def updateCustomersTable(receiptsDf: pd.DataFrame) -> None:
     """ Updates Customers table in db with updated Receipts Payroll
@@ -14,26 +15,6 @@ def updateCustomersTable(receiptsDf: pd.DataFrame) -> None:
 
     customersDf = generateCustomersDf(receiptsDf)
     postDataframeToDb(data=customersDf, table="customers", mode="append", filename="flask_api.ini")
-
-def updateCustomersPreviousRecords() -> None:
-    """ Generates last week customers ids and updates Customers table. """
-
-    receipts = ReceiptsPayroll()
-    customers = Customers()
-    
-    lastDateFromTable = receipts.getLastRecord()[0]["date"]
-    lastDate = lastDateFromTable.date()
-    dates = generateOneWeekDateRange(lastDate)
-
-    receiptsJson = receipts.getBetweenDates(dates["start"], dates["end"])
-    receiptsDf = pd.DataFrame(receiptsJson)
-    receiptsNoDuplicates = receiptsDf.drop_duplicates("customer_id")
-    customersIds = receiptsNoDuplicates["customer_id"].tolist()
-
-    customers.deleteByIds(customersIds)
-    print(f"Customers data from {dates["start"]} to {dates["end"]} deleted...")
-    updateCustomersTable(receiptsNoDuplicates)
-    print(f"Customers data from {dates["start"]} to {dates["end"]} updated...")
 
 def addCustomersSpecificRange(start: str, end: str) -> None:
     """ Add data to Customers table in db with an specific date range.
@@ -55,3 +36,38 @@ def addCustomersSpecificRange(start: str, end: str) -> None:
     print(f"Customers data from {start} to {end} deleted...")
     updateCustomersTable(receiptsNoDuplicates)
     print(f"Customers data from {start} to {end} added...")
+
+def updateCustomersPreviousRecords() -> None:
+    """ Generates last week customers ids and updates Customers table. """
+
+    receipts = ReceiptsPayroll()
+    customers = Customers()
+
+    lastDateFromTable = receipts.getLastRecord()[0]["date"]
+    lastDate = lastDateFromTable.date()
+    dates = generateOneWeekDateRange(lastDate)
+
+    receiptsJson = receipts.getBetweenDates(dates["start"], dates["end"])
+    receiptsDf = pd.DataFrame(receiptsJson)
+    receiptsNoDuplicates = receiptsDf.drop_duplicates("customer_id")
+    customersIds = receiptsNoDuplicates["customer_id"].tolist()
+
+    customers.deleteByIds(customersIds)
+    print(f"Customers data from {dates["start"]} to {dates["end"]} deleted...")
+    updateCustomersTable(receiptsNoDuplicates)
+    print(f"Customers data from {dates["start"]} to {dates["end"]} updated...")
+
+def updateRedisKey() -> None:
+    """ Updates Redis key 'AllCustomers' with updated Customers table. """
+
+    redisCli = redis.Redis(host="localhost", port=6379, decode_responses=True)
+
+    customers = Customers()
+    customersJson = customers.getAllData()
+    customersDf = pd.DataFrame(customersJson)
+
+    expirationTime = 60*60*10
+    redisKey = "AllCustomers"
+    data = json.dumps(obj=customersDf, default=str)
+    redisCli.set(name=redisKey, value=data, ex=expirationTime)
+    redisCli.close()

@@ -11,6 +11,7 @@ LOGS="/home/berenice/Documents/cron-logs"
 try:
     print("-"*50)
     addWebquotesTodayRecords()
+    updateRedisPreviousRecords()
 
     os.system(f'echo "cd {SCRIPTS} && {PYTHON} -m receipts_payroll_updater_9am >> {LOGS}/receipts_payroll.log 2>&1" | at now + 3 minutes')
 except Exception as e:

@@ -11,6 +11,7 @@ LOGS="/home/berenice/Documents/cron-logs"
 try:
     print("-"*50)
     updateReceiptsPreviousRecords()
+    updateRedisKey()
 
     os.system(f'echo "cd {SCRIPTS} && {PYTHON} -m customers_updater >> {LOGS}/customers.log 2>&1" | at now + 3 minutes')
 except Exception as e:

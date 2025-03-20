@@ -207,7 +207,7 @@ def getDynamicForm(start: str, end: str) -> dict | None:
 
     URL = (
         f"{ADRIANAS_URL}/dynamicforms/filtered?"
-        "limit=1000&"
+        "limit=2000&"
         "status=&"
         "purpose=&"
         "searchForm=&"

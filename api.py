@@ -30,9 +30,9 @@ from flask_jwt_extended import create_access_token, jwt_required, JWTManager
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from dotenv import load_dotenv
-import logging
+import logging, redis, json
 
-# ===================== FLASK CONFIGURATION ======================
+# ======================== FLASK CONFIGURATION ========================
 
 setupLogging()
 load_dotenv()
@@ -40,25 +40,32 @@ load_dotenv()
 app = Flask(__name__)
 app.config.from_object(Config)
 jwt = JWTManager(app)
-CORS(app)
+#CORS(app)
 
 logger = logging.getLogger(__name__)
+
+redisCli = redis.Redis(host="localhost", port=6379, decode_responses=True)
+
+# ======================== FLASK API ENDPOINTS ========================
 
 @app.route("/")
 @jwt_required()
 def home():
     return jsonify(f"Running on port 8000.")
 
-# ======================== FLASK API ENDPOINTS ========================
-
 @app.route("/Register/<string:username>", methods=["GET", "POST"])
 def register(username: str):    
     token = create_access_token(identity=username)
     return jsonify({ "token": token })
 
+@app.route("/Test", methods=["GET"])
+def tester():
+    return jsonify({ "hola": "hola" })
+
 @app.route("/ReceiptsPayroll", methods=["GET"])
 @jwt_required()
 def getDataBetweenDates():
+    # 1) Retrieve parameters and validate them.
     start = request.args.get("startAt")
     end = request.args.get("endAt")
     
@@ -68,44 +75,88 @@ def getDataBetweenDates():
             "label": "Bad request",
             "error": "Invalid date format"
         }), 400
+
+    # 2) Check if the data is already in Redis.
+    redisKey = f"ReceiptsPayroll_{start}_{end}"
     
+    if redisCli.get(redisKey):
+        print("Recovered Receipts Payroll from Redis")
+        return jsonify(json.loads(redisCli.get(redisKey)))
+
+    # 3) Recover data from database.
     receiptsPayroll = ReceiptsPayroll()
-    return jsonify(receiptsPayroll.getBetweenDates(start, end))
+    data = receiptsPayroll.getBetweenDates(start, end)
+    
+    # 4) Save data in Redis.
+    redisCli.set(redisKey, json.dumps(obj=data, default=str))
+    
+    # 5) Return data.
+    print("Recovered Receips Payroll from Database")
+    return jsonify(data)
 
 @app.route("/ReceiptsPayroll/<string:id>", methods=["GET"])
 @jwt_required()
-def getReceiptsByCustId(id: int):
+def getReceiptsByCustId(id: str):
+    # 1) Validate parameter.
     if not validateNumber(id):
         return jsonify({
             "status": 400,
             "label": "Bad request",
             "error": "Invalid Customer ID"
         }), 400
-    
-    print(f"id: {id}")
-    
+
+    # 2) Check if the data is already in Redis.
+    redisKey = f"ReceiptsPayroll_from_cust_id_{id}"
+    if redisCli.get(redisKey):
+        print("Recovered Receipts Payroll from Redis")
+        return jsonify(json.loads(redisCli.get(redisKey)))
+
+    # 3) Recover data from database.
     receiptsPayroll = ReceiptsPayroll()
-    return jsonify(receiptsPayroll.getByCustomerId(id))
+    data = receiptsPayroll.getByCustomerId(id)
+    
+    # 4) Save data in Redis.
+    redisCli.set(redisKey, json.dumps(obj=data, default=str))
+
+    # 5) Return data.
+    print("Recovered Receipts Payroll from Database")
+    return jsonify(data)
 
 @app.route("/Webquotes", methods=["GET"])
 @jwt_required()
 def getWebquotesFromDateRange():
+    # 1) Retrieve parameters and validate them.
     start = request.args.get("fromDate")
     end = request.args.get("toDate")
-    
+
     if not validateStringDate(start) and not validateStringDate(end):
         return jsonify({
             "status": 400,
             "label": "Bad request",
             "error": "Invalid date format"
         }), 400
-    
+
+    # 2) Check if the data is already in Redis.
+    redisKey = f"Webquotes_{start}_{end}"
+    if redisCli.get(redisKey):
+        print("Recovered Webquotes from Redis")
+        return jsonify(json.loads(redisCli.get(redisKey)))
+
+    # 3) Recover data from database.
     webquotes = Webquotes()
-    return jsonify(webquotes.getPartialFromDateRange(start, end))
+    data = webquotes.getPartialFromDateRange(start, end)
+    
+    # 4) Save data in Redis.
+    redisCli.set(redisKey, json.dumps(obj=data, default=str))
+    
+    # 5) Return data.
+    print("Recovered Webquotes from Database")
+    return jsonify(data)
 
 @app.route("/Webquotes/Details", methods=["GET"])
 @jwt_required()
 def getWebquotesDetails():
+    # 1) Retrieve parameters and validate them.
     start = request.args.get("fromDate")
     end = request.args.get("toDate")
     
@@ -115,13 +166,28 @@ def getWebquotesDetails():
             "label": "Bad request",
             "error": "Invalid date format"
         }), 400
-        
+
+    # 2) Check if the data is already in Redis.
+    redisKey = f"WebquotesDetails_{start}_{end}"
+    if redisCli.get(redisKey):
+        print("Recovered Webquotes Details from Redis")
+        return jsonify(json.loads(redisCli.get(redisKey)))
+
+    # 3) Recover data from database.
     webquotes = Webquotes()
-    return jsonify(webquotes.getWebquotesFromDateRange(start, end))
+    data = webquotes.getWebquotesFromDateRange(start, end)
+    
+    # 4) Save data in Redis.
+    redisCli.set(redisKey, json.dumps(obj=data, default=str))
+
+    # 5) Return data.
+    print("Recovered Webquotes Detailsfrom Database")
+    return jsonify(data)
 
 @app.route("/DynamicForms", methods=["GET"])
 @jwt_required()
 def getHomeOwnersDF():
+    # 1) Retrieve parameters and validate them.
     start = request.args.get("fromDate")
     end = request.args.get("toDate")
     
@@ -132,11 +198,26 @@ def getHomeOwnersDF():
             "error": "Invalid date format"
         }), 400
 
-    return jsonify(generateDynamicFormDf(start, end))
+    # 2) Check if the data is already in Redis.
+    redisKey = f"DynamicForms_{start}_{end}"
+    if redisCli.get(redisKey):
+        print("Recovered Dynamic Form from Redis")
+        return jsonify(json.loads(redisCli.get(redisKey)))
+
+    # 3) Recover data from database.
+    data = generateDynamicFormDf(start, end)
+
+    # 4) Save data in Redis.
+    redisCli.set(redisKey, json.dumps(obj=data, default=str))
+
+    # 5) Return data.
+    print("Recovered Dynamic Form from Database")
+    return jsonify(data)
 
 @app.route("/Lae", methods=["GET"])
 @jwt_required()
 def getLaeBetweenDates():
+    # 1) Retrieve parameters and validate them.
     start = request.args.get("startAt")
     end = request.args.get("endAt")
     
@@ -146,56 +227,145 @@ def getLaeBetweenDates():
             "label": "Bad request",
             "error": "Invalid date format"
         }), 400
-    
+
+    # 2) Check if the data is already in Redis.
+    redisKey = f"Lae_{start}_{end}"
+    if redisCli.get(redisKey):
+        print("Recovered LAE data from Redis")
+        return jsonify(json.loads(redisCli.get(redisKey)))
+
+    # 3) Recover data from database.
     lae = LaeData()
-    return jsonify(lae.getBetweenDates(start=start, end=end))
+    data = lae.getBetweenDates(start=start, end=end)
+
+    # 4) Save data in Redis.
+    redisCli.set(redisKey, json.dumps(obj=data, default=str))
+
+    # 5) Return data.
+    print("Recovered LAE Data from Database")
+    return jsonify(data)
 
 @app.route("/Customers", methods=["GET"])
 @jwt_required()
 def getAllCustomers():
-    customers = Customers()
-    return jsonify(customers.getAllData())
+    # 1) Check if the data is already in Redis.
+    redisKey = "AllCustomers"
+    if redisCli.get(redisKey):
+        print("Recovered all Customers from Redis")
+        return jsonify(json.loads(redisCli.get(redisKey)))
 
-@app.route("/Customers/<int:id>", methods=["GET"])
+    # 2) Recover data from database.
+    customers = Customers()
+    data = customers.getAllData()
+
+    # 3) Save data in Redis.
+    redisCli.set(redisKey, json.dumps(obj=data, default=str))
+
+    # 4) Return data.
+    print("Recovered all Cusotmers from Database")
+    return jsonify(data)
+
+@app.route("/Customers/<string:id>", methods=["GET"])
 @jwt_required()
-def getCustomerById(id: int):
+def getCustomerById(id: str):
+    # 1) Validate parameter.
     if not validateNumber(id):
         return jsonify({
             "status": 400,
             "label": "Bad request",
             "error": "Invalid Customer ID"
         }), 400
-    
+
+    # 2) Check if the data is already in Redis.
+    redisKey = f"Customer_with_id_{id}"
+    if redisCli.get(redisKey):
+        print("Recovered Customer from Redis")
+        return jsonify(json.loads(redisCli.get(redisKey)))
+
+    # 3) Recover data from database.
     customers = Customers()
-    return jsonify(customers.getById(id))
+    data = customers.getById(id)
+
+    # 4) Save data in Redis.
+    redisCli.set(redisKey, json.dumps(obj=data, default=str))
+
+    # 5) Return data.
+    print("Recovered Customer from Database")
+    return jsonify(data)
 
 @app.route("/Employees", methods=["GET"])
 @jwt_required()
 def getAllEmployees():
+    # 1) Check if the data is already in Redis.
+    redisKey = "AllEmployees"
+    if redisCli.get(redisKey):
+        print("Recovered all Employees from Redis")
+        return jsonify(json.loads(redisCli.get(redisKey)))
+
+    # 2) Recover data from database.
     employees = Employees()
-    return jsonify(employees.getAllData())
+    data = employees.getAllData()
+
+    # 3) Save data in Redis.
+    redisCli.set(redisKey, json.dumps(obj=data, default=str))
+
+    # 4) Return data.
+    print("Recovered all Employeesfrom Database")
+    return jsonify(data)
 
 @app.route("/FiduciaryReport", methods=["GET"])
 @jwt_required()
 def getReceiptsBetweenDates():
+    # 1) Retrieve parameters and validate them.
     start = request.args.get("startAt")
     end = request.args.get("endAt")
-    
+
     if not validateStringDate(start) and not validateStringDate(end):
         return jsonify({
             "status": 400,
             "label": "Bad request",
             "error": "Invalid date format"
         }), 400
-    
+
+    # 2) Check if the data is already in Redis.
+    redisKey = f"FiduciaryReport_{start}_{end}"
+    if redisCli.get(redisKey):
+        print("Recovered Fiduciary Reportfrom Redis")
+        return jsonify(json.loads(redisCli.get(redisKey)))
+
+    # 3) Recover data from database.
     receipts = Receipts()
-    return jsonify(receipts.getBetweenDates(start, end))
+    data = receipts.getBetweenDates(start, end)
+
+    # 4) Save data in Redis.
+    redisCli.set(redisKey, json.dumps(obj=data, default=str))
+
+    # 5) Return data.
+    print("Recovered Fiduciary Reportfrom Database")
+    return jsonify(data)
 
 @app.route("/RegionalsOffices", methods=["GET"])
 @jwt_required()
 def getRegionalsByOffice():
+    # 1) Check if the data is already in Redis.
+    redisKey = "RegionalsOfficesReport"
+    if redisCli.get(redisKey):
+        print("Recovered Regional Offices from Redis")
+        return jsonify(json.loads(redisCli.get(redisKey)))
+
+    # 2) Recover data from database.
     offices = Compliance()
-    return jsonify(offices.getRegionalsByOffices())
+    data = offices.getRegionalsByOffices()
+
+    # 3) Save data in Redis.
+    redisCli.set(redisKey, json.dumps(obj=data, default=str))
+
+    # 4) Return data.
+    print("Recovered Regional Offices from Database")
+    return jsonify(data)
+
+
+# ========= pendiente de ver como lo guardaré en redis
 
 @app.route("/CountDialpadCalls", methods=["GET"])
 @jwt_required()
@@ -511,4 +681,4 @@ def getYelpCallsReport():
 # ========================= FLASK EXECUTER =======================
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0")
+    app.run(host="0.0.0.0")

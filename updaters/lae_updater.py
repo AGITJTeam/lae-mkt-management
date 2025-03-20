@@ -11,6 +11,8 @@ LOGS="/home/berenice/Documents/cron-logs"
 try:
     print("-"*50)
     updateLaeDataTablesPreviousRecords()
+    
+    os.system(f'echo "cd {SCRIPTS} && {PYTHON} -m dynamic_form_updater >> {LOGS}/dynamic_form.log 2>&1" | at now + 3 minutes')
 except Exception as e:
     print(f"Error updating lae data in lae_updater.py: {str(e)}.")
     os.system(f'echo "cd {SCRIPTS} && {PYTHON} -m lae_updater >> $LOGS/lae.log 2>&1" | at now + 5 minutes')
