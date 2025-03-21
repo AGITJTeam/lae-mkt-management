@@ -95,7 +95,7 @@ def updateTwoMonthsRedisKeys() -> None:
         "end": today
     })
     redisKeys = [
-        "ReceiptsPayrollLastMonth",
+        "ReceiptsPayrollPreviousMonth",
         "ReceiptsPayrollCurrentMonth",
         "ReceiptsPayrollTwoMonths"
     ]

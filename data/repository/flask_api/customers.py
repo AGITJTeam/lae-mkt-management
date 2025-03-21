@@ -21,7 +21,7 @@ def updateCustomersTable(receiptsDf: pd.DataFrame) -> None:
     )
 
 def updateRedisKey() -> None:
-    """ Updates Redis keys with given DataFrame. """
+    """ Updates Redis keys with retrieved customers data. """
 
     # Open Redis connection.
     redisCli = redis.Redis(host="localhost", port=6379, decode_responses=True)

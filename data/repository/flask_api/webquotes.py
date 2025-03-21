@@ -95,7 +95,7 @@ def updateWTwoMonthsRedisKeys() -> None:
         "end": today
     })
     redisKeys = [
-        "WebquotesLastMonth",
+        "WebquotesPreviousMonth",
         "WebquotesCurrentMonth",
         "WebquotesTwoMonths"
     ]
@@ -121,7 +121,7 @@ def updateWDTwoMonthsRedisKeys() -> None:
         "end": today
     })
     redisKeys = [
-        "WebquotesDetailsLastMonth",
+        "WebquotesDetailsPreviousMonth",
         "WebquotesDetailsCurrentMonth",
         "WebquotesDetailsTwoMonths"
     ]
@@ -134,7 +134,7 @@ def updateWDTwoMonthsRedisKeys() -> None:
         updateRedisKeys(webquotesDetailsDf, redisKeys[i])
         print(f"Redis keys {redisKeys[i]} updated...")
 
-def updateRedisAllWebquotes() -> None:
+def updateAllWebquotesRedisKey() -> None:
     """ Generate date range from 2024-01-01 to today for updating Redis
     key for Webquotes endpoint. """
 
@@ -143,9 +143,11 @@ def updateRedisAllWebquotes() -> None:
     start = "2024-01-01"
     redisKey = "AllWebquotes"
 
-    # Generates data for date range and updates Redis key.
+    # Generates data for date range.
     webquotes = Webquotes()
     webquotesJson = webquotes.getPartialFromDateRange(start, today)
     webquotesDf = pd.DataFrame(webquotesJson)
+
+    # Updates Redis key.
     updateRedisKeys(webquotesDf, redisKey)
     print(f"Redis keys {redisKey} updated...")

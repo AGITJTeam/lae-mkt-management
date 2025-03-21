@@ -4,7 +4,7 @@ from datetime import datetime
 import json, pandas as pd, redis
 
 def updateRedisKeys(rawData: pd.DataFrame, redisKey: str) -> None:
-    """ Updates Redis keys with the last date of Receipts Payroll table.
+    """ Updates Redis keys with given DataFrame.
 
     Parameters
         - data {pandas.DataFrame} the data to update.
@@ -35,7 +35,7 @@ def updateTwoMonthsRedisKeys():
         "end": currentDay
     })
     redisKeys = [
-        "DynamicFormsLastMonth",
+        "DynamicFormsPreviousMonth",
         "DynamicFormsCurrentMonth",
         "DynamicFormsTwoMonths"
     ]

@@ -2,7 +2,10 @@ import os, sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from data.repository.calls.helpers import generateDateTimeUpdated
-from data.repository.flask_api.webquotes import *
+from data.repository.flask_api.webquotes import (
+    updateWebquotesPreviousRecords,
+    addWebquotesSpecificDateRange
+)
 
 PYTHON="/home/berenice/Documents/python-dev.v3/venv/bin/python"
 SCRIPTS="/home/berenice/Documents/python-dev.v3/updaters"

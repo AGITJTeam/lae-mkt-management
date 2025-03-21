@@ -28,7 +28,7 @@ from config import Config
 
 from flask_jwt_extended import create_access_token, jwt_required, JWTManager
 from flask import Flask, jsonify, request
-from flask_cors import CORS
+# from flask_cors import CORS --------------------------------------------------- descomentar despues
 from dotenv import load_dotenv
 import logging, redis, json
 
@@ -40,7 +40,7 @@ load_dotenv()
 app = Flask(__name__)
 app.config.from_object(Config)
 jwt = JWTManager(app)
-#CORS(app)
+#CORS(app) ---------------------------------------------------------------------- descomentar despues
 
 logger = logging.getLogger(__name__)
 
@@ -58,9 +58,11 @@ def register(username: str):
     token = create_access_token(identity=username)
     return jsonify({ "token": token })
 
+# ------------------------------------------------------------------------------- eliminar despues
 @app.route("/Test", methods=["GET"])
 def tester():
     return jsonify({ "hola": "hola" })
+# -------------------------------------------------------------------------------
 
 @app.route("/ReceiptsPayroll", methods=["GET"])
 @jwt_required()
@@ -77,10 +79,19 @@ def getDataBetweenDates():
         }), 400
 
     # 2) Check if the data is already in Redis.
-    redisKey = f"ReceiptsPayroll_{start}_{end}"
-    
-    if redisCli.get(redisKey):
-        print("Recovered Receipts Payroll from Redis")
+    if valCurrentMonthDates(start, end):
+        redisKey = "ReceiptsPayrollCurrentMonth"
+        print("Receipts Payroll recovered from Redis")
+        return jsonify(json.loads(redisCli.get(redisKey)))
+
+    if valPreviousMonthDates(start, end):
+        redisKey = "ReceiptsPayrollPreviousMonth"
+        print("Receipts Payroll recovered from Redis")
+        return jsonify(json.loads(redisCli.get(redisKey)))
+
+    if valTwoMonthsDates(start, end):
+        redisKey = "ReceiptsPayrollTwoMonths"
+        print("Receipts Payroll recovered from Redis")
         return jsonify(json.loads(redisCli.get(redisKey)))
 
     # 3) Recover data from database.
@@ -88,10 +99,11 @@ def getDataBetweenDates():
     data = receiptsPayroll.getBetweenDates(start, end)
     
     # 4) Save data in Redis.
-    redisCli.set(redisKey, json.dumps(obj=data, default=str))
+    expirationTime = 60*60*6
+    redisCli.set(name=redisKey, value=json.dumps(obj=data, default=str), ex=expirationTime)
     
     # 5) Return data.
-    print("Recovered Receips Payroll from Database")
+    print("Receipts Payroll recovered from Database")
     return jsonify(data)
 
 @app.route("/ReceiptsPayroll/<string:id>", methods=["GET"])
@@ -105,20 +117,11 @@ def getReceiptsByCustId(id: str):
             "error": "Invalid Customer ID"
         }), 400
 
-    # 2) Check if the data is already in Redis.
-    redisKey = f"ReceiptsPayroll_from_cust_id_{id}"
-    if redisCli.get(redisKey):
-        print("Recovered Receipts Payroll from Redis")
-        return jsonify(json.loads(redisCli.get(redisKey)))
-
-    # 3) Recover data from database.
+    # 2) Recover data from database.
     receiptsPayroll = ReceiptsPayroll()
     data = receiptsPayroll.getByCustomerId(id)
-    
-    # 4) Save data in Redis.
-    redisCli.set(redisKey, json.dumps(obj=data, default=str))
 
-    # 5) Return data.
+    # 3) Return data.
     print("Recovered Receipts Payroll from Database")
     return jsonify(data)
 
@@ -137,9 +140,24 @@ def getWebquotesFromDateRange():
         }), 400
 
     # 2) Check if the data is already in Redis.
-    redisKey = f"Webquotes_{start}_{end}"
-    if redisCli.get(redisKey):
-        print("Recovered Webquotes from Redis")
+    if valCurrentMonthDates(start, end):
+        redisKey = "WebquotesCurrentMonth"
+        print("Webquotes recovered from Redis")
+        return jsonify(json.loads(redisCli.get(redisKey)))
+
+    if valPreviousMonthDates(start, end):
+        redisKey = "WebquotesPreviousMonth"
+        print("Webquotes recovered from Redis")
+        return jsonify(json.loads(redisCli.get(redisKey)))
+
+    if valTwoMonthsDates(start, end):
+        redisKey = "WebquotesTwoMonths"
+        print("Webquotes recovered from Redis")
+        return jsonify(json.loads(redisCli.get(redisKey)))
+
+    if valLastToCurrentYearDates(start, end):
+        redisKey = "AllWebquotes"
+        print("Webquotes recovered from Redis")
         return jsonify(json.loads(redisCli.get(redisKey)))
 
     # 3) Recover data from database.
@@ -147,10 +165,11 @@ def getWebquotesFromDateRange():
     data = webquotes.getPartialFromDateRange(start, end)
     
     # 4) Save data in Redis.
-    redisCli.set(redisKey, json.dumps(obj=data, default=str))
+    expirationTime = 60*60*6
+    redisCli.set(name=redisKey, value=json.dumps(obj=data, default=str), ex=expirationTime)
     
     # 5) Return data.
-    print("Recovered Webquotes from Database")
+    print("Webquotes recovered from Database")
     return jsonify(data)
 
 @app.route("/Webquotes/Details", methods=["GET"])
@@ -168,9 +187,19 @@ def getWebquotesDetails():
         }), 400
 
     # 2) Check if the data is already in Redis.
-    redisKey = f"WebquotesDetails_{start}_{end}"
-    if redisCli.get(redisKey):
-        print("Recovered Webquotes Details from Redis")
+    if valCurrentMonthDates(start, end):
+        redisKey = "WebquotesDetailsCurrentMonth"
+        print("Webquotes Details recovered from Redis")
+        return jsonify(json.loads(redisCli.get(redisKey)))
+
+    if valPreviousMonthDates(start, end):
+        redisKey = "WebquotesDetailsPreviousMonth"
+        print("Webquotes Details recovered from Redis")
+        return jsonify(json.loads(redisCli.get(redisKey)))
+
+    if valTwoMonthsDates(start, end):
+        redisKey = "WebquotesDetailsTwoMonths"
+        print("Webquotes Details recovered from Redis")
         return jsonify(json.loads(redisCli.get(redisKey)))
 
     # 3) Recover data from database.
@@ -178,10 +207,11 @@ def getWebquotesDetails():
     data = webquotes.getWebquotesFromDateRange(start, end)
     
     # 4) Save data in Redis.
-    redisCli.set(redisKey, json.dumps(obj=data, default=str))
+    expirationTime = 60*60*6
+    redisCli.set(name=redisKey, value=json.dumps(obj=data, default=str), ex=expirationTime)
 
     # 5) Return data.
-    print("Recovered Webquotes Detailsfrom Database")
+    print("Webquotes Details recovered from Database")
     return jsonify(data)
 
 @app.route("/DynamicForms", methods=["GET"])
@@ -199,19 +229,30 @@ def getHomeOwnersDF():
         }), 400
 
     # 2) Check if the data is already in Redis.
-    redisKey = f"DynamicForms_{start}_{end}"
-    if redisCli.get(redisKey):
-        print("Recovered Dynamic Form from Redis")
+    if valCurrentMonthDates(start, end):
+        redisKey = "DynamicFormsCurrentMonth"
+        print("Dynamic Form recovered from Redis")
+        return jsonify(json.loads(redisCli.get(redisKey)))
+
+    if valPreviousMonthDates(start, end):
+        redisKey = "DynamicFormsPreviousMonth"
+        print("Dynamic Form recovered from Redis")
+        return jsonify(json.loads(redisCli.get(redisKey)))
+
+    if valTwoMonthsDates(start, end):
+        redisKey = "DynamicFormsTwoMonths"
+        print("Dynamic Form recovered from Redis")
         return jsonify(json.loads(redisCli.get(redisKey)))
 
     # 3) Recover data from database.
     data = generateDynamicFormDf(start, end)
 
     # 4) Save data in Redis.
-    redisCli.set(redisKey, json.dumps(obj=data, default=str))
+    expirationTime = 60*60*6
+    redisCli.set(name=redisKey, value=json.dumps(obj=data, default=str), ex=expirationTime)
 
     # 5) Return data.
-    print("Recovered Dynamic Form from Database")
+    print("Dynamic Form recovered from Database")
     return jsonify(data)
 
 @app.route("/Lae", methods=["GET"])
@@ -228,21 +269,12 @@ def getLaeBetweenDates():
             "error": "Invalid date format"
         }), 400
 
-    # 2) Check if the data is already in Redis.
-    redisKey = f"Lae_{start}_{end}"
-    if redisCli.get(redisKey):
-        print("Recovered LAE data from Redis")
-        return jsonify(json.loads(redisCli.get(redisKey)))
-
-    # 3) Recover data from database.
+    # 2) Recover data from database.
     lae = LaeData()
     data = lae.getBetweenDates(start=start, end=end)
 
-    # 4) Save data in Redis.
-    redisCli.set(redisKey, json.dumps(obj=data, default=str))
-
-    # 5) Return data.
-    print("Recovered LAE Data from Database")
+    # 3) Return data.
+    print("LAE Data recovered from Database")
     return jsonify(data)
 
 @app.route("/Customers", methods=["GET"])
@@ -251,7 +283,7 @@ def getAllCustomers():
     # 1) Check if the data is already in Redis.
     redisKey = "AllCustomers"
     if redisCli.get(redisKey):
-        print("Recovered all Customers from Redis")
+        print("All Customers recovered from Redis")
         return jsonify(json.loads(redisCli.get(redisKey)))
 
     # 2) Recover data from database.
@@ -259,10 +291,11 @@ def getAllCustomers():
     data = customers.getAllData()
 
     # 3) Save data in Redis.
-    redisCli.set(redisKey, json.dumps(obj=data, default=str))
+    expirationTime = 60*60*6
+    redisCli.set(name=redisKey, value=json.dumps(obj=data, default=str), ex=expirationTime)
 
     # 4) Return data.
-    print("Recovered all Cusotmers from Database")
+    print("All Customers recovered from Database")
     return jsonify(data)
 
 @app.route("/Customers/<string:id>", methods=["GET"])
@@ -276,21 +309,12 @@ def getCustomerById(id: str):
             "error": "Invalid Customer ID"
         }), 400
 
-    # 2) Check if the data is already in Redis.
-    redisKey = f"Customer_with_id_{id}"
-    if redisCli.get(redisKey):
-        print("Recovered Customer from Redis")
-        return jsonify(json.loads(redisCli.get(redisKey)))
-
-    # 3) Recover data from database.
+    # 2) Recover data from database.
     customers = Customers()
     data = customers.getById(id)
 
-    # 4) Save data in Redis.
-    redisCli.set(redisKey, json.dumps(obj=data, default=str))
-
-    # 5) Return data.
-    print("Recovered Customer from Database")
+    # 3) Return data.
+    print("Customer recovered from Database")
     return jsonify(data)
 
 @app.route("/Employees", methods=["GET"])
@@ -299,7 +323,7 @@ def getAllEmployees():
     # 1) Check if the data is already in Redis.
     redisKey = "AllEmployees"
     if redisCli.get(redisKey):
-        print("Recovered all Employees from Redis")
+        print("All Employees recovered from Redis")
         return jsonify(json.loads(redisCli.get(redisKey)))
 
     # 2) Recover data from database.
@@ -307,10 +331,11 @@ def getAllEmployees():
     data = employees.getAllData()
 
     # 3) Save data in Redis.
-    redisCli.set(redisKey, json.dumps(obj=data, default=str))
+    expirationTime = 60*60*6
+    redisCli.set(name=redisKey, value=json.dumps(obj=data, default=str), ex=expirationTime)
 
     # 4) Return data.
-    print("Recovered all Employeesfrom Database")
+    print("All Employees recovered from Database")
     return jsonify(data)
 
 @app.route("/FiduciaryReport", methods=["GET"])
@@ -328,9 +353,14 @@ def getReceiptsBetweenDates():
         }), 400
 
     # 2) Check if the data is already in Redis.
-    redisKey = f"FiduciaryReport_{start}_{end}"
-    if redisCli.get(redisKey):
-        print("Recovered Fiduciary Reportfrom Redis")
+    if valCurrentMonthDates(start, end):
+        redisKey = "ReceiptsCurrentMonth"
+        print("Receipts recovered from Redis")
+        return jsonify(json.loads(redisCli.get(redisKey)))
+    
+    if valPreviousMonthDates(start, end):
+        redisKey = "ReceiptsPreviousMonth"
+        print("Receipts recovered from Redis")
         return jsonify(json.loads(redisCli.get(redisKey)))
 
     # 3) Recover data from database.
@@ -338,10 +368,11 @@ def getReceiptsBetweenDates():
     data = receipts.getBetweenDates(start, end)
 
     # 4) Save data in Redis.
-    redisCli.set(redisKey, json.dumps(obj=data, default=str))
+    expirationTime = 60*60*6
+    redisCli.set(name=redisKey, value=json.dumps(obj=data, default=str), ex=expirationTime)
 
     # 5) Return data.
-    print("Recovered Fiduciary Reportfrom Database")
+    print("Receipts recovered from Database")
     return jsonify(data)
 
 @app.route("/RegionalsOffices", methods=["GET"])
@@ -358,14 +389,12 @@ def getRegionalsByOffice():
     data = offices.getRegionalsByOffices()
 
     # 3) Save data in Redis.
-    redisCli.set(redisKey, json.dumps(obj=data, default=str))
+    expirationTime = 60*60*6
+    redisCli.set(name=redisKey, value=json.dumps(obj=data, default=str), ex=expirationTime)
 
     # 4) Return data.
     print("Recovered Regional Offices from Database")
     return jsonify(data)
-
-
-# ========= pendiente de ver como lo guardaré en redis
 
 @app.route("/CountDialpadCalls", methods=["GET"])
 @jwt_required()

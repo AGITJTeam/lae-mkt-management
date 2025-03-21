@@ -1,5 +1,4 @@
-from datetime import datetime
-import pandas as pd
+from datetime import datetime, timedelta
 import re
 
 def validateStringDate(strDate: str) -> bool:
@@ -35,6 +34,96 @@ def validateNumber(number: str) -> bool:
     """
 
     if isinstance(number, str) and number.isdigit():
+        return True
+
+    return False
+
+def valCurrentMonthDates(start: str, end: str) -> bool:
+    """ Checks if string dates correspond to current month first day
+    and today.
+
+    Parameters
+        - start {str} the beginning of the range.
+        - end {str} the end of the range.
+
+    Returns
+        {bool} True if the dates correspond to current month, False
+        otherwise.
+    """
+
+    today = datetime.today().date()
+    firstDayCurrentMonth = today.replace(day=1).isoformat()
+    strToday = today.isoformat()
+
+    if start == firstDayCurrentMonth and end == strToday:
+        return True
+
+    return False
+
+def valPreviousMonthDates(start: str, end: str) -> bool:
+    """ Checks if string dates correspond to previous month first and
+    last day.
+
+    Parameters
+        - start {str} the beginning of the range.
+        - end {str} the end of the range.
+
+    Returns
+        {bool} True if the dates correspond to previous month, False
+        otherwise.
+    """
+
+    today = datetime.today().date()
+    firstDayCurrentMonth = today.replace(day=1)
+    lastDayPreviousMonth = (firstDayCurrentMonth - timedelta(days=1)).isoformat()
+    firstDayPreviousMonth = lastDayPreviousMonth.replace(day=1).isoformat()
+
+    if start == firstDayPreviousMonth and end == lastDayPreviousMonth:
+        return True
+
+    return False
+
+def valTwoMonthsDates(start: str, end: str) -> bool:
+    """ Checks if string dates correspond to previous month first day
+    and today.
+
+    Parameters
+        - start {str} the beginning of the range.
+        - end {str} the end of the range.
+
+    Returns
+        {bool} True if the dates correspond to previous and current
+        month, False otherwise.
+    """
+
+    today = datetime.today().date()
+    firstDayCurrentMonth = today.replace(day=1)
+    lastDayPreviousMonth = (firstDayCurrentMonth - timedelta(days=1))
+    firstDayPreviousMonth = lastDayPreviousMonth.replace(day=1).isoformat()
+    strToday = today.isoformat()
+
+    if start == firstDayPreviousMonth and end == strToday:
+        return True
+
+    return False
+
+def valLastToCurrentYearDates(start: str, end: str) -> bool:
+    """ Checks if string dates correspond to first day of last year
+    and today. This escenario only happens with Webquotes endpoint.
+
+    Parameters
+        - start {str} the beginning of the range.
+        - end {str} the end of the range.
+
+    Returns
+        {bool} True if the dates correspond to first day of last year
+        and today, False otherwise.
+    """
+
+    firstDayLastYear = "2024-01-01"
+    strToday = datetime.today().date().isoformat()
+
+    if start == firstDayLastYear and end == strToday:
         return True
 
     return False
