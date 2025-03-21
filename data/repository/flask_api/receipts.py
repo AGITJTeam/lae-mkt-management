@@ -1,4 +1,4 @@
-from data.repository.calls.helpers import postDataframeToDb
+from data.repository.calls.helpers import generateTwoMonthsDateRange, postDataframeToDb
 from data.repository.calls.receipts_payroll_repo import ReceiptsPayroll
 from data.repository.calls.receipts_repo import Receipts
 from service.receipts import generateReceiptsDf
@@ -22,25 +22,20 @@ def updateReceiptsTable(receiptsPayrollDf: pd.DataFrame) -> None:
         filename="flask_api.ini"
     )
 
-def updateRedisKey() -> None:
-    """ Updates Redis keys with given DataFrame. """
+def updateRedisKeys(rawData: pd.DataFrame, redisKey: str) -> None:
+    """ Updates Redis keys with given DataFrame.
+    
+    Parameters
+        - data {pandas.DataFrame} the data to update.
+        - redisKey {str} the Redis key to update.
+    """
 
     # Open Redis connection.
     redisCli = redis.Redis(host="localhost", port=6379, decode_responses=True)
 
-    # Defines date ranges.
-    startDate, endDate = genOneMonthDateRange()
-
-    # Generates data for date range.
-    receiptsPayroll = ReceiptsPayroll()    
-    receiptsPayrollJson = receiptsPayroll.getBetweenDates(startDate, endDate)
-    receiptsPayrollDf = pd.DataFrame(receiptsPayrollJson)
-    receiptsPayrollDf.drop_duplicates(subset=["id_receipt_hdr"], inplace=True)
-
     # Defines expiration time, redis Key and formatted data.
     expirationTime = 60*60*10
-    redisKey = "ReceiptsCurrentMonth"
-    data = json.dumps(obj=receiptsPayrollDf, default=str)
+    data = json.dumps(obj=rawData, default=str)
 
     # Set Redis key with 10 hours expiration time.
     redisCli.set(name=redisKey, value=data, ex=expirationTime)
@@ -92,19 +87,23 @@ def updateReceiptsPreviousRecords() -> None:
     updateReceiptsTable(receiptsPayrollDf)
     print(f"Receipts data from {yesterday} to {today} updated...")
 
-def genOneMonthDateRange() -> tuple[str, str]:
-    """ Generates one month date range to delete and/or update Receipts
-    table.
+def updateTwoMonthsRedisKeys() -> None:
+    """ Generate date range for current month, last month and both
+    months for updating Redis keys for Webquotes endpoint. """
 
-    Returns
-        {tuple[str, str]} date ranges to delete and/or update.
-    """
-
+    # Defines date ranges and Redis keys.
     receiptsPayroll = ReceiptsPayroll()
     lastDate = receiptsPayroll.getLastRecord()[0]["date"]
-    firstDayCurrentMonth = lastDate.replace(day=1)
+    dateRanges = generateTwoMonthsDateRange(lastDate)
+    redisKeys = [
+        "ReceiptsPreviousMonth",
+        "ReceiptsCurrentMonth"
+    ]
 
-    startDate = firstDayCurrentMonth.date().isoformat()
-    endDate = lastDate.date().isoformat()
-
-    return startDate, endDate
+    # Generates data for every date range and updates Redis keys.
+    for i, val in enumerate(dateRanges):
+        receiptsPayrollJson = receiptsPayroll.getBetweenDates(val["start"], val["end"])
+        receiptsPayrollDf = pd.DataFrame(receiptsPayrollJson)
+        receiptsPayrollDf.drop_duplicates(subset=["id_receipt_hdr"], inplace=True)
+        updateRedisKeys(receiptsPayrollDf, redisKeys[i])
+        print(f"Redis keys {redisKeys[i]} updated...")
