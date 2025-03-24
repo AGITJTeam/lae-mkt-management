@@ -27,4 +27,4 @@ finally:
 
 # add data from a specific date range, substitute 'start' and 'end'
 # with a date in YYYY-MM-DD format.
-#addReceiptsPayrollSpecificDateRange("2024-09-15", "2024-09-30")
+#addReceiptsPayrollSpecificDateRange("start", "end")

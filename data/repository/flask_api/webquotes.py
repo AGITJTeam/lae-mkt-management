@@ -20,11 +20,11 @@ def updateWebquotesTables(start: str, end: str) -> None:
         filename="flask_api.ini"
     )
 
-def updateRedisKeys(rawData: pd.DataFrame, redisKey: str) -> None:
+def updateRedisKeys(rawData: str | list[dict], redisKey: str) -> None:
     """ Updates Redis keys with given DataFrame.
     
     Parameters
-        - data {pandas.DataFrame} the data to update.
+        - data {str | list[dict]} the data to update.
         - redisKey {str} the Redis key to update.
     """
 
@@ -33,10 +33,12 @@ def updateRedisKeys(rawData: pd.DataFrame, redisKey: str) -> None:
 
     # Defines expiration time and formatted data for Redis key.
     expirationTime = 60*60*10
-    data = json.dumps(obj=rawData, default=str)
+    if type(rawData) == list:
+        data = json.dumps(obj=rawData, default=str)
+        rawData = data
 
     # Set Redis key with 10 hours expiration time.
-    redisCli.set(name=redisKey, value=data, ex=expirationTime)
+    redisCli.set(name=redisKey, value=rawData, ex=expirationTime)
 
     # Close Redis connection.
     redisCli.close()
@@ -81,57 +83,43 @@ def addWebquotesSpecificDateRange(start: str, end: str) -> None:
     print(f"Webquotes data from {start} to {end} added...")
 
 def updateWTwoMonthsRedisKeys() -> None:
-    """ Generate date range for current month, last month and both
-    months for updating Redis keys for Webquotes endpoint. """
+    """ Generate date range for current month and last month
+    for updating Redis keys for Webquotes endpoint. """
 
     # Defines date ranges and Redis keys.
     webquotes = Webquotes()
     lastDate = webquotes.getLastRecord()[0]["submission_date"]
     dateRanges = generateTwoMonthsDateRange(lastDate)
-    firstDayLastMonth = dateRanges[0]["start"]
-    today = dateRanges[1]["end"]
-    dateRanges.append({
-        "start": firstDayLastMonth,
-        "end": today
-    })
     redisKeys = [
         "WebquotesPreviousMonth",
-        "WebquotesCurrentMonth",
-        "WebquotesTwoMonths"
+        "WebquotesCurrentMonth"
     ]
 
     # Generates data for every date range and updates Redis keys.
     for i, val in enumerate(dateRanges):
         webquotesDf = generateWebquotesDf(val["start"], val["end"])
-        updateRedisKeys(webquotesDf, redisKeys[i])
+        webquotesJson = webquotesDf.to_json(orient="records", date_format="iso")
+        updateRedisKeys(webquotesJson, redisKeys[i])
         print(f"Redis keys {redisKeys[i]} updated...")
 
 def updateWDTwoMonthsRedisKeys() -> None:
-    """ Generate date range for current month, last month and both
-    months for updating Redis keys for WebquotesDetails endpoint. """
+    """ Generate date range for current month and last month
+    for updating Redis keys for WebquotesDetails endpoint. """
 
     # Defines date ranges and Redis keys.
     webquotes = Webquotes()
     lastDate = webquotes.getLastRecord()[0]["submission_date"]
     dateRanges = generateTwoMonthsDateRange(lastDate)
-    firstDayLastMonth = dateRanges[0]["start"]
-    today = dateRanges[1]["end"]
-    dateRanges.append({
-        "start": firstDayLastMonth,
-        "end": today
-    })
     redisKeys = [
         "WebquotesDetailsPreviousMonth",
-        "WebquotesDetailsCurrentMonth",
-        "WebquotesDetailsTwoMonths"
+        "WebquotesDetailsCurrentMonth"
     ]
 
     # Generates data for every date range and updates Redis keys.
     for i, val in enumerate(dateRanges):
         webquotes = Webquotes()
         webquotesDetailsJson = webquotes.getWebquotesFromDateRange(val["start"], val["end"])
-        webquotesDetailsDf = pd.DataFrame(webquotesDetailsJson)
-        updateRedisKeys(webquotesDetailsDf, redisKeys[i])
+        updateRedisKeys(webquotesDetailsJson, redisKeys[i])
         print(f"Redis keys {redisKeys[i]} updated...")
 
 def updateAllWebquotesRedisKey() -> None:
@@ -146,8 +134,7 @@ def updateAllWebquotesRedisKey() -> None:
     # Generates data for date range.
     webquotes = Webquotes()
     webquotesJson = webquotes.getPartialFromDateRange(start, today)
-    webquotesDf = pd.DataFrame(webquotesJson)
 
     # Updates Redis key.
-    updateRedisKeys(webquotesDf, redisKey)
+    updateRedisKeys(webquotesJson, redisKey)
     print(f"Redis keys {redisKey} updated...")

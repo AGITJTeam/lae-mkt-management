@@ -33,10 +33,12 @@ def updateRedisKeys(rawData: pd.DataFrame, redisKey: str) -> None:
 
     # Defines expiration time and formatted data for Redis key.
     expirationTime = 60*60*10
-    data = json.dumps(obj=rawData, default=str)
+    if type(rawData) == list:
+        data = json.dumps(obj=rawData, default=str)
+        rawData = data
 
     # Set Redis key with 10 hours expiration time.
-    redisCli.set(name=redisKey, value=data, ex=expirationTime)
+    redisCli.set(name=redisKey, value=rawData, ex=expirationTime)
 
     # Close Redis connection.
     redisCli.close()
@@ -54,7 +56,8 @@ def updateReceiptsPayrollPreviousRecords() -> None:
 
     # Defines date ranges.
     receiptsPayroll = ReceiptsPayroll()
-    lastDate = receiptsPayroll.getLastRecord()[0]["date"]
+    date = receiptsPayroll.getLastRecord()[0]["date"]
+    lastDate = date.date()
     dateRanges = generateTwoMonthsDateRange(lastDate)
     firstDayLastMonth = dateRanges[0]["start"]
     yesterday = dateRanges[1]["end"]
@@ -81,27 +84,21 @@ def addReceiptsPayrollSpecificDateRange(start: str, end: str) -> None:
     print(f"Receipts Payroll data from {start} to {end} added...")
 
 def updateTwoMonthsRedisKeys() -> None:
-    """ Generate date range for current month, last month and both
-    months for updating Redis keys for ReceiptsPayroll endpoint. """
+    """ Generate date range for current month and last month
+    for updating Redis keys for ReceiptsPayroll endpoint. """
 
     # Defines date ranges and Redis keys.
     receiptsPayroll = ReceiptsPayroll()
     lastDate = receiptsPayroll.getLastRecord()[0]["date"]
     dateRanges = generateTwoMonthsDateRange(lastDate)
-    firstDayLastMonth = dateRanges[0]["start"]
-    today = dateRanges[1]["end"]
-    dateRanges.append({
-        "start": firstDayLastMonth,
-        "end": today
-    })
     redisKeys = [
         "ReceiptsPayrollPreviousMonth",
-        "ReceiptsPayrollCurrentMonth",
-        "ReceiptsPayrollTwoMonths"
+        "ReceiptsPayrollCurrentMonth"
     ]
 
     # Generates data for every date range and updates Redis keys.
     for i, val in enumerate(dateRanges):
         receiptsPayrollDf = generateReceiptsPayrollDf(val["start"], val["end"])
-        updateRedisKeys(receiptsPayrollDf, redisKeys[i])
+        receiptsJson = receiptsPayrollDf.to_json(orient="records", date_format="iso")
+        updateRedisKeys(receiptsJson, redisKeys[i])
         print(f"Redis keys {redisKeys[i]} updated...")

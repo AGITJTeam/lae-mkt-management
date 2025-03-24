@@ -52,10 +52,11 @@ def valCurrentMonthDates(start: str, end: str) -> bool:
     """
 
     today = datetime.today().date()
-    firstDayCurrentMonth = today.replace(day=1).isoformat()
+    firstDayCurrentMonth = today.replace(day=1)
+    firstDayCurrentMonthStr = firstDayCurrentMonth.isoformat()
     strToday = today.isoformat()
 
-    if start == firstDayCurrentMonth and end == strToday:
+    if start == firstDayCurrentMonthStr and end == strToday:
         return True
 
     return False
@@ -75,10 +76,13 @@ def valPreviousMonthDates(start: str, end: str) -> bool:
 
     today = datetime.today().date()
     firstDayCurrentMonth = today.replace(day=1)
-    lastDayPreviousMonth = (firstDayCurrentMonth - timedelta(days=1)).isoformat()
-    firstDayPreviousMonth = lastDayPreviousMonth.replace(day=1).isoformat()
+    lastDayPreviousMonth = (firstDayCurrentMonth - timedelta(days=1))
+    firstDayPreviousMonth = lastDayPreviousMonth.replace(day=1)
 
-    if start == firstDayPreviousMonth and end == lastDayPreviousMonth:
+    firstDayPreviousMonthStr = firstDayPreviousMonth.isoformat()
+    lastDayPreviousMonthStr = lastDayPreviousMonth.isoformat()
+
+    if start == firstDayPreviousMonthStr and end == lastDayPreviousMonthStr:
         return True
 
     return False
@@ -99,10 +103,12 @@ def valTwoMonthsDates(start: str, end: str) -> bool:
     today = datetime.today().date()
     firstDayCurrentMonth = today.replace(day=1)
     lastDayPreviousMonth = (firstDayCurrentMonth - timedelta(days=1))
-    firstDayPreviousMonth = lastDayPreviousMonth.replace(day=1).isoformat()
+    firstDayPreviousMonth = lastDayPreviousMonth.replace(day=1)
+    
+    firstDayPreviousMonthStr = firstDayPreviousMonth.isoformat()
     strToday = today.isoformat()
 
-    if start == firstDayPreviousMonth and end == strToday:
+    if start == firstDayPreviousMonthStr and end == strToday:
         return True
 
     return False

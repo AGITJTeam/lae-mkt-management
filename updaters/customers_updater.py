@@ -4,7 +4,8 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from data.repository.calls.helpers import generateDateTimeUpdated
 from data.repository.flask_api.customers import (
     updateCustomersPreviousRecords,
-    updateRedisKey
+    updateRedisKey,
+    addCustomersSpecificRange
 )
 
 PYTHON="/home/berenice/Documents/python-dev.v3/venv/bin/python"
@@ -28,4 +29,4 @@ finally:
 
 # add data from a specific date range, substitute 'start' and 'end'
 # with a date in YYYY-MM-DD format.
-#addCustomersSpecificRange("2024-09-22", "2024-09-30")
+#addCustomersSpecificRange("start", "end")

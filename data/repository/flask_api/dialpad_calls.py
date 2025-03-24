@@ -16,12 +16,18 @@ def updateRedisKeys(allCalls: list[dict], uniqueCalls: list[dict], redisKey: str
     redisCli = redis.Redis(host="localhost", port=6379, decode_responses=True)
 
     # Defines expiration time and formatted data for Redis key.
-    expirationTime = 60*60*10
     allCallsJson = json.dumps(obj=allCalls, default=str)
     uniqueCallsJson = json.dumps(obj=uniqueCalls, default=str)
 
     # Set Redis key with 10 hours expiration time.
     #redisCli.set(name=redisKey, value=data, ex=expirationTime)
+    redisCli.hset(
+        name=redisKey,
+        mapping={
+            "allCalls": allCallsJson,
+            "uniqueCalls": uniqueCallsJson
+        }
+    )
 
     # Close Redis connection.
     redisCli.close()

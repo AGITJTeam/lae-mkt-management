@@ -18,6 +18,7 @@ def updateRedisKey() -> None:
 
     # Set Redis key with 10 hours expiration time.
     redisCli.set(name=redisKey, value=data, ex=expirationTime)
+    print("Redis keys RegionalsOfficesReport updated...")
 
     # Close Redis connection.
     redisCli.close()

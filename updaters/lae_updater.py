@@ -2,7 +2,10 @@ import os, sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from data.repository.calls.helpers import generateDateTimeUpdated
-from data.repository.flask_api.lae import updateLaeDataTablesPreviousRecords
+from data.repository.flask_api.lae import (
+    updateLaeDataTablesPreviousRecords,
+    addLaeSpecificDateRange
+)
 
 PYTHON="/home/berenice/Documents/python-dev.v3/venv/bin/python"
 SCRIPTS="/home/berenice/Documents/python-dev.v3/updaters"
@@ -26,4 +29,4 @@ finally:
 # add data from a specific date range, substitute 'start' and 'end'
 # with a date in YYYY-MM-DD format. Receipts Payroll data must have
 # been added first.
-#addLaeSpecificDateRange("2025-01-01", "2025-01-08")
+#addLaeSpecificDateRange("start", "end")

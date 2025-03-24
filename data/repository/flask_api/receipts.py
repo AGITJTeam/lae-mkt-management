@@ -88,13 +88,14 @@ def updateReceiptsPreviousRecords() -> None:
     print(f"Receipts data from {yesterday} to {today} updated...")
 
 def updateTwoMonthsRedisKeys() -> None:
-    """ Generate date range for current month, last month and both
-    months for updating Redis keys for Webquotes endpoint. """
+    """ Generate date range for current mont and last month
+    for updating Redis keys for Webquotes endpoint. """
 
     # Defines date ranges and Redis keys.
     receiptsPayroll = ReceiptsPayroll()
     lastDate = receiptsPayroll.getLastRecord()[0]["date"]
-    dateRanges = generateTwoMonthsDateRange(lastDate)
+    date = lastDate.date()
+    dateRanges = generateTwoMonthsDateRange(date)
     redisKeys = [
         "ReceiptsPreviousMonth",
         "ReceiptsCurrentMonth"
@@ -105,5 +106,6 @@ def updateTwoMonthsRedisKeys() -> None:
         receiptsPayrollJson = receiptsPayroll.getBetweenDates(val["start"], val["end"])
         receiptsPayrollDf = pd.DataFrame(receiptsPayrollJson)
         receiptsPayrollDf.drop_duplicates(subset=["id_receipt_hdr"], inplace=True)
-        updateRedisKeys(receiptsPayrollDf, redisKeys[i])
+        receiptsJson = receiptsPayrollDf.to_json(orient="records")
+        updateRedisKeys(receiptsJson, redisKeys[i])
         print(f"Redis keys {redisKeys[i]} updated...")

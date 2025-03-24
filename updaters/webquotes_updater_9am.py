@@ -29,4 +29,3 @@ else:
     date, time = generateDateTimeUpdated()
     print(f"\n{date} {time}\n")
     print("-"*50)
-

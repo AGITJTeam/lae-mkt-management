@@ -12,7 +12,7 @@ def generateDynamicFormDf(start: str, end: str) -> list[dict]:
         - end {str} the end of the date range.
 
     Returns
-        {pandas.DataFrame} resulting DataFrame.
+        {list[dict]} transformed data.
     """
 
     homeOwners = []
