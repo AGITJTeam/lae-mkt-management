@@ -86,19 +86,29 @@ def updateWTwoMonthsRedisKeys() -> None:
     """ Generate date range for current month and last month
     for updating Redis keys for Webquotes endpoint. """
 
-    # Defines date ranges and Redis keys.
+    # Retrieves last date from database.
     webquotes = Webquotes()
     lastDate = webquotes.getLastRecord()[0]["submission_date"]
+
+    # Defines date ranges.
     dateRanges = generateTwoMonthsDateRange(lastDate)
+    firstDayPreviousMonth = dateRanges[0]["start"]
+    yesterday = dateRanges[1]["end"]
+    dateRanges.append({
+        "start": firstDayPreviousMonth,
+        "end": yesterday
+    })
+
+    # Defines Redis keys.
     redisKeys = [
         "WebquotesPreviousMonth",
-        "WebquotesCurrentMonth"
+        "WebquotesCurrentMonth",
+        "WebquotesTwoMonths"
     ]
 
     # Generates data for every date range and updates Redis keys.
     for i, val in enumerate(dateRanges):
-        webquotesDf = generateWebquotesDf(val["start"], val["end"])
-        webquotesJson = webquotesDf.to_json(orient="records", date_format="iso")
+        webquotesJson = webquotes.getPartialFromDateRange(val["start"], val["end"])
         updateRedisKeys(webquotesJson, redisKeys[i])
         print(f"Redis keys {redisKeys[i]} updated...")
 
@@ -106,18 +116,28 @@ def updateWDTwoMonthsRedisKeys() -> None:
     """ Generate date range for current month and last month
     for updating Redis keys for WebquotesDetails endpoint. """
 
-    # Defines date ranges and Redis keys.
+    # Retrieves last date from database.
     webquotes = Webquotes()
     lastDate = webquotes.getLastRecord()[0]["submission_date"]
+
+    # Defines date ranges.
     dateRanges = generateTwoMonthsDateRange(lastDate)
+    firstDayPreviousMonth = dateRanges[0]["start"]
+    yesterday = dateRanges[1]["end"]
+    dateRanges.append({
+        "start": firstDayPreviousMonth,
+        "end": yesterday
+    })
+
+    # Defines Redis keys.
     redisKeys = [
         "WebquotesDetailsPreviousMonth",
-        "WebquotesDetailsCurrentMonth"
+        "WebquotesDetailsCurrentMonth",
+        "WebquotesDetailsTwoMonths"
     ]
 
     # Generates data for every date range and updates Redis keys.
     for i, val in enumerate(dateRanges):
-        webquotes = Webquotes()
         webquotesDetailsJson = webquotes.getWebquotesFromDateRange(val["start"], val["end"])
         updateRedisKeys(webquotesDetailsJson, redisKeys[i])
         print(f"Redis keys {redisKeys[i]} updated...")

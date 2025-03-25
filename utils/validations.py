@@ -1,5 +1,36 @@
+from api import redisCli
 from datetime import datetime, timedelta
-import re
+from werkzeug.datastructures import FileStorage
+import json, re
+
+def valPreMadeRedisData(start: str, end: str, redisKey: str, validators: dict) -> dict | None:
+    """ Checks if Redis keys in validators exists in Redis.
+
+    Parameters
+        - start {str} the beginning of the range.
+        - end {str} the end of the range.
+        - newKeyName {str} Redis key if pre-made keys do not exist.
+        - validators {dict} dictionary with the Redis keys and validator
+        functions.
+    """
+
+    # 1) Checks Redis connection.
+    if not redisCli:
+        return None
+
+    for key, validatorFunc in validators.items():
+        # 2) Checks if date range correspond to pre-made Redis keys.
+        if validatorFunc(start, end):
+            # 3) Returns data if Redis key exists.
+            cachedData = redisCli.get(key)
+            if cachedData:
+                return json.loads(cachedData)
+
+    # 4) Checks if particular Redis key exists.
+    cachedData = redisCli.get(redisKey)
+
+    # 5) Returns data if Redis key exists.
+    return json.loads(cachedData) if cachedData else None
 
 def validateStringDate(strDate: str) -> bool:
     """ Checks if a string is a valid date and if it's not in
@@ -11,7 +42,7 @@ def validateStringDate(strDate: str) -> bool:
     Returns
         {bool} True if the string is a valid date, False otherwise.
     """
-    
+
     pattern = r"^\d{4}\-(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])$"
 
     if not re.fullmatch(pattern, strDate):
@@ -23,7 +54,7 @@ def validateStringDate(strDate: str) -> bool:
     except ValueError:
         return False
 
-def validateNumber(number: str) -> bool:
+def validateStringNumber(number: str) -> bool:
     """ Checks if a string is a number.
 
     Parameters
@@ -33,10 +64,26 @@ def validateNumber(number: str) -> bool:
         {bool} True if the number is an integer, False otherwise.
     """
 
-    if isinstance(number, str) and number.isdigit():
-        return True
+    if not isinstance(number, str) or not number.isdigit(): 
+        return False
 
-    return False
+    return True
+
+def validatePayrollReportId(id: str) -> bool:
+    """ Checks if a string contains only numbers and the length is
+    equal to 8.
+
+    Parameters
+        - id {str} the id to check.
+
+    Returns
+        {bool} True if the id is valid, False otherwise.
+    """
+
+    if not validateStringNumber(id) or not len(id) == 8:
+        return False
+
+    return True
 
 def validateEmail(email: str) -> bool:
     """ Checks if a string is a valid email.
@@ -48,11 +95,71 @@ def validateEmail(email: str) -> bool:
         {bool} True if the email is valid, False otherwise.
     """
 
-    pattern = r"[^@ \t\r\n]+@[^@ \t\r\n]+\.[^@ \t\r\n]+"
+    pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9]+(?:\.[a-zA-Z0-9]+)+$"
 
     if not re.fullmatch(pattern, email):
         return False
-    
+
+    return True
+
+def validateFileStorage(file: FileStorage) -> bool:
+    """ Checks if a file is valid.
+
+    Parameters
+        - file {werkzeug.datastructures.FileStorage} the file to check.
+
+    Returns
+        {bool} True if the file is valid, False otherwise.
+    """
+
+    if not isinstance(file, FileStorage):
+        return False
+
+    return True
+
+def validateTxtFile(file: FileStorage) -> bool:
+    """ Checks if a file is a valid txt file.
+
+    Parameters
+        - file {werkzeug.datastructures.FileStorage} the file to check.
+
+    Returns
+        {bool} True if the file is a valid txt file, False otherwise.
+    """
+
+    if not validateFileStorage(file) or not file.filename.endswith(".txt"):
+        return False
+
+    return True
+
+def validateXlsFile(file: FileStorage) -> bool:
+    """ Checks if a file is a valid xls file.
+
+    Parameters
+        - file {werkzeug.datastructures.FileStorage} the file to check.
+
+    Returns
+        {bool} True if the file is a valid xls file, False otherwise.
+    """
+
+    if not validateFileStorage(file) or not file.filename.endswith(".xls"):
+        return False
+
+    return True
+
+def validateXlsxFile(file: FileStorage) -> bool:
+    """ Checks if a file is a valid xlsx file.
+
+    Parameters
+        - file {werkzeug.datastructures.FileStorage} the file to check.
+
+    Returns
+        {bool} True if the file is a valid xlsx file, False otherwise.
+    """
+
+    if not validateFileStorage(file) or not file.filename.endswith(".xlsx"):
+        return False
+
     return True
 
 def valCurrentMonthDates(start: str, end: str) -> bool:
@@ -68,15 +175,18 @@ def valCurrentMonthDates(start: str, end: str) -> bool:
         otherwise.
     """
 
+    # Create auxiliar datetime variables.
     today = datetime.today().date()
     firstDayCurrentMonth = today.replace(day=1)
+
+    # Create only date strings from datetime variables.
     firstDayCurrentMonthStr = firstDayCurrentMonth.isoformat()
     strToday = today.isoformat()
 
-    if start == firstDayCurrentMonthStr and end == strToday:
-        return True
+    if start != firstDayCurrentMonthStr or end != strToday:
+        return False
 
-    return False
+    return True
 
 def valPreviousMonthDates(start: str, end: str) -> bool:
     """ Checks if string dates correspond to previous month first and
@@ -91,18 +201,20 @@ def valPreviousMonthDates(start: str, end: str) -> bool:
         otherwise.
     """
 
+    # Create auxiliar datetime variables.
     today = datetime.today().date()
     firstDayCurrentMonth = today.replace(day=1)
     lastDayPreviousMonth = (firstDayCurrentMonth - timedelta(days=1))
     firstDayPreviousMonth = lastDayPreviousMonth.replace(day=1)
 
+    # Create only date strings from datetime variables.
     firstDayPreviousMonthStr = firstDayPreviousMonth.isoformat()
     lastDayPreviousMonthStr = lastDayPreviousMonth.isoformat()
 
-    if start == firstDayPreviousMonthStr and end == lastDayPreviousMonthStr:
-        return True
+    if start != firstDayPreviousMonthStr or end != lastDayPreviousMonthStr:
+        return False
 
-    return False
+    return True
 
 def valTwoMonthsDates(start: str, end: str) -> bool:
     """ Checks if string dates correspond to previous month first day
@@ -117,18 +229,20 @@ def valTwoMonthsDates(start: str, end: str) -> bool:
         month, False otherwise.
     """
 
+    # Create auxiliar datetime variables.
     today = datetime.today().date()
     firstDayCurrentMonth = today.replace(day=1)
     lastDayPreviousMonth = (firstDayCurrentMonth - timedelta(days=1))
     firstDayPreviousMonth = lastDayPreviousMonth.replace(day=1)
-    
+
+    # Create only date strings from datetime variables.
     firstDayPreviousMonthStr = firstDayPreviousMonth.isoformat()
     strToday = today.isoformat()
 
-    if start == firstDayPreviousMonthStr and end == strToday:
-        return True
+    if start != firstDayPreviousMonthStr or end != strToday:
+        return False
 
-    return False
+    return True
 
 def valLastToCurrentYearDates(start: str, end: str) -> bool:
     """ Checks if string dates correspond to first day of last year
@@ -143,10 +257,11 @@ def valLastToCurrentYearDates(start: str, end: str) -> bool:
         and today, False otherwise.
     """
 
+    # Create only date strings.
     firstDayLastYear = "2024-01-01"
     strToday = datetime.today().date().isoformat()
 
-    if start == firstDayLastYear and end == strToday:
-        return True
+    if start != firstDayLastYear or end != strToday: 
+        return False
 
-    return False
+    return True

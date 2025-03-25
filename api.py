@@ -30,7 +30,26 @@ from flask_jwt_extended import create_access_token, jwt_required, JWTManager
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from dotenv import load_dotenv
-import logging, redis, json
+import logging, redis, redis.exceptions, json
+
+# ======================== REDIS INITIALIZATION =======================
+
+def initRedis() -> redis.Redis | None:
+    """ Creates a Redis client and checks if it's working.
+
+    Returns
+        {redis.Redis | None} the Redis client if it's working, None 
+        otherwise.
+    """
+    
+    try:
+        redisCli = redis.Redis(host="localhost", port=6379, decode_responses=True)
+        redisCli.ping()
+        logger.info("Redis connection established.")
+        return redisCli
+    except redis.exceptions.ConnectionError:
+        logger.error("Redis connection error. Check if Redis container is running.")
+        return None
 
 # ======================== FLASK CONFIGURATION ========================
 
@@ -44,7 +63,7 @@ CORS(app)
 
 logger = logging.getLogger(__name__)
 
-redisCli = redis.Redis(host="localhost", port=6379, decode_responses=True)
+redisCli = initRedis()
 
 # ======================== FLASK API ENDPOINTS ========================
 
@@ -64,7 +83,7 @@ def getDataBetweenDates():
     # 1) Retrieve parameters and validate them.
     start = request.args.get("startAt")
     end = request.args.get("endAt")
-    
+
     if not validateStringDate(start) or not validateStringDate(end):
         return jsonify({
             "status": 400,
@@ -72,38 +91,30 @@ def getDataBetweenDates():
             "error": "Invalid date format"
         }), 400
 
-    # 2) Defines Redis key with date parameters.
+    # 2) Defines pre-made Redis key with date parameters.
     redisKey = f"ReceiptsPayroll_{start}_{end}"
 
-    # 3) Check if the data is already in Redis.
-    if valCurrentMonthDates(start, end):
-        redisKey = "ReceiptsPayrollCurrentMonth"
-        print("Receipts Payroll recovered from Redis")
-        return jsonify(json.loads(redisCli.get(redisKey)))
+    # 3) Defines pre-made Redis keys and validators.
+    validators = {
+        "ReceiptsPayrollCurrentMonth": valCurrentMonthDates,
+        "ReceiptsPayrollPreviousMonth": valPreviousMonthDates,
+        "ReceiptsPayrollTwoMonths": valTwoMonthsDates
+    }
 
-    if valPreviousMonthDates(start, end):
-        redisKey = "ReceiptsPayrollPreviousMonth"
-        print("Receipts Payroll recovered from Redis")
-        return jsonify(json.loads(redisCli.get(redisKey)))
+    # 4) Check if the data is already in Redis.
+    redisData = valPreMadeRedisData(start, end, redisKey, validators)
+    if redisData:
+        return jsonify(redisData)
 
-    if valTwoMonthsDates(start, end):
-        redisKey = "ReceiptsPayrollTwoMonths"
-        print("Receipts Payroll recovered from Redis")
-        return jsonify(json.loads(redisCli.get(redisKey)))
-    
-    if redisCli.get(redisKey):
-        print("Receipts Payroll recovered from Redis")
-        return jsonify(json.loads(redisCli.get(redisKey)))
-
-    # 4) Recover data from database.
+    # 5) Recover data from database.
     receiptsPayroll = ReceiptsPayroll()
     data = receiptsPayroll.getBetweenDates(start, end)
 
-    # 5) Defines expiration time and save Redis key.
+    # 6) Defines expiration time and save Redis key.
     expirationTime = 60*60*3
     redisCli.set(name=redisKey, value=json.dumps(obj=data, default=str), ex=expirationTime)
     
-    # 6) Return data.
+    # 7) Return data.
     print("Receipts Payroll recovered from Database")
     return jsonify(data)
 
@@ -111,7 +122,7 @@ def getDataBetweenDates():
 @jwt_required()
 def getReceiptsByCustId(id: str):
     # 1) Validate parameter.
-    if not validateNumber(id):
+    if not validateStringNumber(id):
         return jsonify({
             "status": 400,
             "label": "Bad request",
@@ -320,7 +331,7 @@ def getAllCustomers():
 @jwt_required()
 def getCustomerById(id: str):
     # 1) Validate parameter.
-    if not validateNumber(id):
+    if not validateStringNumber(id):
         return jsonify({
             "status": 400,
             "label": "Bad request",
@@ -582,10 +593,10 @@ def postUser():
 
         if username in usernames:
             return jsonify({
-                "status": 400,
+                "status": 409,
                 "label": "Bad request",
                 "error": f"Username '{username}' already exist"
-            }), 400
+            }), 409
 
         if not position in positions:
             return jsonify({
@@ -626,6 +637,9 @@ def postUser():
 @app.route("/StatsDash/OtReports/Names", methods=["GET"])
 @jwt_required()
 def getOtReportByName():
+    test = redisCli.ping()
+    print(test)
+    
     # 1) Check if the data is already in Redis.
     redisKey = "OtReportsNames"
     if redisCli.get(redisKey):
@@ -690,7 +704,7 @@ def getOtReportIdByName():
 @jwt_required()
 def getOtReport(id: str):
     # 1) Validate parameter.
-    if not validateNumber(id):
+    if not validateStringNumber(id):
         return jsonify({
             "status": 400,
             "label": "Bad request",
@@ -802,7 +816,7 @@ def postOtReport():
 @jwt_required()
 def delOtReport(id: str):
     # 1) Validate parameter.
-    if not validateNumber(id):
+    if not validateStringNumber(id):
         return jsonify({
             "status": 400,
             "label": "Bad request",
@@ -890,7 +904,7 @@ def processDashProjections():
         return jsonify({
             "status": 400,
             "label": "Bad request",
-            "error": "Invalid username format"
+            "error": "Fullname must contain only caracteres and spaces"
         }), 400
 
     try:
@@ -900,12 +914,12 @@ def processDashProjections():
         
         if not position in positions:
             return jsonify({
-                "status": 400,
-                "label": "Bad request",
+                "status": 404,
+                "label": "Not found",
                 "error": f"{position} position do not exist"
-            }), 400
+            }), 404
     except Exception:
-        logger.error("An error occurred while getting data for Projections Dash data")
+        logger.error("An error occurred while getting data for Projections Report")
         return jsonify({}), 500
 
     # 3) Generate Projections data with parameters.
@@ -926,112 +940,242 @@ def processDashProjections():
 @app.route("/StatsDash/DashOffices", methods=["GET"])
 @jwt_required()
 def processDashOffices():
+    # 1) Retrieve parameters and validate them.
     start = request.args.get("startAt")
     end = request.args.get("endAt")
     reportId = request.args.get("reportId")
 
+    if not validateStringDate(start) or not validateStringDate(end):
+        return jsonify({
+            "status": 400,
+            "label": "Bad request",
+            "error": "Invalid date format"
+        }), 400
+
+    if not validatePayrollReportId(reportId):
+        return jsonify({
+            "status": 400,
+            "label": "Bad request",
+            "error": "Invalid report ID"
+        }), 400
+
+    # 2) Generate Offices data with parameters.
     try:
         companySales, totalSums = dashOffices(start, end, reportId)
     except Exception:
         logger.error(f"An error occurred while processing the Offices Dash data")
         return jsonify({}), 500
-    else:
-        return jsonify({"daily_data": companySales, "total_data": totalSums}), 200
+
+    # 3) Return data.
+    return jsonify({
+        "daily_data": companySales,
+        "total_data": totalSums
+    }), 200
 
 @app.route("/StatsDash/DashOs", methods=["GET"])
 @jwt_required()
 def processDashOs():
+    # 1) Retrieve parameters and validate them.
     start = request.args.get("startAt")
     end = request.args.get("endAt")
 
+    if not validateStringDate(start) or not validateStringDate(end):
+        return jsonify({
+            "status": 400,
+            "label": "Bad request",
+            "error": "Invalid date format"
+        }), 400
+
+    # 2) Generate Online Sales data with parameters.
     try:
         companySales, totalSums = dashOs(start, end)
     except Exception:
         logger.error(f"An error occurred while processing the Online Sales Dash data")
         return jsonify({}), 500
-    else:
-        return jsonify({"daily_data": companySales, "total_data": totalSums}), 200
+
+    # 3) Return data.
+    return jsonify({
+        "daily_data": companySales,
+        "total_data": totalSums
+    }), 200
 
 @app.route("/StatsDash/DashCarriers", methods=["GET"])
 @jwt_required()
 def processDashCarriers():
+    # 1) Retrieve parameters and validate them.
     start = request.args.get("startAt")
     end = request.args.get("endAt")
     position = request.args.get("position")
     fullname = request.args.get("fullname")
 
+    if not validateStringDate(start) or not validateStringDate(end):
+        return jsonify({
+            "status": 400,
+            "label": "Bad request",
+            "error": "Invalid date format"
+        }), 400
+
+    if not fullname.replace(" ", "").isalpha():
+        return jsonify({
+            "status": 400,
+            "label": "Bad request",
+            "error": "Fullname must contain only caracteres and spaces"
+        }), 400
+
+    try:
+        # 2) Recover positions from database and validate position.
+        compliance = Compliance()
+        positions = [position["position"] for position in compliance.getPositions()]
+
+        if not position in positions:
+            return jsonify({
+                "status": 404,
+                "label": "Not found",
+                "error": f"{position} position do not exist"
+            }), 404
+    except Exception:
+        logger.error("An error occurred while getting data for Carriers Report")
+        return jsonify({}), 500
+
+    # 3) Generate Carriers data with parameters.
     try:
         companySales, totalSums = dashCarriers(start, end, position, fullname)
     except Exception:
         logger.error(f"An error occurred while processing the Carrier Dash data")
         return jsonify({}), 500
-    else:
-        return jsonify({"daily_data": companySales, "total_data": totalSums}), 200
+
+    # 4) Return data.
+    return jsonify({
+        "daily_data": companySales,
+        "total_data": totalSums
+    }), 200
 
 @app.route("/StatsDash/TopCarriers", methods=["GET"])
 @jwt_required()
 def processTopCarriers():
+    # 1) Retrieve parameters and validate them.
     start = request.args.get("startAt")
     end = request.args.get("endAt")
 
+    if not validateStringDate(start) or not validateStringDate(end):
+        return jsonify({
+            "status": 400,
+            "label": "Bad request",
+            "error": "Invalid date format"
+        }), 400
+
+    # 2) Generate Top Carriers data with parameters.
     try:
         companySales, companySalesOffices, totalSums = topCarriers(start, end)
     except Exception:
         logger.error(f"An error occurred while processing the Top Carrier Dash data")
         return jsonify({}), 500
-    else:
-        return jsonify({
-            "daily_data": companySales,
-            "daily_data_office": companySalesOffices,
-            "total_data": totalSums
-        }), 200
+
+    # 3) Return data.
+    return jsonify({
+        "daily_data": companySales,
+        "daily_data_office": companySalesOffices,
+        "total_data": totalSums
+    }), 200
 
 @app.route("/StatsDash/OutOfState", methods=["GET"])
 @jwt_required()
 def processOutOfState():
+    # 1) Retrieve parameters and validate them.
     start = request.args.get("startAt")
     end = request.args.get("endAt")
 
+    if not validateStringDate(start) or not validateStringDate(end):
+        return jsonify({
+            "status": 400,
+            "label": "Bad request",
+            "error": "Invalid date format"
+        }), 400
+
+    # 2) Generate Out Of State data with parameters.
     try:
         dailyData = outOfState(start, end)
     except Exception:
         logger.error(f"An error occurred while processing the Out Of State Dash data")
         return jsonify({}), 500
-    else:
-        return jsonify({"daily_data": dailyData}), 200
+
+    return jsonify({
+        "daily_data": dailyData
+    }), 200
 
 @app.route("/StatsDash/GmbReports", methods=["GET"])
 @jwt_required()
 def getGmbCallsReport():
+    # 1) Retrieve parameters and validate them.
     start = request.form.get("startDate")
     end = request.form.get("endDate")
     file = request.files.get("gmbCallsFile")
 
+    if not validateStringDate(start) or not validateStringDate(end):
+        return jsonify({
+            "status": 400,
+            "label": "Bad request",
+            "error": "Invalid date format"
+        }), 400
+
+    if not validateTxtFile(file):
+        return jsonify({
+            "status": 400,
+            "label": "Bad request",
+            "error": "Invalid format or file must be a .txt file"
+        }), 400
+
+    # 2) Generate GMB Calls data with parameters.
     try:
         excelReport = generateGmbCallsReport(start, end, file)
     except Exception:
         logger.error(f"An error occurred while generating the report.")
         return jsonify({}), 500
-    else:
-        dictReport = excelReport.to_dict(orient="records")
-        return jsonify(dictReport), 200
+
+    # 3) Return data.
+    dictReport = excelReport.to_dict(orient="records")
+    return jsonify(dictReport), 200
 
 @app.route("/StatsDash/YelpReports", methods=["GET"])
 @jwt_required()
 def getYelpCallsReport():
+    # 1) Retrieve parameters and validate them.
     start = request.form.get("startDate")
     end = request.form.get("endDate")
     yelpCalls = request.files.get("yelpCallsFile")
     yelpCodes = request.files.get("yelpCodesFile")
 
+    if not validateStringDate(start) or not validateStringDate(end):
+        return jsonify({
+            "status": 400,
+            "label": "Bad request",
+            "error": "Invalid date format"
+        }), 400
+
+    if not validateXlsFile(yelpCalls):
+        return jsonify({
+            "status": 400,
+            "label": "Bad request",
+            "error": "Invalid format or file must be a .xls file"
+        }), 400
+
+    if not validateXlsxFile(yelpCodes):
+        return jsonify({
+            "status": 400,
+            "label": "Bad request",
+            "error": "Invalid format or file must be a .xlsx file"
+        }), 400
+
+    # 2) Generate Yelp Calls data with parameters.
     try:
         yelpReport = generateYelpCallsReport(start, end, yelpCalls, yelpCodes)
     except Exception as e:
         logger.error(f"An error occurred while generating the report.")
         return jsonify({}), 500
-    else:
-        dictReport = yelpReport.to_dict(orient="records")
-        return jsonify(dictReport), 200
+
+    # 3) Return data.
+    dictReport = yelpReport.to_dict(orient="records")
+    return jsonify(dictReport), 200
 
 # ========================= FLASK EXECUTER =======================
 

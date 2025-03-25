@@ -44,7 +44,11 @@ def otRun(start: str, end: str, username: str, encryptedPassword: str, reportNam
 
         postOtReportSales(sales, id, "ot_reports_sales")
         postOtReportSales(weekSales, id, "ot_reports_weeksales")
-        return jsonify({"msg": "Success"}), 200
+        return jsonify({
+            "status": 201,
+            "label": "OK",
+            "message": f"Ot Report '{reportName}' created successfully"
+        }), 201
     except Exception as e:
         logger.error(f"Error posting OT Report data in otRun: {str(e)}")
         raise

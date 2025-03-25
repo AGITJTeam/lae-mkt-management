@@ -87,18 +87,29 @@ def updateTwoMonthsRedisKeys() -> None:
     """ Generate date range for current month and last month
     for updating Redis keys for ReceiptsPayroll endpoint. """
 
-    # Defines date ranges and Redis keys.
+    # Retrieves last date from database.
     receiptsPayroll = ReceiptsPayroll()
     lastDate = receiptsPayroll.getLastRecord()[0]["date"]
-    dateRanges = generateTwoMonthsDateRange(lastDate)
+    date = lastDate.date()
+
+    # Defines date ranges.
+    dateRanges = generateTwoMonthsDateRange(date)
+    firstDayPreviousMonth = dateRanges[0]["start"]
+    yesterday = dateRanges[1]["end"]
+    dateRanges.append({
+        "start": firstDayPreviousMonth,
+        "end": yesterday
+    })
+
+    # Defines Redis keys.
     redisKeys = [
         "ReceiptsPayrollPreviousMonth",
-        "ReceiptsPayrollCurrentMonth"
+        "ReceiptsPayrollCurrentMonth",
+        "ReceiptsPayrollTwoMonths"
     ]
 
     # Generates data for every date range and updates Redis keys.
     for i, val in enumerate(dateRanges):
-        receiptsPayrollDf = generateReceiptsPayrollDf(val["start"], val["end"])
-        receiptsJson = receiptsPayrollDf.to_json(orient="records", date_format="iso")
-        updateRedisKeys(receiptsJson, redisKeys[i])
+        receiptsPayrollJson = receiptsPayroll.getBetweenDates(val["start"], val["end"])
+        updateRedisKeys(receiptsPayrollJson, redisKeys[i])
         print(f"Redis keys {redisKeys[i]} updated...")
