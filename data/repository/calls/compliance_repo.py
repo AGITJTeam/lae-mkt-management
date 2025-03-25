@@ -6,15 +6,26 @@ class Compliance(ICompliance):
     Handles every petition of different tables from Compliance database.
 
     Methods
+        - getPositions.
         - getRegionalsByOffices.
         - getUserEmailById.
+        - getAllUsernames.
         - searchUser.
         - insertUser.
         - getOtReportsNames.
         - getOtReportIdByName.
         - getLastOtReportId.
+        - getOtReportById.
         - delOtReport.
+        - getNumberOfOtReports.
     """
+    
+    def getPositions(self):
+        """ Retrieve all positions available for the users. """
+        
+        query = "SELECT DISTINCT position FROM users;"
+        
+        return getData(query, filename="k_db.ini")
 
     def getRegionalsByOffices(self):
         """ Retrieve the regional, manager, office and region related
@@ -42,6 +53,17 @@ class Compliance(ICompliance):
         
         return getData(query, filename="k_db.ini")
     
+    def getAllUsernames(self):
+        """ Retrieve all usernames in the database.
+
+        Returns
+            {list[dict]} a list containing the usernames of the users.
+        """
+
+        query = "SELECT DISTINCT username FROM users;"
+
+        return getData(query, filename="k_db.ini")
+
     def searchUser(self, username):
         """ Search a user by their username.
 

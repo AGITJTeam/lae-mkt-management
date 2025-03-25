@@ -505,182 +505,423 @@ def countDialpadCalls():
 @app.route("/StatsDash/User/<string:username>", methods=["GET"])
 @jwt_required()
 def getUserData(username: str):
-    compliance = Compliance()
-    response = compliance.searchUser(username)
+    # 1) Validate parameter.
+    if not username.isalpha():
+        return jsonify({
+            "status": 400,
+            "label": "Bad request",
+            "error": "Invalid username format"
+        }), 400
+
+    try:
+        # 2) Recover data from database.
+        compliance = Compliance()
+        response = compliance.searchUser(username)
+    except Exception as e:
+        return jsonify({
+            "status": 500,
+            "label": "Internal server error",
+            "error": f"An error occurred while searching the user: {str(e)}"
+        }), 500
+    
+    # 3) Prepare data and return it.
     if response:
         userData = response[0]
     else:
         userData = {}
 
-    return jsonify(userData)
+    return jsonify(userData), 200
 
 @app.route("/StatsDash/User", methods=["POST"])
 @jwt_required()
 def postUser():
-    compliance = Compliance()
+    # 1) Recover parameters from request.
     data = request.json
-
     fullname = data["fullname"]
     username = data["username"]
+    location = data["location"]
     password = data["password"]
     email = data["email"]
-    position = data["position"]
-    location = data["location"]
     hired = data["hired"]
+    position = data["position"]
+
+    # 2) Validate parameters.
+    alphaValidations = [
+        { "fullname": fullname, "key": "fullname" },
+        { "location": location, "key": "location" }
+    ]
+
+    for i, val in enumerate(alphaValidations):
+        key  = val["key"]
+        if not val[key].replace(" ", "").isalpha():
+            return jsonify({
+                "status": 400,
+                "label": "Bad request",
+                "error": f"{key} must contain only caracteres and spaces"
+            }), 400
+
+    if not validateEmail(email):
+        return jsonify({
+            "status": 400,
+            "label": "Bad request",
+            "error": "Invalid email format"
+        }), 400
+
+    if not validateStringDate(hired):
+        return jsonify({
+            "status": 400,
+            "label": "Bad request",
+            "error": "Invalid date format"
+        }), 400
 
     try:
-        if compliance.insertUser(
-            fullname,
-            username,
-            password,
-            email,
-            position,
-            location,
-            hired
-        ):
-            return jsonify({"message": f"User {username} created successfully."}), 200
-        else:
-            return jsonify({"error": f"User {username} already exists."}), 400
+        # 3) Recover positions and usernames from database and validate position.
+        compliance = Compliance()
+        positions = [position["position"] for position in compliance.getPositions()]
+        usernames = [username["username"] for username in compliance.getAllUsernames()]
+
+        if username in usernames:
+            return jsonify({
+                "status": 400,
+                "label": "Bad request",
+                "error": f"Username '{username}' already exist"
+            }), 400
+
+        if not position in positions:
+            return jsonify({
+                "status": 400,
+                "label": "Bad request",
+                "error": f"Position '{position}' do not exist"
+            }), 400
+    except Exception:
+        return jsonify({
+            "status": 500,
+            "label": "Internal server error",
+            "error": "An error occurred while getting data for the user"
+        }), 500
+    
+    try:
+        # 4) Insert user in database.
+        userCreated = compliance.insertUser(fullname, username, password, email, position, location, hired)
     except Exception as e:
-        return jsonify({"error": f"An error occurred while posting the user: {str(e)}"}), 500
+        return jsonify({
+            "status": 500,
+            "label": "Internal server error",
+            "error": f"An error occurred while inserting the user: {str(e)}"
+        }), 500
+    
+    if not userCreated:
+        return jsonify({
+            "status": 400,
+            "label": "Bad request",
+            "error": "User not created"
+        }), 400
+    
+    return jsonify({
+        "status": 201,
+        "label": "OK",
+        "message": f"User created successfully"
+    }), 201
 
 @app.route("/StatsDash/OtReports/Names", methods=["GET"])
 @jwt_required()
 def getOtReportByName():
-    compliance = Compliance()
+    # 1) Check if the data is already in Redis.
+    redisKey = "OtReportsNames"
+    if redisCli.get(redisKey):
+        return jsonify(json.loads(redisCli.get(redisKey)))
 
     try:
+        # 2) Recover data from database.
+        compliance = Compliance()
         response = compliance.getOtReportsNames()
     except Exception as e:
-        return jsonify({"error": f"An error occurred while fetching the report names: {str(e)}"}), 500
-    else:
-        if len(response) == 0:
-            return jsonify({"error": "No OT Reports found"}), 404
+        return jsonify({
+            "status": 500,
+            "label": "Internal server error",
+            "error": f"An error occurred while fetching the report names: {str(e)}"
+        }), 500
 
-        return jsonify(response), 200
+    # 3) Validate if db response has data.
+    if len(response) == 0:
+        return jsonify({
+            "status": 404,
+            "label": "Not found",
+            "error": "No OT Reports found"
+        }), 404
+
+    # 4) Defines expiration time and save Redis key.
+    expirationTime = 60*60*3
+    redisCli.set(name=redisKey, value=json.dumps(obj=response, default=str), ex=expirationTime)
+
+    # 5) Return data.
+    return jsonify(response), 200
 
 @app.route("/StatsDash/OtReports/ID", methods=["GET"])
 @jwt_required()
 def getOtReportIdByName():
-    compliance = Compliance()
+    # 1) Recover parameters from request.
     reportName = request.args.get("reportName")
 
     try:
+        # 2) Recover data from database.
+        compliance = Compliance()
         response = compliance.getOtReportIdByName(reportName)
     except Exception as e:
-        return jsonify({"error": f"An error occurred while fetching the report: {str(e)}"}), 500
-    else:
-        if len(response) == 0:
-            return jsonify({"error": f"OT Report {reportName} do not exists"}), 404
+        return jsonify({
+            "status": 500,
+            "label": "Internal server error",
+            "error": f"An error occurred while fetching the report: {str(e)}"
+        }), 500
 
-        id = response[0]
-        return jsonify(id), 200
+    # 3) Validate if db response has data.
+    if len(response) == 0:
+        return jsonify({
+            "status": 404,
+            "label": "Not found",
+            "error": f"OT Report {reportName} do not exists"
+        }), 404
 
-@app.route("/StatsDash/OtReports/<int:id>", methods=["GET"])
+    # 4) Return data.
+    id = response[0]
+    return jsonify(id), 200
+
+@app.route("/StatsDash/OtReports/<string:id>", methods=["GET"])
 @jwt_required()
-def getOtReport(id: int):
-    compliance = Compliance()
+def getOtReport(id: str):
+    # 1) Validate parameter.
+    if not validateNumber(id):
+        return jsonify({
+            "status": 400,
+            "label": "Bad request",
+            "error": "Invalid report ID"
+        }), 400
 
     try:
+        # 2) Recover data from database.
+        compliance = Compliance()
         dateCreated, sales, weekSales = compliance.getOtReportById(id)
     except Exception:
         logger.error("An error occurred while processing the Projections Dash data")
         return jsonify({}), 500
-    else:
-        return jsonify({
-            "data": sales,
-            "weekdata": weekSales,
-            "created": dateCreated,
-        }), 200
+
+    # 4) Return data.
+    return jsonify({
+        "data": sales,
+        "weekdata": weekSales,
+        "created": dateCreated,
+    }), 200
 
 @app.route("/StatsDash/OtReports", methods=["POST"])
 @jwt_required()
 def postOtReport():
+    # 1) Recover parameters from request.
     data = request.json
-
-    username = data["username"]
-    password = data["password"]
     startDate = data["startDate"]
     endDate = data["endDate"]
+    username = data["username"]
+    encryptedPassword = data["password"]
     reportName = data["reportName"]
     dashUsername = data["dashUsername"]
 
+    # 2) Validate string dates.
+    if not validateStringDate(startDate) or not validateStringDate(endDate):
+        return jsonify({
+            "status": 400,
+            "label": "Bad request",
+            "error": "Invalid date format"
+        }), 400
+
+    otReportsNames = None
+    compliance = Compliance()
+
+    # 3) Recover Ot Reports names from Redis or database.
+    if redisCli.get("OtReportsNames"):
+        otReportsNames = json.loads(redisCli.get("OtReportsNames"))
+    else:
+        try:
+            otReportsNames = compliance.getOtReportsNames()
+        except Exception as e:
+            return jsonify({
+                "status": 500,
+                "label": "Internal server error",
+                "error": f"An error occurred while getting data for the report: {str(e)}"
+            }), 500
+
+    # 4) Recover usernames from database.
+    try:
+        usernames = compliance.getAllUsernames()
+    except Exception as e:
+        return jsonify({
+            "status": 500,
+            "label": "Internal server error",
+            "error": f"An error occurred while getting data for the report: {str(e)}"
+        }), 500
+
+    # 5) Validate if report exists and if username exists.
+    reportNames = [reportName["report_name"] for reportName in otReportsNames]
+    if reportName in reportNames:
+        return jsonify({
+            "status": 404,
+            "label": "Not found",
+            "error": f"OT Report '{reportName}' already exists"
+        }), 404
+
+    if len(usernames) == 0:
+        return jsonify({
+            "status": 404,
+            "label": "Not found",
+            "error": "No users found in database"
+        }), 404
+
+    if dashUsername not in [username["username"] for username in usernames]:
+        return jsonify({
+            "status": 404,
+            "label": "Not found",
+            "error": f"User '{dashUsername}' not found in database"
+        }), 404
+
+    # 6) Save the report in database.
     try:
         return otRun(
             start=startDate,
             end=endDate,
             username=username,
-            encryptedPassword=password,
+            encryptedPassword=encryptedPassword,
             reportName=reportName,
             dashUsername=dashUsername
         )
     except Exception as e:
-        return jsonify({"error": f"An error occurred while posting the report: {str(e)}"}), 500
+        return jsonify({
+            "status": 500,
+            "label": "Internal server error",
+            "error": f"An error occurred while posting the report: {str(e)}"
+        }), 500
 
-@app.route("/StatsDash/OtReports/<int:id>", methods=["DELETE"])
+@app.route("/StatsDash/OtReports/<string:id>", methods=["DELETE"])
 @jwt_required()
-def delOtReport(id: int):
-    compliance = Compliance()
+def delOtReport(id: str):
+    # 1) Validate parameter.
+    if not validateNumber(id):
+        return jsonify({
+            "status": 400,
+            "label": "Bad request",
+            "error": "Invalid report ID"
+        }), 400
 
     try:
-        if compliance.delOtReport(id):
-            return jsonify({"message": f"Report with id {id} deleted successfully."}), 200
-        else:
-            return jsonify({"error": f"Report with id {id} not found."}), 404
+        # 2) Delete the report.
+        compliance = Compliance()
+        deleted = compliance.delOtReport(id)
     except Exception as e:
-        return jsonify({"error": f"An error occurred while deleting the report: {str(e)}"}), 500
+        return jsonify({
+            "status": 500,
+            "label": "Internal server error",
+            "error": f"An error occurred while deleting the report: {str(e)}"
+        }), 500
+
+    # 3) Validate if report was deleted.
+    if not deleted:
+        return jsonify({
+            "status": 404,
+            "label": "Not found",
+            "error": f"Report with id {id} not found"
+        }), 404
+
+    # 4) Return success message.
+    return jsonify({
+        "status": 200,
+        "label": f"OK",
+        "message": f"Report with id {id} deleted successfully"
+    }), 200
 
 @app.route("/StatsDash/FinalSales", methods=["GET"])
 @jwt_required()
 def processFinalSales():
+    # 1) Retrieve parameters and validate them.
     start = request.args.get("startAt")
     end = request.args.get("endAt")
     yesterday = request.args.get("yesterday")
 
+    if not validateStringDate(start) or not validateStringDate(end) or not validateStringDate(yesterday):
+        return jsonify({
+            "status": 400,
+            "label": "Bad request",
+            "error": "Invalid date format"
+        }), 400
+
+    # 2) Generate Final Sales data with parameters.
     try:
         yesterdayData, lastWeekData = dashFinalSales(start, end, yesterday)
     except Exception:
         logger.error(f"An error occurred while processing the Final Sales data")
         return jsonify({}), 500
-    else:
-        return jsonify({
-            "yesterdayData": yesterdayData,
-            "lastWeekData": lastWeekData
-        }), 200
+
+    # 3) Return data.
+    return jsonify({
+        "yesterdayData": yesterdayData,
+        "lastWeekData": lastWeekData
+    }), 200
 
 @app.route("/StatsDash/Pvc", methods=["GET"])
 @jwt_required()
 def processPvc():
+    # 1) Generate PVC data.
     try:
-        #yesterdayData = dashPvc()
         yesterdayData, lastWeekData = dashPvc()
     except Exception:
         logger.error(f"An error occurred while processing the Pvc data")
         return jsonify({}), 500
-    else:
-        return jsonify({
-            "yesterdayData": yesterdayData,
-            "lastWeekData": lastWeekData
-        }), 200
+
+    # 2) Return data.
+    return jsonify({
+        "yesterdayData": yesterdayData,
+        "lastWeekData": lastWeekData
+    }), 200
 
 @app.route("/StatsDash/DashProjections", methods=["GET"])
 @jwt_required()
 def processDashProjections():
+    # 1) Retrieve parameters and validate fullname.
     position = request.args.get("position")
     fullname = request.args.get("fullname")
 
+    if not fullname.replace(" ", "").isalpha():
+        return jsonify({
+            "status": 400,
+            "label": "Bad request",
+            "error": "Invalid username format"
+        }), 400
+
+    try:
+        # 2) Recover positions from database and validate position.
+        compliance = Compliance()
+        positions = [position["position"] for position in compliance.getPositions()]
+        
+        if not position in positions:
+            return jsonify({
+                "status": 400,
+                "label": "Bad request",
+                "error": f"{position} position do not exist"
+            }), 400
+    except Exception:
+        logger.error("An error occurred while getting data for Projections Dash data")
+        return jsonify({}), 500
+
+    # 3) Generate Projections data with parameters.
     try:
         companySales, totalSums, startDate, endDate = dashProjections(position, fullname)
     except Exception:
         logger.error(f"An error occurred while processing the Projections Dash data")
         return jsonify({}), 500
-    else:
-        return jsonify({
-            "daily_data": companySales,
-            "total_data": totalSums,
-            "startDate": startDate,
-            "endDate": endDate
-        }), 200
+
+    # 4) Return data.
+    return jsonify({
+        "daily_data": companySales,
+        "total_data": totalSums,
+        "startDate": startDate,
+        "endDate": endDate
+    }), 200
 
 @app.route("/StatsDash/DashOffices", methods=["GET"])
 @jwt_required()

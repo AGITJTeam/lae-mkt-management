@@ -38,6 +38,23 @@ def validateNumber(number: str) -> bool:
 
     return False
 
+def validateEmail(email: str) -> bool:
+    """ Checks if a string is a valid email.
+
+    Parameters
+        - email {str} the email to check.
+
+    Returns
+        {bool} True if the email is valid, False otherwise.
+    """
+
+    pattern = r"[^@ \t\r\n]+@[^@ \t\r\n]+\.[^@ \t\r\n]+"
+
+    if not re.fullmatch(pattern, email):
+        return False
+    
+    return True
+
 def valCurrentMonthDates(start: str, end: str) -> bool:
     """ Checks if string dates correspond to current month first day
     and today.
