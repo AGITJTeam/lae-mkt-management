@@ -1,4 +1,4 @@
-from api import redisCli
+from redisCli import redisCli
 from datetime import datetime, timedelta
 from werkzeug.datastructures import FileStorage
 import json, re
