@@ -403,66 +403,35 @@ def countDialpadCalls():
             "error": "Invalid date format"
         }), 400
 
-    # 2) Defines Redis key with date parameters.
+    # 2) Defines Redis key, validators and resulting Json keys.
     redisKey = f"DialpadCalls_{start}_{end}"
+    validators = {
+        "DialpadCallsCurrentMonth": valCurrentMonthDates,
+        "DialpadCallsPreviousMonth": valPreviousMonthDates,
+        "DialpadCallsTwoMonths": valTwoMonthsDates
+    }
+    hashKeys = ["allCalls", "uniqueCalls"]
 
     # 3) Check if the data is already in Redis.
-    if valCurrentMonthDates(start, end):
-        redisKey = "DialpadCallsCurrentMonth"
+    redisData = valPreMadeHashData(start, end, redisKey, validators, hashKeys)
+    if redisData:
         print("Dialpad Calls count recovered from Redis")
-        allCalls = json.loads(redisCli.hget(redisKey, "allCalls"))
-        uniqueCalls = json.loads(redisCli.hget(redisKey, "uniqueCalls"))
-
-        return jsonify({
-            "allCalls": allCalls,
-            "uniqueCalls": uniqueCalls
-        }), 200
-
-    if valPreviousMonthDates(start, end):
-        redisKey = "DialpadCallsPreviousMonth"
-        print("Dialpad Calls count recovered from Redis")
-        allCalls = json.loads(redisCli.hget(redisKey, "allCalls"))
-        uniqueCalls = json.loads(redisCli.hget(redisKey, "uniqueCalls"))
-
-        return jsonify({
-            "allCalls": allCalls,
-            "uniqueCalls": uniqueCalls
-        }), 200
-
-    if valTwoMonthsDates(start, end):
-        redisKey = "DialpadCallsTwoMonths"
-        print("Dialpad Calls count recovered from Redis")
-        allCalls = json.loads(redisCli.hget(redisKey, "allCalls"))
-        uniqueCalls = json.loads(redisCli.hget(redisKey, "uniqueCalls"))
-
-        return jsonify({
-            "allCalls": allCalls,
-            "uniqueCalls": uniqueCalls
-        }), 200
-
-    if redisCli.get(redisKey):
-        print("Dialpad Calls count recovered from Redis")
-        allCalls = json.loads(redisCli.hget(redisKey, "allCalls"))
-        uniqueCalls = json.loads(redisCli.hget(redisKey, "uniqueCalls"))
-
-        return jsonify({
-            "allCalls": allCalls,
-            "uniqueCalls": uniqueCalls
-        }), 200
+        return jsonify(redisData), 200
 
     # 4) Recover data from database.
     allCalls, uniqueCalls = countDialpadCallsByDateRange(start, end)
-    
+
     # 5) Saves new Redis key.
     redisCli.hset(
         name=redisKey,
         mapping={
-            "allCalls": allCalls,
-            "uniqueCalls": uniqueCalls
+            "allCalls": json.dumps(allCalls),
+            "uniqueCalls": json.dumps(uniqueCalls)
         }
     )
     
     # 6) Return data.
+    print("Dialpad Calls count recovered from Database")
     return jsonify({
         "allCalls": allCalls,
         "uniqueCalls": uniqueCalls
@@ -594,16 +563,8 @@ def postUser():
 @app.route("/StatsDash/OtReports/Names", methods=["GET"])
 @jwt_required()
 def getOtReportByName():
-    test = redisCli.ping()
-    print(test)
-    
-    # 1) Check if the data is already in Redis.
-    redisKey = "OtReportsNames"
-    if redisCli.get(redisKey):
-        return jsonify(json.loads(redisCli.get(redisKey)))
-
     try:
-        # 2) Recover data from database.
+        # 1) Recover data from database.
         compliance = Compliance()
         response = compliance.getOtReportsNames()
     except Exception as e:
@@ -613,7 +574,7 @@ def getOtReportByName():
             "error": f"An error occurred while fetching the report names: {str(e)}"
         }), 500
 
-    # 3) Validate if db response has data.
+    # 2) Validate if db response has data.
     if len(response) == 0:
         return jsonify({
             "status": 404,
@@ -621,11 +582,7 @@ def getOtReportByName():
             "error": "No OT Reports found"
         }), 404
 
-    # 4) Defines expiration time and save Redis key.
-    expirationTime = 60*60*3
-    redisCli.set(name=redisKey, value=json.dumps(obj=response, default=str), ex=expirationTime)
-
-    # 5) Return data.
+    # 3) Return data.
     return jsonify(response), 200
 
 @app.route("/StatsDash/OtReports/ID", methods=["GET"])
@@ -696,22 +653,22 @@ def postOtReport():
     dashUsername = data["dashUsername"]
 
     # 2) Validate string dates.
-    if not validateStringDate(startDate) or not validateStringDate(endDate):
+    if not valDateRanges(startDate, endDate):
         return jsonify({
             "status": 400,
             "label": "Bad request",
             "error": "Invalid date format"
         }), 400
 
-    otReportsNames = None
+    usernames = None
     compliance = Compliance()
 
     # 3) Recover Ot Reports names from Redis or database.
-    if redisCli.get("OtReportsNames"):
-        otReportsNames = json.loads(redisCli.get("OtReportsNames"))
+    if redisCli.get("AllUsernames"):
+        usernames = json.loads(redisCli.get("AllUsernames"))
     else:
         try:
-            otReportsNames = compliance.getOtReportsNames()
+            usernames = compliance.getAllUsernames()
         except Exception as e:
             return jsonify({
                 "status": 500,
@@ -721,7 +678,7 @@ def postOtReport():
 
     # 4) Recover usernames from database.
     try:
-        usernames = compliance.getAllUsernames()
+        otReportsNames = compliance.getOtReportsNames()
     except Exception as e:
         return jsonify({
             "status": 500,
@@ -730,8 +687,7 @@ def postOtReport():
         }), 500
 
     # 5) Validate if report exists and if username exists.
-    reportNames = [reportName["report_name"] for reportName in otReportsNames]
-    if reportName in reportNames:
+    if reportName in [reportName["report_name"] for reportName in otReportsNames]:
         return jsonify({
             "status": 404,
             "label": "Not found",
@@ -814,21 +770,44 @@ def processFinalSales():
     end = request.args.get("endAt")
     yesterday = request.args.get("yesterday")
 
-    if not validateStringDate(start) or not validateStringDate(end) or not validateStringDate(yesterday):
+    if not valDateRanges(start, end) or not validateStringDate(yesterday):
         return jsonify({
             "status": 400,
             "label": "Bad request",
             "error": "Invalid date format"
         }), 400
 
-    # 2) Generate Final Sales data with parameters.
+    # 2) Defines Redis key, validators and resulting Json keys.
+    redisKey = f"FinalSales_{start}_{end}"
+    validators = {
+        "FinalSalesCurrentMonth": valCurrentMonthDates
+    }
+    hashKeys = ["yesterdayData", "lastWeekData"]
+
+    # 3) Check if the data is already in Redis.
+    redisData = valPreMadeHashData(start, end, redisKey, validators, hashKeys)
+    if redisData:
+        print("Final Sales Report recovered from Redis")
+        return jsonify(redisData), 200
+
+    # 4) Generate Final Sales data with parameters.
     try:
         yesterdayData, lastWeekData = dashFinalSales(start, end, yesterday)
     except Exception:
         logger.error(f"An error occurred while processing the Final Sales data")
         return jsonify({}), 500
 
-    # 3) Return data.
+    # 5) Saves new Redis key.
+    redisCli.hset(
+        name=redisKey,
+        mapping={
+            "yesterdayData": json.dumps(yesterdayData),
+            "lastWeekData": json.dumps(lastWeekData)
+        }
+    )
+
+    # 6) Return data.
+    print("Final Sales Report calculated in backend")
     return jsonify({
         "yesterdayData": yesterdayData,
         "lastWeekData": lastWeekData
@@ -837,14 +816,36 @@ def processFinalSales():
 @app.route("/StatsDash/Pvc", methods=["GET"])
 @jwt_required()
 def processPvc():
-    # 1) Generate PVC data.
+    # 1) Check if the data is already in Redis.
+    redisKey = f"PvcCurrentMonth"
+    if redisCli.hgetall(redisKey):
+        print("Pvc Report recovered from Redis")
+        yesterdayData = json.loads(redisCli.hget(redisKey, "yesterdayData"))
+        lastWeekData = json.loads(redisCli.hget(redisKey, "lastWeekData"))
+
+        return jsonify({
+            "yesterdayData": yesterdayData,
+            "lastWeekData": lastWeekData
+        }), 200
+    
+    # 2) Generate PVC data.
     try:
         yesterdayData, lastWeekData = dashPvc()
     except Exception:
         logger.error(f"An error occurred while processing the Pvc data")
         return jsonify({}), 500
 
-    # 2) Return data.
+    # 3) Saves new Redis key.
+    redisCli.hset(
+        name=redisKey,
+        mapping={
+            "yesterdayData": json.dumps(yesterdayData),
+            "lastWeekData": json.dumps(lastWeekData)
+        }
+    )
+
+    # 4) Return data.
+    print("Pvc Report calculated in backend")
     return jsonify({
         "yesterdayData": yesterdayData,
         "lastWeekData": lastWeekData
@@ -878,15 +879,46 @@ def processDashProjections():
     except Exception:
         logger.error("An error occurred while getting data for Projections Report")
         return jsonify({}), 500
+    
+    # 3) Defines Redis key with date parameters.
+    redisKey = f"Projections_{fullname.replace(" ", "_")}_{position}"
 
-    # 3) Generate Projections data with parameters.
+    # 4) Check if the data is already in Redis.
+    if redisCli.hgetall(redisKey):
+        print("Projections Report recovered from Redis")
+        dailyData = json.loads(redisCli.hget(redisKey, "daily_data"))
+        totalData = json.loads(redisCli.hget(redisKey, "total_data"))
+        startDate = json.loads(redisCli.hget(redisKey, "startDate"))
+        endDate = json.loads(redisCli.hget(redisKey, "endDate"))
+
+        return jsonify({
+            "daily_data": dailyData,
+            "total_data": totalData,
+            "startDate": startDate,
+            "endDate": endDate
+        }), 200
+
+    # 5) Generate Projections data with parameters.
     try:
         companySales, totalSums, startDate, endDate = dashProjections(position, fullname)
     except Exception:
         logger.error(f"An error occurred while processing the Projections Dash data")
         return jsonify({}), 500
 
-    # 4) Return data.
+    print("pre a guardar en redis")
+    # 6) Saves new Redis key.
+    redisCli.hset(
+        name=redisKey,
+        mapping={
+            "daily_data": json.dumps(companySales),
+            "total_data": json.dumps(totalSums),
+            "startDate": json.dumps(startDate),
+            "endDate": json.dumps(endDate)
+        }
+    )
+
+    # 7) Return data.
+    print("Projections Report calculated in backend")
     return jsonify({
         "daily_data": companySales,
         "total_data": totalSums,
@@ -900,30 +932,45 @@ def processDashOffices():
     # 1) Retrieve parameters and validate them.
     start = request.args.get("startAt")
     end = request.args.get("endAt")
-    reportId = request.args.get("reportId")
 
-    if not validateStringDate(start) or not validateStringDate(end):
+    if not valDateRanges(start, end):
         return jsonify({
             "status": 400,
             "label": "Bad request",
             "error": "Invalid date format"
         }), 400
 
-    if not validatePayrollReportId(reportId):
-        return jsonify({
-            "status": 400,
-            "label": "Bad request",
-            "error": "Invalid report ID"
-        }), 400
+    # 2) Defines Redis key, validators and resulting Json keys.
+    redisKey = f"Offices_{start}_{end}"
+    validators = {
+        "OfficesCurrentMonth": valCurrentMonthDates
+    }
+    hashKeys = ["daily_data", "total_data"]
 
-    # 2) Generate Offices data with parameters.
+    # 3) Check if the data is already in Redis.
+    redisData = valPreMadeHashData(start, end, redisKey, validators, hashKeys)
+    if redisData:
+        print("Offices Report recovered from Redis")
+        return jsonify(redisData), 200
+
+    # 4) Generate Offices data with parameters.
     try:
-        companySales, totalSums = dashOffices(start, end, reportId)
+        companySales, totalSums = dashOffices(start, end)
     except Exception:
         logger.error(f"An error occurred while processing the Offices Dash data")
         return jsonify({}), 500
 
-    # 3) Return data.
+    # 5) Saves new Redis key.
+    redisCli.hset(
+        name=redisKey,
+        mapping={
+            "daily_data": json.dumps(companySales),
+            "total_data": json.dumps(totalSums)
+        }
+    )
+
+    # 6) Return data.
+    print("Offices Report calculated in backend")
     return jsonify({
         "daily_data": companySales,
         "total_data": totalSums
@@ -943,14 +990,37 @@ def processDashOs():
             "error": "Invalid date format"
         }), 400
 
-    # 2) Generate Online Sales data with parameters.
+    # 2) Defines Redis key, validators and resulting Json keys.
+    redisKey = f"OnlineSales_{start}_{end}"
+    validators = {
+        "OnlineSalesCurrentMonth": valCurrentMonthDates
+    }
+    hashKeys = ["daily_data", "total_data"]
+
+    # 3) Check if the data is already in Redis.
+    redisData = valPreMadeHashData(start, end, redisKey, validators, hashKeys)
+    if redisData:
+        print("Online Sales Report recovered from Redis")
+        return jsonify(redisData), 200
+
+    # 4) Generate Online Sales data with parameters.
     try:
         companySales, totalSums = dashOs(start, end)
     except Exception:
         logger.error(f"An error occurred while processing the Online Sales Dash data")
         return jsonify({}), 500
 
-    # 3) Return data.
+    # 5) Saves new Redis key.
+    redisCli.hset(
+        name=redisKey,
+        mapping={
+            "daily_data": json.dumps(companySales),
+            "total_data": json.dumps(totalSums)
+        }
+    )
+
+    # 6) Return data.
+    print("Online Sales Report calculated in backend")
     return jsonify({
         "daily_data": companySales,
         "total_data": totalSums
@@ -965,7 +1035,7 @@ def processDashCarriers():
     position = request.args.get("position")
     fullname = request.args.get("fullname")
 
-    if not validateStringDate(start) or not validateStringDate(end):
+    if not valDateRanges(start, end):
         return jsonify({
             "status": 400,
             "label": "Bad request",
@@ -994,14 +1064,38 @@ def processDashCarriers():
         logger.error("An error occurred while getting data for Carriers Report")
         return jsonify({}), 500
 
-    # 3) Generate Carriers data with parameters.
+    # 3) Defines Redis key with date parameters.
+    redisKey = f"Carriers_{start}_{end}_{fullname.replace(" ", "_")}_{position}"
+
+    # 4) Check if the data is already in Redis.
+    if redisCli.hgetall(redisKey):
+        print("Carriers Report recovered from Redis")
+        dailyData = json.loads(redisCli.hget(redisKey, "daily_data"))
+        totalData = json.loads(redisCli.hget(redisKey, "total_data"))
+
+        return jsonify({
+            "daily_data": dailyData,
+            "total_data": totalData
+        }), 200
+
+    # 5) Generate Carriers data with parameters.
     try:
         companySales, totalSums = dashCarriers(start, end, position, fullname)
     except Exception:
         logger.error(f"An error occurred while processing the Carrier Dash data")
         return jsonify({}), 500
 
+    # 6) Saves new Redis key.
+    redisCli.hset(
+        name=redisKey,
+        mapping={
+            "daily_data": json.dumps(companySales),
+            "total_data": json.dumps(totalSums)
+        }
+    )
+
     # 4) Return data.
+    print("Carriers Report calculated in backend")
     return jsonify({
         "daily_data": companySales,
         "total_data": totalSums
@@ -1014,21 +1108,45 @@ def processTopCarriers():
     start = request.args.get("startAt")
     end = request.args.get("endAt")
 
-    if not validateStringDate(start) or not validateStringDate(end):
+    if not valDateRanges(start, end):
         return jsonify({
             "status": 400,
             "label": "Bad request",
             "error": "Invalid date format"
         }), 400
 
-    # 2) Generate Top Carriers data with parameters.
+    # 2) Defines Redis key, validators and resulting Json keys.
+    redisKey = f"TopCarriers_{start}_{end}"
+    validators = {
+        "TopCarriersCurrentMonth": valCurrentMonthDates
+    }
+    hashKeys = ["daily_data", "daily_data_office", "total_data"]
+
+    # 3) Check if the data is already in Redis.
+    redisData = valPreMadeHashData(start, end, redisKey, validators, hashKeys)
+    if redisData:
+        print("Top Carriers Report recovered from Redis")
+        return jsonify(redisData), 200
+
+    # 4) Generate Top Carriers data with parameters.
     try:
         companySales, companySalesOffices, totalSums = topCarriers(start, end)
     except Exception:
         logger.error(f"An error occurred while processing the Top Carrier Dash data")
         return jsonify({}), 500
 
-    # 3) Return data.
+    # 5) Saves new Redis key.
+    redisCli.hset(
+        name=redisKey,
+        mapping={
+            "daily_data": json.dumps(companySales),
+            "daily_data_office": json.dumps(companySalesOffices),
+            "total_data": json.dumps(totalSums)
+        }
+    )
+
+    # 6) Return data.
+    print("Top Carriers Report calculated in backend")
     return jsonify({
         "daily_data": companySales,
         "daily_data_office": companySalesOffices,
@@ -1042,20 +1160,43 @@ def processOutOfState():
     start = request.args.get("startAt")
     end = request.args.get("endAt")
 
-    if not validateStringDate(start) or not validateStringDate(end):
+    if not valDateRanges(start, end):
         return jsonify({
             "status": 400,
             "label": "Bad request",
             "error": "Invalid date format"
         }), 400
 
-    # 2) Generate Out Of State data with parameters.
+    # 2) Defines Redis key, validators and resulting Json keys.
+    redisKey = f"OutOfState_{start}_{end}"
+    validators = {
+        "OutOfStateCurrentMonth": valCurrentMonthDates,
+    }
+    hashKeys = ["daily_data"]
+
+    # 3) Check if the data is already in Redis.
+    redisData = valPreMadeHashData(start, end, redisKey, validators, hashKeys)
+    if redisData:
+        print("Out Of State Report recovered from Redis")
+        return jsonify(redisData), 200
+
+    # 4) Generate Out Of State data with parameters.
     try:
         dailyData = outOfState(start, end)
     except Exception:
         logger.error(f"An error occurred while processing the Out Of State Dash data")
         return jsonify({}), 500
 
+    # 5) Saves new Redis key.
+    redisCli.hset(
+        name=redisKey,
+        mapping={
+            "daily_data": json.dumps(dailyData)
+        }
+    )
+
+    # 6) Return data.
+    print("Out Of State Report calculated in backend")
     return jsonify({
         "daily_data": dailyData
     }), 200
@@ -1068,7 +1209,7 @@ def getGmbCallsReport():
     end = request.form.get("endDate")
     file = request.files.get("gmbCallsFile")
 
-    if not validateStringDate(start) or not validateStringDate(end):
+    if not valDateRanges(start, end):
         return jsonify({
             "status": 400,
             "label": "Bad request",
@@ -1102,7 +1243,7 @@ def getYelpCallsReport():
     yelpCalls = request.files.get("yelpCallsFile")
     yelpCodes = request.files.get("yelpCodesFile")
 
-    if not validateStringDate(start) or not validateStringDate(end):
+    if not valDateRanges(start, end):
         return jsonify({
             "status": 400,
             "label": "Bad request",

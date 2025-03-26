@@ -8,14 +8,13 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-def dashOffices(start: str, end: str, reportId: int) -> tuple[list[dict], list[dict]] | None:
+def dashOffices(start: str, end: str) -> tuple[list[dict], list[dict]] | None:
     """ Generates the company sales and total sums to be shown in
     the Production by Office page.
 
     Parameters
         - start {str} the beginning of the date range.
         - end {str} the end of the date range.
-        - reportId {int} the id of the report to search for.
 
     Returns
         {tuple[list[dict], list[dict]] | None} the data that will be
@@ -23,10 +22,11 @@ def dashOffices(start: str, end: str, reportId: int) -> tuple[list[dict], list[d
     """
 
     compliance = Compliance()
+    REPORT_ID = 91399488
 
     try:
         companySales = fetchReceipts(start, end)
-        agiReport = generateAgiReport(reportId)
+        agiReport = generateAgiReport(REPORT_ID)
         offices = compliance.getRegionalsByOffices()
 
         companySalesProcessed, totalSums = processDashOffices(companySales, agiReport, offices)

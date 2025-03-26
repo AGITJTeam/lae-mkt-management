@@ -4,7 +4,7 @@ from werkzeug.datastructures import FileStorage
 import json, re
 
 def valPreMadeRedisData(start: str, end: str, redisKey: str, validators: dict) -> dict | None:
-    """ Checks if Redis keys in validators exists in Redis.
+    """ Checks if date range corresponds to pre-made Redis keys.
 
     Parameters
         - start {str} the beginning of the range.
@@ -31,6 +31,36 @@ def valPreMadeRedisData(start: str, end: str, redisKey: str, validators: dict) -
 
     # 5) Returns data if Redis key exists.
     return json.loads(cachedData) if cachedData else None
+
+def valPreMadeHashData(start: str, end: str, redisKey: str, validators: dict, hashKeys: list) -> dict | None:
+    """ Checks if date range corresponds to pre-made Redis keys of Hash type.
+
+    Parameters
+        - start {str} the beginning of the range.
+        - end {str} the end of the range.
+        - newKeyName {str} Redis key if pre-made keys do not exist.
+        - validators {dict} dictionary with the Redis keys and validator
+        functions.
+        - hashKeys {list} list with Hash keys.
+    """
+
+    # 1) Checks Redis connection.
+    if not redisCli:
+        return None
+
+    for key, validatorFunc in validators.items():
+        # 2) Checks if date range correspond to pre-made Redis keys.
+        if validatorFunc(start, end):
+            # 3) Returns data if Redis key exists.
+            cachedData = redisCli.hgetall(key)
+            if cachedData:
+                return {k: json.loads(cachedData.get(k, "{}")) for k in hashKeys}
+
+    # 4) Checks if particular Redis key exists.
+    cachedData = redisCli.hgetall(redisKey)
+
+    # 5) Returns data if Redis key exists.
+    return {k: json.loads(cachedData.get(k, "{}")) for k in hashKeys} if cachedData else None
 
 def valDateRanges(start: str, end: str) -> bool:
     """ Checks if strings dates are valid dates, dates are not in the
@@ -90,22 +120,6 @@ def validateStringNumber(number: str) -> bool:
     """
 
     if not isinstance(number, str) or not number.isdigit(): 
-        return False
-
-    return True
-
-def validatePayrollReportId(id: str) -> bool:
-    """ Checks if a string contains only numbers and the length is
-    equal to 8.
-
-    Parameters
-        - id {str} the id to check.
-
-    Returns
-        {bool} True if the id is valid, False otherwise.
-    """
-
-    if not validateStringNumber(id) or not len(id) == 8:
         return False
 
     return True
