@@ -7,7 +7,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-def dashFinalSales(start: str, end: str, yesterday: str) -> list[dict] | None:
+def dashFinalSales(start: str, end: str, yesterday: str) -> tuple[list[dict], list[dict]] | None:
     """ Generates the company sales and total sums to be shown in
     the Production by Office page.
 
@@ -17,7 +17,7 @@ def dashFinalSales(start: str, end: str, yesterday: str) -> list[dict] | None:
         - yesterday {str} yesterday's date.
 
     Returns
-        {list[dict] | None} the data that will be
+        {tuple[list[dict], list[dict]] | None} the data that will be
         shown or None if exception raise an error.
     """
 

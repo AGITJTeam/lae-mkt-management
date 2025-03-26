@@ -2,19 +2,20 @@ from data.repository.calls.compliance_repo import Compliance
 from service.payroll_report import generateAgiReport
 from service.gi_logic import normalizeStr
 from service.receipts_for_dash import fetchReceipts
-from flask import session
 import pandas as pd
 import logging
 
 logger = logging.getLogger(__name__)
 
-def dashOffices(start: str, end: str) -> tuple[list[dict], list[dict]] | None:
+def dashOffices(start: str, end: str, fullname: str, position: str) -> tuple[list[dict], list[dict]] | None:
     """ Generates the company sales and total sums to be shown in
     the Production by Office page.
 
     Parameters
         - start {str} the beginning of the date range.
         - end {str} the end of the date range.
+        - fullname {str} fullname of Dashboard user.
+        - position {str} position of Dashboard user.
 
     Returns
         {tuple[list[dict], list[dict]] | None} the data that will be
@@ -29,14 +30,20 @@ def dashOffices(start: str, end: str) -> tuple[list[dict], list[dict]] | None:
         agiReport = generateAgiReport(REPORT_ID)
         offices = compliance.getRegionalsByOffices()
 
-        companySalesProcessed, totalSums = processDashOffices(companySales, agiReport, offices)
+        companySalesProcessed, totalSums = processDashOffices(
+            companySales,
+            agiReport,
+            offices,
+            fullname,
+            position
+        )
     except Exception as e:
         logger.error(f"Error generating data in dashOffices: {str(e)}")
         raise
     else:
         return companySalesProcessed, totalSums
 
-def processDashOffices(companySalesDf: pd.DataFrame, agiReport: pd.DataFrame, offices: list[dict]) -> tuple[list[dict], list[dict]]:
+def processDashOffices(companySalesDf: pd.DataFrame, agiReport: pd.DataFrame, offices: list[dict], fullname: str, position: str) -> tuple[list[dict], list[dict]]:
     """ Transform the company sales and agi reports to make it ready for the Production
     by Office page.
 
@@ -44,13 +51,12 @@ def processDashOffices(companySalesDf: pd.DataFrame, agiReport: pd.DataFrame, of
         - companySalesDf {pandas.DataFrame} Raw company sales data.
         - agiReport {pandas.DataFrame} Agent information report data.
         - offices {list[dict]} List of office data dictionaries.
+        - fullname {str} fullname of Dashboard user.
+        - position {str} position of Dashboard user.
 
     Returns
         {tuple[dict, dict]} the transformed company sales and total sums.
     """
-
-    POSITION = session.get("position")
-    REGNAME = session.get("fullname")
 
     companySalesDf = preMergeTransformations(companySalesDf)
     agentCount = generateAgentCount(agiReport)
@@ -63,8 +69,8 @@ def processDashOffices(companySalesDf: pd.DataFrame, agiReport: pd.DataFrame, of
         .fillna(0)
     )
 
-    if POSITION == "Regional Manager":
-        regName = setRegName(REGNAME)
+    if position == "Regional Manager":
+        regName = setRegName(fullname)
         companySalesDf = companySalesDf[companySalesDf["regional"].isin(regName)]
 
     totalSumsDf = generateTotalSums(companySalesDf)
