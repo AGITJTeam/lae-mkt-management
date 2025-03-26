@@ -64,7 +64,7 @@ def getDataBetweenDates():
     start = request.args.get("startAt")
     end = request.args.get("endAt")
 
-    if not validateStringDate(start) or not validateStringDate(end):
+    if not valDateRanges(start, end):
         return jsonify({
             "status": 400,
             "label": "Bad request",
@@ -125,7 +125,7 @@ def getWebquotesFromDateRange():
     start = request.args.get("fromDate")
     end = request.args.get("toDate")
 
-    if not validateStringDate(start) and not validateStringDate(end):
+    if not valDateRanges(start, end):
         return jsonify({
             "status": 400,
             "label": "Bad request",
@@ -168,7 +168,7 @@ def getWebquotesDetails():
     start = request.args.get("fromDate")
     end = request.args.get("toDate")
 
-    if not validateStringDate(start) and not validateStringDate(end):
+    if not valDateRanges(start, end):
         return jsonify({
             "status": 400,
             "label": "Bad request",
@@ -209,6 +209,13 @@ def getHomeOwnersDF():
     # 1) Retrieve parameters and validate them.
     start = request.args.get("fromDate")
     end = request.args.get("toDate")
+    
+    if not valDateRanges(start, end):
+        return jsonify({
+            "status": 400,
+            "label": "Bad request",
+            "error": "Invalid date format"
+        }), 400
 
     # 2) Defines pre-made Redis key with date parameters.
     redisKey = f"DynamicForms_{start}_{end}"
@@ -244,7 +251,7 @@ def getLaeBetweenDates():
     start = request.args.get("startAt")
     end = request.args.get("endAt")
     
-    if not validateStringDate(start) and not validateStringDate(end):
+    if not valDateRanges(start, end):
         return jsonify({
             "status": 400,
             "label": "Bad request",
@@ -327,7 +334,7 @@ def getReceiptsBetweenDates():
     start = request.args.get("startAt")
     end = request.args.get("endAt")
 
-    if not validateStringDate(start) and not validateStringDate(end):
+    if not valDateRanges(start, end):
         return jsonify({
             "status": 400,
             "label": "Bad request",
@@ -347,7 +354,7 @@ def getReceiptsBetweenDates():
     redisData = valPreMadeRedisData(start, end, redisKey, validators)
     if redisData:
         print("Receipts recovered from Redis")
-        return jsonify(redisData)
+        return jsonify(json.loads(redisData))
 
     # 5) Recover data from database.
     receipts = Receipts()
@@ -389,16 +396,16 @@ def countDialpadCalls():
     start = request.args.get("startAt")
     end = request.args.get("endAt")
 
-    # 2) Defines Redis key with date parameters.
-    redisKey = f"DialpadCalls_{start}_{end}"
-
-    if not validateStringDate(start) and not validateStringDate(end):
+    if not valDateRanges(start, end):
         return jsonify({
             "status": 400,
             "label": "Bad request",
             "error": "Invalid date format"
         }), 400
-    
+
+    # 2) Defines Redis key with date parameters.
+    redisKey = f"DialpadCalls_{start}_{end}"
+
     # 3) Check if the data is already in Redis.
     if valCurrentMonthDates(start, end):
         redisKey = "DialpadCallsCurrentMonth"

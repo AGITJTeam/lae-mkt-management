@@ -32,9 +32,35 @@ def valPreMadeRedisData(start: str, end: str, redisKey: str, validators: dict) -
     # 5) Returns data if Redis key exists.
     return json.loads(cachedData) if cachedData else None
 
+def valDateRanges(start: str, end: str) -> bool:
+    """ Checks if strings dates are valid dates, dates are not in the
+    future and start date is before end date.
+    
+    Parameters
+        - start {str} the beginning of the range.
+        - end {str} the end of the range.
+
+    Returns
+        {bool} True if the dates are valid, False otherwise.
+    """
+
+    if not validateStringDate(start) or not validateStringDate(end):
+        return False
+
+    today = datetime.today().date()
+    startDate = datetime.strptime(start, "%Y-%m-%d").date()
+    endDate = datetime.strptime(end, "%Y-%m-%d").date()
+
+    if startDate > endDate:
+        return False
+
+    if startDate > today or endDate > today:
+        return False
+
+    return True
+
 def validateStringDate(strDate: str) -> bool:
-    """ Checks if a string is a valid date and if it's not in
-    the future.
+    """ Checks if a string is a valid date.
 
     Parameters
         - strDate {str} the string to check.
@@ -43,14 +69,13 @@ def validateStringDate(strDate: str) -> bool:
         {bool} True if the string is a valid date, False otherwise.
     """
 
-    pattern = r"^\d{4}\-(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])$"
+    PATTERN = r"^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$"
 
-    if not re.fullmatch(pattern, strDate):
+    if not re.fullmatch(PATTERN, strDate):
         return False
     try:
-        today = datetime.now().date()
-        date = datetime.strptime(strDate, "%Y-%m-%d").date()
-        return date <= today
+        datetime.strptime(strDate, "%Y-%m-%d").date()
+        return True
     except ValueError:
         return False
 
@@ -95,9 +120,9 @@ def validateEmail(email: str) -> bool:
         {bool} True if the email is valid, False otherwise.
     """
 
-    pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9]+(?:\.[a-zA-Z0-9]+)+$"
+    PATTERN = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9]+(?:\.[a-zA-Z0-9]+)+$"
 
-    if not re.fullmatch(pattern, email):
+    if not re.fullmatch(PATTERN, email):
         return False
 
     return True
