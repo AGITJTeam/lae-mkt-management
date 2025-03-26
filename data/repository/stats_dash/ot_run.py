@@ -7,7 +7,7 @@ from flask import jsonify, Response
 from Crypto.Cipher import AES
 import pandas as pd
 import numpy as np
-import logging, base64, os, datetime
+import base64, datetime, json, logging, os, redis
 
 logger = logging.getLogger(__name__)
 
@@ -38,20 +38,37 @@ def otRun(start: str, end: str, username: str, encryptedPassword: str, reportNam
         logger.error(f"Error with generated OT Report data in otRun. Empty data")
         raise
 
+    id = getLastOtReportId()
+
     try:
         postOtReport(reportName, dashUsername)
-        id = getLastOtReportId()
-
         postOtReportSales(sales, id, "ot_reports_sales")
         postOtReportSales(weekSales, id, "ot_reports_weeksales")
-        return jsonify({
-            "status": 201,
-            "label": "OK",
-            "message": f"Ot Report '{reportName}' created successfully"
-        }), 201
     except Exception as e:
         logger.error(f"Error posting OT Report data in otRun: {str(e)}")
         raise
+    
+    try:
+        compliance = Compliance()
+        created, data, weekData = compliance.getOtReportById(id)
+    except Exception as e:
+        logger.error(f"Error retrieving Ot Report with id {id} in otRun: {str(e)}")
+        raise
+
+    hashValues = {
+        "created": json.dumps(created),
+        "data": json.dumps(data),
+        "weekdata": json.dumps(weekData)
+    }
+    redisCli = redis.Redis(host="localhost", port=6379, decode_responses=True)
+    redisCli.hset(name=reportName, mapping=hashValues)
+    redisCli.close()
+
+    return jsonify({
+        "status": 201,
+        "label": "OK",
+        "message": f"Ot Report '{reportName}' created successfully"
+    }), 201
 
 def dencryptPassword(encryptedPassword: str) -> str:
     """ Decrypts a text using the AES encryption system.

@@ -663,7 +663,7 @@ def postOtReport():
     usernames = None
     compliance = Compliance()
 
-    # 3) Recover Ot Reports names from Redis or database.
+    # 3) Recover usernames from Redis or database.
     if redisCli.get("AllUsernames"):
         usernames = json.loads(redisCli.get("AllUsernames"))
     else:
@@ -676,7 +676,7 @@ def postOtReport():
                 "error": f"An error occurred while getting data for the report: {str(e)}"
             }), 500
 
-    # 4) Recover usernames from database.
+    # 4) Recover Ot Reports names from database.
     try:
         otReportsNames = compliance.getOtReportsNames()
     except Exception as e:
@@ -764,11 +764,15 @@ def delOtReport(id: str):
 
 @app.route("/StatsDash/FinalSales", methods=["GET"])
 @jwt_required()
-def processFinalSales():
+def genFinalSales():
     # 1) Retrieve parameters and validate them.
     start = request.args.get("startAt")
     end = request.args.get("endAt")
     yesterday = request.args.get("yesterday")
+    
+    print(start)
+    print(end)
+    print(yesterday)
 
     if not valDateRanges(start, end) or not validateStringDate(yesterday):
         return jsonify({
@@ -815,7 +819,7 @@ def processFinalSales():
 
 @app.route("/StatsDash/Pvc", methods=["GET"])
 @jwt_required()
-def processPvc():
+def genPvc():
     # 1) Check if the data is already in Redis.
     redisKey = f"PvcCurrentMonth"
     if redisCli.hgetall(redisKey):
@@ -853,7 +857,7 @@ def processPvc():
 
 @app.route("/StatsDash/DashProjections", methods=["GET"])
 @jwt_required()
-def processDashProjections():
+def genProjections():
     # 1) Retrieve parameters and validate fullname.
     position = request.args.get("position")
     fullname = request.args.get("fullname")
@@ -905,7 +909,6 @@ def processDashProjections():
         logger.error(f"An error occurred while processing the Projections Dash data")
         return jsonify({}), 500
 
-    print("pre a guardar en redis")
     # 6) Saves new Redis key.
     redisCli.hset(
         name=redisKey,
@@ -928,10 +931,12 @@ def processDashProjections():
 
 @app.route("/StatsDash/DashOffices", methods=["GET"])
 @jwt_required()
-def processDashOffices():
+def genOffices():
     # 1) Retrieve parameters and validate them.
     start = request.args.get("startAt")
     end = request.args.get("endAt")
+    position = request.args.get("position")
+    fullname = request.args.get("fullname")
 
     if not valDateRanges(start, end):
         return jsonify({
@@ -940,27 +945,50 @@ def processDashOffices():
             "error": "Invalid date format"
         }), 400
 
-    # 2) Defines Redis key, validators and resulting Json keys.
-    redisKey = f"Offices_{start}_{end}"
-    validators = {
-        "OfficesCurrentMonth": valCurrentMonthDates
-    }
-    hashKeys = ["daily_data", "total_data"]
+    if not fullname.replace(" ", "").isalpha():
+        return jsonify({
+            "status": 400,
+            "label": "Bad request",
+            "error": "Fullname must contain only caracteres and spaces"
+        }), 400
 
-    # 3) Check if the data is already in Redis.
-    redisData = valPreMadeHashData(start, end, redisKey, validators, hashKeys)
-    if redisData:
-        print("Offices Report recovered from Redis")
-        return jsonify(redisData), 200
-
-    # 4) Generate Offices data with parameters.
     try:
-        companySales, totalSums = dashOffices(start, end)
+        # 2) Recover positions from database and validate position.
+        compliance = Compliance()
+        positions = [position["position"] for position in compliance.getPositions()]
+
+        if not position in positions:
+            return jsonify({
+                "status": 404,
+                "label": "Not found",
+                "error": f"{position} position do not exist"
+            }), 404
+    except Exception:
+        logger.error("An error occurred while getting data for Offices Report")
+        return jsonify({}), 500
+
+    # 3) Defines Redis key, validators and resulting Json keys.
+    redisKey = f"Offices_{start}_{end}_{fullname.replace(" ", "_")}_{position}"
+
+    # 4) Check if the data is already in Redis.
+    if redisCli.hgetall(redisKey):
+        print("Offices Report recovered from Redis")
+        dailyData = json.loads(redisCli.hget(redisKey, "daily_data"))
+        totalData = json.loads(redisCli.hget(redisKey, "total_data"))
+
+        return jsonify({
+            "daily_data": dailyData,
+            "total_data": totalData
+        }), 200
+
+    # 5) Generate Offices data with parameters.
+    try:
+        companySales, totalSums = dashOffices(start, end, fullname, position)
     except Exception:
         logger.error(f"An error occurred while processing the Offices Dash data")
         return jsonify({}), 500
 
-    # 5) Saves new Redis key.
+    # 6) Saves new Redis key.
     redisCli.hset(
         name=redisKey,
         mapping={
@@ -969,7 +997,7 @@ def processDashOffices():
         }
     )
 
-    # 6) Return data.
+    # 7) Return data.
     print("Offices Report calculated in backend")
     return jsonify({
         "daily_data": companySales,
@@ -978,12 +1006,12 @@ def processDashOffices():
 
 @app.route("/StatsDash/DashOs", methods=["GET"])
 @jwt_required()
-def processDashOs():
+def genOnlineSales():
     # 1) Retrieve parameters and validate them.
     start = request.args.get("startAt")
     end = request.args.get("endAt")
 
-    if not validateStringDate(start) or not validateStringDate(end):
+    if not valDateRanges(start, end):
         return jsonify({
             "status": 400,
             "label": "Bad request",
@@ -1028,7 +1056,7 @@ def processDashOs():
 
 @app.route("/StatsDash/DashCarriers", methods=["GET"])
 @jwt_required()
-def processDashCarriers():
+def genCarriers():
     # 1) Retrieve parameters and validate them.
     start = request.args.get("startAt")
     end = request.args.get("endAt")
@@ -1103,7 +1131,7 @@ def processDashCarriers():
 
 @app.route("/StatsDash/TopCarriers", methods=["GET"])
 @jwt_required()
-def processTopCarriers():
+def genTopCarriers():
     # 1) Retrieve parameters and validate them.
     start = request.args.get("startAt")
     end = request.args.get("endAt")
@@ -1155,7 +1183,7 @@ def processTopCarriers():
 
 @app.route("/StatsDash/OutOfState", methods=["GET"])
 @jwt_required()
-def processOutOfState():
+def genOutOfState():
     # 1) Retrieve parameters and validate them.
     start = request.args.get("startAt")
     end = request.args.get("endAt")
@@ -1203,7 +1231,7 @@ def processOutOfState():
 
 @app.route("/StatsDash/GmbReports", methods=["GET"])
 @jwt_required()
-def getGmbCallsReport():
+def genGmbCallsReport():
     # 1) Retrieve parameters and validate them.
     start = request.form.get("startDate")
     end = request.form.get("endDate")
@@ -1236,7 +1264,7 @@ def getGmbCallsReport():
 
 @app.route("/StatsDash/YelpReports", methods=["GET"])
 @jwt_required()
-def getYelpCallsReport():
+def genYelpCallsReport():
     # 1) Retrieve parameters and validate them.
     start = request.form.get("startDate")
     end = request.form.get("endDate")
