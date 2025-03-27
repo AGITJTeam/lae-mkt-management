@@ -65,8 +65,7 @@ def updateReceiptsPayrollPreviousRecords() -> None:
     start, end = generateOneMonthDateRange(lastDate)
 
     # Delete data that will be updated.
-    receipts = ReceiptsPayroll()
-    receipts.deleteLastMonthData(start, end)
+    receiptsPayroll.deleteLastMonthData(start, end)
     print(f"Receipts Payroll data from {start} to {end} deleted...")
 
     # Generates data for current month and updates Receipts Payroll table.

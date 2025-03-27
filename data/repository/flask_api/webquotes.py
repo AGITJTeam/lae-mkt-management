@@ -64,7 +64,6 @@ def updateWebquotesPreviousRecords() -> None:
     start, end = generateOneMonthDateRange(lastDate)
 
     # Delete data that will be updated.
-    webquotes = Webquotes()
     webquotes.deleteLastMonthData(start, end)
     print(f"Webquotes data from {start} to {end} deleted...")
 
