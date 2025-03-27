@@ -5,14 +5,14 @@ import logging
 logger = logging.getLogger(__name__)
 
 def generateDynamicFormDf(start: str, end: str) -> list[dict]:
-    """ Create Home Owners Dynamic FormDataFrame with API response.
+    """ Create Home Owners Dynamic Form DataFrame with API response.
 
     Parameters
         - start {str} the beginning of the date range.
         - end {str} the end of the date range.
 
     Returns
-        {pandas.DataFrame} resulting DataFrame.
+        {list[dict]} transformed data.
     """
 
     homeOwners = []

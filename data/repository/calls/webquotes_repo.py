@@ -22,9 +22,6 @@ class Webquotes(IWebquotes):
 
         query = f"SELECT name, email, phone, submission_date, status, agent, referer, campaign_id FROM webquotes WHERE submission_date BETWEEN \'{start}\' AND \'{end}\';"
         return getData(query=query, filename="flask_api.ini")
-        parsedWebquoteDate = parseWebquotesSubmissionDate(webquotes)
-
-        return parsedWebquoteDate
 
     def getWebquotesFromDateRange(self, start, end):
         """ {list[dict]} get almost every webquote column from a
