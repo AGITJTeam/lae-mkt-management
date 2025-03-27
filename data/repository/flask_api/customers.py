@@ -69,27 +69,27 @@ def addCustomersSpecificRange(start: str, end: str) -> None:
     print(f"Customers data from {start} to {end} added...")
 
 def updateCustomersPreviousRecords() -> None:
-    """ Generates last week customers ids and updates Customers table. """
+    """ Generates todays customers ids and updates Customers table. """
 
-    # Defines date ranges.
-    receipts = ReceiptsPayroll()
-    lastDateFromTable = receipts.getLastRecord()[0]["date"]
-    lastDate = lastDateFromTable.date()
-    dates = generateOneWeekDateRange(lastDate)
+    # Defines todays date.
+    receiptsPayroll = ReceiptsPayroll()
+    lastDateFromTable = receiptsPayroll.getLastRecord()[0]["date"]
+    todayDate = lastDateFromTable.date()
+    todayStr = todayDate.isoformat()
 
-    # Generates data from date range and delete duplicated CustomerId records.
-    receiptsJson = receipts.getBetweenDates(dates["start"], dates["end"])
-    receiptsDf = pd.DataFrame(receiptsJson)
-    receiptsNoDuplicates = receiptsDf.drop_duplicates("customer_id")
+    # Generates data from today and delete duplicated CustomerId records.
+    receiptsPayrollJson = receiptsPayroll.getBetweenDates(start=todayStr, end=todayStr)
+    receiptsPayrollDf = pd.DataFrame(receiptsPayrollJson)
+    receiptsPayrollDf.drop_duplicates(subset=["customer_id"], inplace=True)
 
     # Convert data to list.
-    customersIds = receiptsNoDuplicates["customer_id"].tolist()
+    customersIds = receiptsPayrollDf["customer_id"].tolist()
 
     # Delete data that will be updated.
     customers = Customers()
     customers.deleteByIds(customersIds)
+    print(f"Customers data from {todayStr} to {todayStr} deleted...")
 
     # Updated Customers table.
-    print(f"Customers data from {dates["start"]} to {dates["end"]} deleted...")
-    updateCustomersTable(receiptsNoDuplicates)
-    print(f"Customers data from {dates["start"]} to {dates["end"]} updated...")
+    updateCustomersTable(receiptsPayrollDf)
+    print(f"Customers data from {todayStr} to {todayStr} updated...")

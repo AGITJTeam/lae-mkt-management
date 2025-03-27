@@ -1,5 +1,9 @@
 from data.repository.calls.receipts_payroll_repo import ReceiptsPayroll
-from data.repository.calls.helpers import generateTwoMonthsDateRange, postDataframeToDb
+from data.repository.calls.helpers import (
+    generateOneMonthDateRange,
+    generateTwoMonthsDateRange,
+    postDataframeToDb
+)
 from service.receipts_payroll import generateReceiptsPayrollDf
 from datetime import datetime
 import json, pandas as pd, redis
@@ -58,19 +62,16 @@ def updateReceiptsPayrollPreviousRecords() -> None:
     receiptsPayroll = ReceiptsPayroll()
     date = receiptsPayroll.getLastRecord()[0]["date"]
     lastDate = date.date()
-    dateRanges = generateTwoMonthsDateRange(lastDate)
-    firstDayLastMonth = dateRanges[0]["start"]
-    yesterday = dateRanges[1]["end"]
+    start, end = generateOneMonthDateRange(lastDate)
 
     # Delete data that will be updated.
     receipts = ReceiptsPayroll()
-    receipts.deleteLastMonthData(firstDayLastMonth, yesterday)
-    print(f"Receipts Payroll data from {firstDayLastMonth} to {yesterday} deleted...")
+    receipts.deleteLastMonthData(start, end)
+    print(f"Receipts Payroll data from {start} to {end} deleted...")
 
-    # Generates data for every date range and updates Webquotes table.
-    for date in dateRanges:
-        updateReceiptsPayrollTable(date["start"], date["end"])
-        print(f"Receipts Payroll data from {date["start"]} to {date["end"]} updated...")
+    # Generates data for current month and updates Receipts Payroll table.
+    updateReceiptsPayrollTable(start, end) 
+    print(f"Receipts Payroll data from {start} to {end} updated...")
 
 def addReceiptsPayrollSpecificDateRange(start: str, end: str) -> None:
     """ Add data to Receipts Payroll table in a specific date range.

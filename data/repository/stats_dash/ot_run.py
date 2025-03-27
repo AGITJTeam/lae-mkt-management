@@ -38,10 +38,9 @@ def otRun(start: str, end: str, username: str, encryptedPassword: str, reportNam
         logger.error(f"Error with generated OT Report data in otRun. Empty data")
         raise
 
-    id = getLastOtReportId()
-
     try:
         postOtReport(reportName, dashUsername)
+        id = getLastOtReportId()
         postOtReportSales(sales, id, "ot_reports_sales")
         postOtReportSales(weekSales, id, "ot_reports_weeksales")
     except Exception as e:
@@ -55,13 +54,14 @@ def otRun(start: str, end: str, username: str, encryptedPassword: str, reportNam
         logger.error(f"Error retrieving Ot Report with id {id} in otRun: {str(e)}")
         raise
 
+    redisKey = f"OtReport_{id}"
     hashValues = {
-        "created": json.dumps(created),
-        "data": json.dumps(data),
-        "weekdata": json.dumps(weekData)
+        "data": json.dumps(obj=data, default=str),
+        "weekdata": json.dumps(obj=weekData, default=str),
+        "created": json.dumps(obj=created, default=str)
     }
     redisCli = redis.Redis(host="localhost", port=6379, decode_responses=True)
-    redisCli.hset(name=reportName, mapping=hashValues)
+    redisCli.hset(name=redisKey, mapping=hashValues)
     redisCli.close()
 
     return jsonify({

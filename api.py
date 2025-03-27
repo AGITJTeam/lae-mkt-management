@@ -624,9 +624,23 @@ def getOtReport(id: str):
             "label": "Bad request",
             "error": "Invalid report ID"
         }), 400
+    
+    # 2) Check if the data is already in Redis.
+    redisKey = f"OtReport_{id}"
+    if redisCli.hgetall(redisKey):
+        print("Ot Report recovered from Redis")
+        data = json.loads(redisCli.hget(redisKey, "data"))
+        weekData = json.loads(redisCli.hget(redisKey, "weekdata"))
+        created = json.loads(redisCli.hget(redisKey, "created"))
+
+        return jsonify({
+            "data": data,
+            "weekdata": weekData,
+            "created": created
+        }), 200
 
     try:
-        # 2) Recover data from database.
+        # 3) Recover data from database.
         compliance = Compliance()
         dateCreated, sales, weekSales = compliance.getOtReportById(id)
     except Exception:
@@ -769,10 +783,6 @@ def genFinalSales():
     start = request.args.get("startAt")
     end = request.args.get("endAt")
     yesterday = request.args.get("yesterday")
-    
-    print(start)
-    print(end)
-    print(yesterday)
 
     if not valDateRanges(start, end) or not validateStringDate(yesterday):
         return jsonify({

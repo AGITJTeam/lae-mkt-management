@@ -60,18 +60,18 @@ def addReceiptsSpecificRange(start: str, end: str) -> None:
     print(f"Receipts data from {start} to {end} added...")
 
 def updateReceiptsPreviousRecords() -> None:
-    """ Update Receipts yesterday records. """
+    """ Update Receipts todays records. """
 
-    # Defines yesterday and today dates.
+    # Defines todays date.
     receiptsPayroll = ReceiptsPayroll()
     lastDateFromTable = receiptsPayroll.getLastRecord()[0]["date"]
     todayDate = lastDateFromTable.date()
-    yesterdayDate = todayDate - timedelta(days=1)
+    #yesterdayDate = todayDate - timedelta(days=1)
     today = todayDate.isoformat()
-    yesterday = yesterdayDate.isoformat()
+    #yesterday = yesterdayDate.isoformat()
 
-    # Generates data from yesterday to today and delete duplicated IdReceiptHdr records.
-    receiptsPayrollJson = receiptsPayroll.getBetweenDates(start=yesterday, end=today)
+    # Generates data from today and delete duplicated IdReceiptHdr records.
+    receiptsPayrollJson = receiptsPayroll.getBetweenDates(start=today, end=today)
     receiptsPayrollDf = pd.DataFrame(receiptsPayrollJson)
     receiptsPayrollDf.drop_duplicates(subset=["id_receipt_hdr"], inplace=True)
 
@@ -81,11 +81,11 @@ def updateReceiptsPreviousRecords() -> None:
     # Delete data that will be updated.
     receipts = Receipts()
     receipts.deleteByIds(receiptsIds)
-    print(f"Receipts data from {yesterday} to {today} deleted...")
+    print(f"Receipts data from {today} to {today} deleted...")
 
     # Updated Receipts table.
     updateReceiptsTable(receiptsPayrollDf)
-    print(f"Receipts data from {yesterday} to {today} updated...")
+    print(f"Receipts data from {today} to {today} updated...")
 
 def updateTwoMonthsRedisKeys() -> None:
     """ Generate date range for current mont and last month

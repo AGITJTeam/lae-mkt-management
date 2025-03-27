@@ -1,4 +1,8 @@
-from data.repository.calls.helpers import generateTwoMonthsDateRange, postDataframeToDb
+from data.repository.calls.helpers import (
+    generateOneMonthDateRange,
+    generateTwoMonthsDateRange,
+    postDataframeToDb
+)
 from data.repository.calls.webquotes_repo import Webquotes
 from service.webquotes import generateWebquotesDf
 from datetime import datetime
@@ -57,19 +61,16 @@ def updateWebquotesPreviousRecords() -> None:
     # Defines date ranges.
     webquotes = Webquotes()
     lastDate = webquotes.getLastRecord()[0]["submission_date"]
-    dateRanges = generateTwoMonthsDateRange(lastDate)
-    firstDayLastMonth = dateRanges[0]["start"]
-    yesterday = dateRanges[1]["end"]
+    start, end = generateOneMonthDateRange(lastDate)
 
     # Delete data that will be updated.
     webquotes = Webquotes()
-    webquotes.deleteLastMonthData(firstDayLastMonth, yesterday)
-    print(f"Webquotes data from {firstDayLastMonth} to {yesterday} deleted...")
+    webquotes.deleteLastMonthData(start, end)
+    print(f"Webquotes data from {start} to {end} deleted...")
 
-    # Generates data for every date range and updates Webquotes table.
-    for date in dateRanges:
-        updateWebquotesTables(date["start"], date["end"])
-        print(f"Webquotes data from {date["start"]} to {date["end"]} updated...")
+    # Generates data for current month and updates Webquotes table.
+    updateWebquotesTables(start, end)
+    print(f"Webquotes data from {start} to {end} updated...")
 
 def addWebquotesSpecificDateRange(start: str, end: str) -> None:
     """ Add data to Webquotes table in a specific date range.

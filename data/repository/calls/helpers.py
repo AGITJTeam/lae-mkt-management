@@ -145,6 +145,23 @@ def generateOneWeekDateRange(lastDate: datetime.date) -> dict[str, str]:
 
     return dateRanges
 
+def generateOneMonthDateRange(lastDate: datetime.date) -> tuple[str, str]:
+    """ Creates 1 month date range to use in sql calls.
+
+    Parameters
+        - lastDate {datetime.date} the last date recovered from database table.
+
+    Returns
+        {tuple[str, str]} both date ranges in a dictionary.
+    """
+
+    firstDayCurrentMonth = lastDate.replace(day=1)
+
+    startStr = firstDayCurrentMonth.isoformat()
+    endStr = lastDate.isoformat()
+
+    return startStr, endStr
+
 def generateTwoMonthsDateRange(lastDate: datetime.date) -> list[dict[str, str]]:
     """ Creates 2 months date range to use in sql calls.
 
