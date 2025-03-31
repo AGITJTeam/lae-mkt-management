@@ -5,8 +5,8 @@ from data.repository.calls.helpers import (
 )
 from data.repository.calls.webquotes_repo import Webquotes
 from service.webquotes import generateWebquotesDf
-from datetime import datetime
-import json, pandas as pd, redis
+from datetime import datetime, timedelta
+import json, redis
 
 def updateWebquotesTables(start: str, end: str) -> None:
     """ Updates Webquotes table in db with a date range.
@@ -47,23 +47,17 @@ def updateRedisKeys(rawData: str | list[dict], redisKey: str) -> None:
     # Close Redis connection.
     redisCli.close()
 
-def addWebquotesTodayRecords() -> None:
-    """ Adds today's date data to Webquotes table. """
-
-    today = datetime.today().date().isoformat()
-    updateWebquotesTables(start=today, end=today)
-    print(f"Webquotes data from {today} added...")
-
 def updateWebquotesPreviousRecords() -> None:
     """ Generate last and current month date ranges to delete and
     update Webquotes table. """
 
     # Defines date ranges.
-    webquotes = Webquotes()
-    lastDate = webquotes.getLastRecord()[0]["submission_date"]
-    start, end = generateOneMonthDateRange(lastDate)
+    today = datetime.today().date()
+    yesterday = today - timedelta(days=1)
+    start, end = generateOneMonthDateRange(yesterday)
 
     # Delete data that will be updated.
+    webquotes = Webquotes()
     webquotes.deleteLastMonthData(start, end)
     print(f"Webquotes data from {start} to {end} deleted...")
 

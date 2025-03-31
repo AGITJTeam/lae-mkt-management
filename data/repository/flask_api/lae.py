@@ -6,6 +6,7 @@ from service.customers import transformCustomersDfForLaeData
 from service.lae_data import generateLaeData
 from service.receipts_payroll import transformReceiptsDfForLaeData
 import pandas as pd
+from datetime import datetime, timedelta
 
 def updateLaeDataTables(start: str, end: str) -> None:
     """ Updates Lae Data table in db with a date range.
@@ -52,10 +53,9 @@ def updateLaeDataTablesPreviousRecords() -> None:
     """ Generate last and current month date ranges to update Lae Data
     table. """
 
-    receiptsPayroll = ReceiptsPayroll()   
-    lastDateFromTable = receiptsPayroll.getLastRecord()[0]["date"]
-    lastDate = lastDateFromTable.date()
-    start, end = generateOneMonthDateRange(lastDate)
+    today = datetime.today().date()
+    yesterday = today - timedelta(days=1)
+    start, end = generateOneMonthDateRange(yesterday)
 
     lae = LaeData()
     lae.deleteLastMonthData(start, end)

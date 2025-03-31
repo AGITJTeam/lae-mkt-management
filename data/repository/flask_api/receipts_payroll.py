@@ -5,7 +5,7 @@ from data.repository.calls.helpers import (
     postDataframeToDb
 )
 from service.receipts_payroll import generateReceiptsPayrollDf
-from datetime import datetime
+from datetime import datetime, timedelta
 import json, pandas as pd, redis
 
 def updateReceiptsPayrollTable(start: str, end: str) -> None:
@@ -47,24 +47,17 @@ def updateRedisKeys(rawData: pd.DataFrame, redisKey: str) -> None:
     # Close Redis connection.
     redisCli.close()
 
-def addReceiptsPayrollTodayRecords() -> None:
-    """ Add today's date data to Receipts Payroll table. """
-
-    today = datetime.today().date().isoformat()
-    updateReceiptsPayrollTable(start=today, end=today)
-    print(f"Receipts Payroll data from {today} added...")
-
 def updateReceiptsPayrollPreviousRecords() -> None:
     """ Generate last and current month date ranges to update Receipts
     Payroll table. """
 
     # Defines date ranges.
-    receiptsPayroll = ReceiptsPayroll()
-    date = receiptsPayroll.getLastRecord()[0]["date"]
-    lastDate = date.date()
-    start, end = generateOneMonthDateRange(lastDate)
+    today = datetime.today().date()
+    yesterday = today - timedelta(days=1)
+    start, end = generateOneMonthDateRange(yesterday)
 
     # Delete data that will be updated.
+    receiptsPayroll = ReceiptsPayroll()
     receiptsPayroll.deleteLastMonthData(start, end)
     print(f"Receipts Payroll data from {start} to {end} deleted...")
 
