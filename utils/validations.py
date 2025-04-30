@@ -62,6 +62,19 @@ def valPreMadeHashData(start: str, end: str, redisKey: str, validators: dict, ha
     # 5) Returns data if Redis key exists.
     return {k: json.loads(cachedData.get(k, "{}")) for k in hashKeys} if cachedData else None
 
+def valIsNotNone(*args) -> bool:
+    """ Checks if all arguments are not None.
+    
+    Parameters
+        - args {list} list of arguments to check They are usually
+        dates, roles or usernames.
+    
+    Returns
+        {bool} True if all arguments are not None, False otherwise.
+    """
+    
+    return all(arg is not None for arg in args)
+
 def valDateRanges(start: str, end: str) -> bool:
     """ Checks if strings dates are valid dates, dates are not in the
     future and start date is before end date.

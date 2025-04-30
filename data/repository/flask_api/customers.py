@@ -1,7 +1,8 @@
 from data.repository.calls.customers_repo import Customers
 from data.repository.calls.receipts_payroll_repo import ReceiptsPayroll
-from data.repository.calls.helpers import generateOneWeekDateRange, postDataframeToDb
+from data.repository.calls.helpers import postDataframeToDb
 from service.customers import generateCustomersDf
+from datetime import datetime, timedelta
 import json, pandas as pd, redis
 
 def updateCustomersTable(receiptsDf: pd.DataFrame) -> None:
@@ -72,13 +73,13 @@ def updateCustomersPreviousRecords() -> None:
     """ Generates todays customers ids and updates Customers table. """
 
     # Defines todays date.
-    receiptsPayroll = ReceiptsPayroll()
-    lastDateFromTable = receiptsPayroll.getLastRecord()[0]["date"]
-    todayDate = lastDateFromTable.date()
-    todayStr = todayDate.isoformat()
+    today = datetime.today().date()
+    yesterday = today - timedelta(days=1)
+    yesterdayStr = yesterday.isoformat()
 
     # Generates data from today and delete duplicated CustomerId records.
-    receiptsPayrollJson = receiptsPayroll.getBetweenDates(start=todayStr, end=todayStr)
+    receiptsPayroll = ReceiptsPayroll()
+    receiptsPayrollJson = receiptsPayroll.getBetweenDates(start=yesterdayStr, end=yesterdayStr)
     receiptsPayrollDf = pd.DataFrame(receiptsPayrollJson)
     receiptsPayrollDf.drop_duplicates(subset=["customer_id"], inplace=True)
 
@@ -88,8 +89,8 @@ def updateCustomersPreviousRecords() -> None:
     # Delete data that will be updated.
     customers = Customers()
     customers.deleteByIds(customersIds)
-    print(f"Customers data from {todayStr} to {todayStr} deleted...")
+    print(f"Customers data from {yesterdayStr} to {yesterdayStr} deleted...")
 
     # Updated Customers table.
     updateCustomersTable(receiptsPayrollDf)
-    print(f"Customers data from {todayStr} to {todayStr} updated...")
+    print(f"Customers data from {yesterdayStr} to {yesterdayStr} updated...")

@@ -11,6 +11,8 @@ LOGS="/home/berenice/Documents/cron-logs"
 try:
     print("-"*50)
     updateTwoMonthsRedisKeys()
+    
+    os.system(f'echo "cd {SCRIPTS} && {PYTHON} -m dashboard_redis_updater >> {LOGS}/dash_redis.log 2>&1" | at now + 3 minutes')
 except Exception as e:
     print(f"Error generating Dialpad Calls in dialpad_calls_updater.py: {str(e)}.")
     os.system(f'echo "cd {SCRIPTS} && {PYTHON} -m dialpad_calls_updater >> {LOGS}/dialpad_calls.log 2>&1" | at now + 5 minutes')

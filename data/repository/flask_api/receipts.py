@@ -3,7 +3,7 @@ from data.repository.calls.receipts_payroll_repo import ReceiptsPayroll
 from data.repository.calls.receipts_repo import Receipts
 from service.receipts import generateReceiptsDf
 from service.receipts_payroll import generateReceiptsPayrollDf
-from datetime import timedelta
+from datetime import datetime, timedelta
 import json, pandas as pd, redis
 
 def updateReceiptsTable(receiptsPayrollDf: pd.DataFrame) -> None:
@@ -63,15 +63,13 @@ def updateReceiptsPreviousRecords() -> None:
     """ Update Receipts todays records. """
 
     # Defines todays date.
-    receiptsPayroll = ReceiptsPayroll()
-    lastDateFromTable = receiptsPayroll.getLastRecord()[0]["date"]
-    todayDate = lastDateFromTable.date()
-    #yesterdayDate = todayDate - timedelta(days=1)
-    today = todayDate.isoformat()
-    #yesterday = yesterdayDate.isoformat()
+    today = datetime.today().date()
+    yesterday = today - timedelta(days=1)
+    yesterdayStr = yesterday.isoformat()
 
     # Generates data from today and delete duplicated IdReceiptHdr records.
-    receiptsPayrollJson = receiptsPayroll.getBetweenDates(start=today, end=today)
+    receiptsPayroll = ReceiptsPayroll()
+    receiptsPayrollJson = receiptsPayroll.getBetweenDates(start=yesterdayStr, end=yesterdayStr)
     receiptsPayrollDf = pd.DataFrame(receiptsPayrollJson)
     receiptsPayrollDf.drop_duplicates(subset=["id_receipt_hdr"], inplace=True)
 
@@ -81,11 +79,11 @@ def updateReceiptsPreviousRecords() -> None:
     # Delete data that will be updated.
     receipts = Receipts()
     receipts.deleteByIds(receiptsIds)
-    print(f"Receipts data from {today} to {today} deleted...")
+    print(f"Receipts data from {yesterdayStr} to {yesterdayStr} deleted...")
 
     # Updated Receipts table.
     updateReceiptsTable(receiptsPayrollDf)
-    print(f"Receipts data from {today} to {today} updated...")
+    print(f"Receipts data from {yesterdayStr} to {yesterdayStr} updated...")
 
 def updateTwoMonthsRedisKeys() -> None:
     """ Generate date range for current mont and last month

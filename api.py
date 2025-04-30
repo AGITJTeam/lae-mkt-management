@@ -64,6 +64,13 @@ def getDataBetweenDates():
     start = request.args.get("startAt")
     end = request.args.get("endAt")
 
+    if not valIsNotNone(start, end):
+        return jsonify({
+            "status": 400,
+            "label": "Bad request",
+            "error": "Missing arguments"
+        }), 400
+
     if not valDateRanges(start, end):
         return jsonify({
             "status": 400,
@@ -125,6 +132,13 @@ def getWebquotesFromDateRange():
     start = request.args.get("fromDate")
     end = request.args.get("toDate")
 
+    if not valIsNotNone(start, end):
+        return jsonify({
+            "status": 400,
+            "label": "Bad request",
+            "error": "Missing arguments"
+        }), 400
+
     if not valDateRanges(start, end):
         return jsonify({
             "status": 400,
@@ -168,6 +182,13 @@ def getWebquotesDetails():
     start = request.args.get("fromDate")
     end = request.args.get("toDate")
 
+    if not valIsNotNone(start, end):
+        return jsonify({
+            "status": 400,
+            "label": "Bad request",
+            "error": "Missing arguments"
+        }), 400
+
     if not valDateRanges(start, end):
         return jsonify({
             "status": 400,
@@ -209,7 +230,14 @@ def getHomeOwnersDF():
     # 1) Retrieve parameters and validate them.
     start = request.args.get("fromDate")
     end = request.args.get("toDate")
-    
+
+    if not valIsNotNone(start, end):
+        return jsonify({
+            "status": 400,
+            "label": "Bad request",
+            "error": "Missing arguments"
+        }), 400
+
     if not valDateRanges(start, end):
         return jsonify({
             "status": 400,
@@ -250,7 +278,14 @@ def getLaeBetweenDates():
     # 1) Retrieve parameters and validate them.
     start = request.args.get("startAt")
     end = request.args.get("endAt")
-    
+
+    if not valIsNotNone(start, end):
+        return jsonify({
+            "status": 400,
+            "label": "Bad request",
+            "error": "Missing arguments"
+        }), 400
+
     if not valDateRanges(start, end):
         return jsonify({
             "status": 400,
@@ -334,6 +369,13 @@ def getReceiptsBetweenDates():
     start = request.args.get("startAt")
     end = request.args.get("endAt")
 
+    if not valIsNotNone(start, end):
+        return jsonify({
+            "status": 400,
+            "label": "Bad request",
+            "error": "Missing arguments"
+        }), 400
+
     if not valDateRanges(start, end):
         return jsonify({
             "status": 400,
@@ -395,6 +437,13 @@ def countDialpadCalls():
     # 1) Retrieve parameters and validate them.
     start = request.args.get("startAt")
     end = request.args.get("endAt")
+
+    if not valIsNotNone(start, end):
+        return jsonify({
+            "status": 400,
+            "label": "Bad request",
+            "error": "Missing arguments"
+        }), 400
 
     if not valDateRanges(start, end):
         return jsonify({
@@ -473,14 +522,21 @@ def getUserData(username: str):
 @jwt_required()
 def postUser():
     # 1) Recover parameters from request.
-    data = request.json
-    fullname = data["fullname"]
-    username = data["username"]
-    location = data["location"]
-    password = data["password"]
-    email = data["email"]
-    hired = data["hired"]
-    position = data["position"]
+    try:
+        data = request.json
+        fullname = data["fullname"]
+        username = data["username"]
+        location = data["location"]
+        password = data["password"]
+        email = data["email"]
+        hired = data["hired"]
+        position = data["position"]
+    except Exception as e:
+        return jsonify({
+            "status": 400,
+            "label": "Bad request",
+            "error": "Missing User body arguments"
+        }), 400
 
     # 2) Validate parameters.
     alphaValidations = [
@@ -607,7 +663,7 @@ def getOtReportIdByName():
         return jsonify({
             "status": 404,
             "label": "Not found",
-            "error": f"OT Report {reportName} do not exists"
+            "error": f"OT Report '{reportName}' do not exists"
         }), 404
 
     # 4) Return data.
@@ -658,13 +714,20 @@ def getOtReport(id: str):
 @jwt_required()
 def postOtReport():
     # 1) Recover parameters from request.
-    data = request.json
-    startDate = data["startDate"]
-    endDate = data["endDate"]
-    username = data["username"]
-    encryptedPassword = data["password"]
-    reportName = data["reportName"]
-    dashUsername = data["dashUsername"]
+    try:
+        data = request.json
+        startDate = data["startDate"]
+        endDate = data["endDate"]
+        username = data["username"]
+        encryptedPassword = data["password"]
+        reportName = data["reportName"]
+        dashUsername = data["dashUsername"]
+    except Exception as e:
+        return jsonify({
+            "status": 400,
+            "label": "Bad request",
+            "error": "Missing Ot Report body arguments"
+        }), 400
 
     # 2) Validate string dates.
     if not valDateRanges(startDate, endDate):
@@ -784,6 +847,13 @@ def genFinalSales():
     end = request.args.get("endAt")
     yesterday = request.args.get("yesterday")
 
+    if not valIsNotNone(start, end, yesterday):
+        return jsonify({
+            "status": 400,
+            "label": "Bad request",
+            "error": "Missing arguments"
+        }), 400
+
     if not valDateRanges(start, end) or not validateStringDate(yesterday):
         return jsonify({
             "status": 400,
@@ -872,6 +942,13 @@ def genProjections():
     position = request.args.get("position")
     fullname = request.args.get("fullname")
 
+    if not valIsNotNone(position, fullname):
+        return jsonify({
+            "status": 400,
+            "label": "Bad request",
+            "error": "Missing arguments"
+        }), 400
+
     if not fullname.replace(" ", "").isalpha():
         return jsonify({
             "status": 400,
@@ -888,7 +965,7 @@ def genProjections():
             return jsonify({
                 "status": 404,
                 "label": "Not found",
-                "error": f"{position} position do not exist"
+                "error": f"Position '{position}' do not exist"
             }), 404
     except Exception:
         logger.error("An error occurred while getting data for Projections Report")
@@ -948,6 +1025,13 @@ def genOffices():
     position = request.args.get("position")
     fullname = request.args.get("fullname")
 
+    if not valIsNotNone(start, end, position, fullname):
+        return jsonify({
+            "status": 400,
+            "label": "Bad request",
+            "error": "Missing arguments"
+        }), 400
+
     if not valDateRanges(start, end):
         return jsonify({
             "status": 400,
@@ -971,7 +1055,7 @@ def genOffices():
             return jsonify({
                 "status": 404,
                 "label": "Not found",
-                "error": f"{position} position do not exist"
+                "error": f"Position '{position}' do not exist"
             }), 404
     except Exception:
         logger.error("An error occurred while getting data for Offices Report")
@@ -1020,6 +1104,13 @@ def genOnlineSales():
     # 1) Retrieve parameters and validate them.
     start = request.args.get("startAt")
     end = request.args.get("endAt")
+
+    if not valIsNotNone(start, end):
+        return jsonify({
+            "status": 400,
+            "label": "Bad request",
+            "error": "Missing arguments"
+        }), 400
 
     if not valDateRanges(start, end):
         return jsonify({
@@ -1073,6 +1164,13 @@ def genCarriers():
     position = request.args.get("position")
     fullname = request.args.get("fullname")
 
+    if not valIsNotNone(start, end, position, fullname):
+        return jsonify({
+            "status": 400,
+            "label": "Bad request",
+            "error": "Missing arguments"
+        }), 400
+
     if not valDateRanges(start, end):
         return jsonify({
             "status": 400,
@@ -1096,7 +1194,7 @@ def genCarriers():
             return jsonify({
                 "status": 404,
                 "label": "Not found",
-                "error": f"{position} position do not exist"
+                "error": f"Position '{position}' do not exist"
             }), 404
     except Exception:
         logger.error("An error occurred while getting data for Carriers Report")
@@ -1145,6 +1243,13 @@ def genTopCarriers():
     # 1) Retrieve parameters and validate them.
     start = request.args.get("startAt")
     end = request.args.get("endAt")
+
+    if not valIsNotNone(start, end):
+        return jsonify({
+            "status": 400,
+            "label": "Bad request",
+            "error": "Missing arguments"
+        }), 400
 
     if not valDateRanges(start, end):
         return jsonify({
@@ -1198,6 +1303,13 @@ def genOutOfState():
     start = request.args.get("startAt")
     end = request.args.get("endAt")
 
+    if not valIsNotNone(start, end):
+        return jsonify({
+            "status": 400,
+            "label": "Bad request",
+            "error": "Missing arguments"
+        }), 400
+
     if not valDateRanges(start, end):
         return jsonify({
             "status": 400,
@@ -1247,6 +1359,13 @@ def genGmbCallsReport():
     end = request.form.get("endDate")
     file = request.files.get("gmbCallsFile")
 
+    if not valIsNotNone(start, end, file):
+        return jsonify({
+            "status": 400,
+            "label": "Bad request",
+            "error": "Missing arguments"
+        }), 400
+
     if not valDateRanges(start, end):
         return jsonify({
             "status": 400,
@@ -1280,6 +1399,13 @@ def genYelpCallsReport():
     end = request.form.get("endDate")
     yelpCalls = request.files.get("yelpCallsFile")
     yelpCodes = request.files.get("yelpCodesFile")
+
+    if not valIsNotNone(start, end, yelpCalls, yelpCodes):
+        return jsonify({
+            "status": 400,
+            "label": "Bad request",
+            "error": "Missing arguments"
+        }), 400
 
     if not valDateRanges(start, end):
         return jsonify({

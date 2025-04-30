@@ -29,4 +29,4 @@ finally:
 
 # add data from a specific date range, substitute 'start' and 'end'
 # with a date in YYYY-MM-DD format.
-#addReceiptsSpecificRange("start", "end") 
+# addReceiptsSpecificRange("2025-03-26", "2025-03-26")
