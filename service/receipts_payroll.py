@@ -44,16 +44,37 @@ def transformReceiptsDfForLaeData(df: pd.DataFrame) -> pd.DataFrame:
         {pandas.DataFrame} resulting DataFrame.
     """
 
+    receiptTypeColumns = [
+        "nb", "bf", "endos", "payments", "invoice",
+        "dmv", "towing", "permit", "traffic_school",
+        "renewal", "trucking", "immigration",
+    ]
     df = df.copy()
 
+    # Delete, filter and add columns to DataFrame.
     df = deleteColumns(df, rpColumnsToDelete)
     df = filterRows(df, "for", rpValuesToFilter)
-    df = addServiceCountingColumns(df)
+    df = addReceiptTypeCountColumns(df)
+
+    # Group by customer_id and sum Receipt type count columns.
+    receiptTypeSums = df.groupby("customer_id")[receiptTypeColumns].sum()
+
+    # Maintain first row for each customer_id of original Dataframe.
+    otherColumns = (
+        df
+        .drop(columns=receiptTypeColumns)
+        .groupby('customer_id')
+        .first()
+    )
+
+    # Join unique customer_id and Receipt type sums.
+    df = otherColumns.join(receiptTypeSums).reset_index()
 
     return df
 
-def addServiceCountingColumns(df: pd.DataFrame) -> pd.DataFrame:
-    """ Add counting service columns for "For" column to Receipts DataFrame.
+def addReceiptTypeCountColumns(df: pd.DataFrame) -> pd.DataFrame:
+    """ Add Receipt type count columns according to "for" column to Receipts
+    DataFrame.
 
     Parameters
         - df {pandas.DataFrame} DataFrame to modify.
@@ -62,22 +83,22 @@ def addServiceCountingColumns(df: pd.DataFrame) -> pd.DataFrame:
         {pandas.DataFrame} resulting DataFrame.
     """
 
-    df["nb"] = countForValues(df, rpValuesToFilter[0])
-    df["bf"] = countForValues(df, rpValuesToFilter[1:4])
-    df["endos"] = countForValues(df, rpValuesToFilter[4:6])
-    df["payments"] = countForValues(df, rpValuesToFilter[6:9])
-    df["invoice"] = countForValues(df, rpValuesToFilter[9:11])
-    df["dmv"] = countForValues(df, rpValuesToFilter[11:17])
-    df["towing"] = countForValues(df, rpValuesToFilter[17])
-    df["permit"] = countForValues(df, rpValuesToFilter[18])
-    df["traffic_school"] = countForValues(df, rpValuesToFilter[19])
-    df["renewal"] = countForValues(df, rpValuesToFilter[20])
-    df["trucking"] = countForValues(df, rpValuesToFilter[21])
-    df["immigration"] = countForValues(df, rpValuesToFilter[22])
+    df["nb"] = countReceiptType(df, rpValuesToFilter[0])
+    df["bf"] = countReceiptType(df, rpValuesToFilter[1:4])
+    df["endos"] = countReceiptType(df, rpValuesToFilter[4:6])
+    df["payments"] = countReceiptType(df, rpValuesToFilter[6:9])
+    df["invoice"] = countReceiptType(df, rpValuesToFilter[9:11])
+    df["dmv"] = countReceiptType(df, rpValuesToFilter[11:17])
+    df["towing"] = countReceiptType(df, rpValuesToFilter[17])
+    df["permit"] = countReceiptType(df, rpValuesToFilter[18])
+    df["traffic_school"] = countReceiptType(df, rpValuesToFilter[19])
+    df["renewal"] = countReceiptType(df, rpValuesToFilter[20])
+    df["trucking"] = countReceiptType(df, rpValuesToFilter[21])
+    df["immigration"] = countReceiptType(df, rpValuesToFilter[22])
     
     return df
 
-def countForValues(df: pd.DataFrame, valuesToCount: list[str]) -> list[int]:
+def countReceiptType(df: pd.DataFrame, valuesToCount: list[str]) -> list[int]:
     """ Count "For" column values and generate list of values.
 
     Parameters
@@ -92,10 +113,10 @@ def countForValues(df: pd.DataFrame, valuesToCount: list[str]) -> list[int]:
         stringToList = [valuesToCount]
         valuesToCount = stringToList
 
-    forColumnValues = df["for"]
+    forValues = df["for"]
     countValues = []
 
-    for forValue in forColumnValues:
+    for forValue in forValues:
         if forValue in valuesToCount:
             countValues.append(1)
         else:

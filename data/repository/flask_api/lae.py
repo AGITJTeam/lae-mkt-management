@@ -19,10 +19,10 @@ def updateLaeDataTables(start: str, end: str) -> None:
     receiptsPayroll = ReceiptsPayroll()
     receiptsPayrollJson = receiptsPayroll.getBetweenDates(start, end)
     receiptsPayrollDf = pd.DataFrame(receiptsPayrollJson)
-    receiptsPayrollDf.drop_duplicates(subset=["customer_id"], inplace=True)
     print("ReceiptsPayroll table generated..")
 
-    customersDf = getUniqueCustomersDf(receiptsPayrollDf)
+    uniqueCustIdRP = receiptsPayrollDf.drop_duplicates(subset=["customer_id"])
+    customersDf = getUniqueCustomersDf(uniqueCustIdRP)
     print("Customers table generated...")
 
     receipts = transformReceiptsDfForLaeData(receiptsPayrollDf)
