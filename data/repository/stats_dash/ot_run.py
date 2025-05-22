@@ -54,15 +54,18 @@ def otRun(start: str, end: str, username: str, encryptedPassword: str, reportNam
         logger.error(f"Error retrieving Ot Report with id {id} in otRun: {str(e)}")
         raise
 
-    redisKey = f"OtReport_{id}"
-    hashValues = {
-        "data": json.dumps(obj=data, default=str),
-        "weekdata": json.dumps(obj=weekData, default=str),
-        "created": json.dumps(obj=created, default=str)
-    }
-    redisCli = redis.Redis(host="localhost", port=6379, decode_responses=True)
-    redisCli.hset(name=redisKey, mapping=hashValues)
-    redisCli.close()
+    if redisCli:
+        redisKey = f"OtReport_{id}"
+        hashValues = {
+            "data": json.dumps(obj=data, default=str),
+            "weekdata": json.dumps(obj=weekData, default=str),
+            "created": json.dumps(obj=created, default=str)
+        }
+        redisCli = redis.Redis(host="localhost", port=6379, decode_responses=True)
+        redisCli.hset(name=redisKey, mapping=hashValues)
+        print("OT Report calculated in backend and saved to Redis")
+    else:
+        print("OT Report calculated in backend")
 
     return jsonify({
         "status": 201,
