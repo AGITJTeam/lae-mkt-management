@@ -8,6 +8,9 @@ You need to create .env file in the root of the project and with this variables:
     API_KEY = "api_key"
     S2_USER = "username"
     S2_PASS = "password"
+    AUTH_URL = "aut url for LAE token"
+    CLIENT_ID = "client id"
+    CLIENT_SECRET = " client secret"
 
 You need to create .ini files in /db/config/ with this db credentials for the main_data,  compliance and main_data (flask) database:
 

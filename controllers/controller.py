@@ -5,10 +5,48 @@ import os, logging
 logger = logging.getLogger(__name__)
 
 LAE_URL = "http://50.18.96.65:8080"
+N_LAE_URL = "http://lae.agibusinessgroup.com:8080"
 ADRIANAS_URL = "https://app.adrianas.com/api"
 SECURE2_URL = "http://secure2.saashr.com/ta/rest/v1"
 COMPANY_SHORTNAME = "AGI04"
 TIMEOUT = 60
+
+def generateTokenForLae() -> str | None:
+    """ Call LAE to get Token for current session.
+    """
+
+    AUTH_URL = "https://agilaesystem.us.auth0.com/oauth/token"
+    CLIENT_ID = os.getenv("CLIENT_ID")
+    CLIENT_SECRET = os.getenv("CLIENT_SECRET")
+    TOKEN_URL = os.getenv("AUTH_URL")
+
+    DATA = {
+        "client_id": CLIENT_ID,
+        "client_secret": CLIENT_SECRET,
+        "audience": TOKEN_URL,
+        "grant_type": "client_credentials",
+    }
+
+    try:
+        response = rq.post(url=AUTH_URL, json=DATA)
+    except (
+        rq.exceptions.ConnectionError,
+        rq.exceptions.ReadTimeout,
+        rq.exceptions.RequestException
+    ) as e:
+        logger.error(f"Error generating token in generateTokenForLae: {str(e)}")
+        return None
+    else:
+        if response.status_code == rq.codes.bad_request or response.status_code == rq.codes.unauthorized or response.status_code == rq.codes.not_found:
+            logger.error(f"Error generating token in generateTokenForLae: Status code {response.status_code}. Message: {response.text}")
+            return None
+        if response.status_code == rq.codes.forbidden:
+            logger.error("Error generating token in generateTokenForLae: Temporary token issued. Please change your password")
+            return None
+        
+        currentToken = response.json().get("access_token")
+        
+        return currentToken
 
 def getEmployees() -> dict | None:
     """ Call Employees endpoint from LAE to get employee data.
@@ -17,10 +55,16 @@ def getEmployees() -> dict | None:
         {dict | None} api response in Json format or None if exception raise.
     """
 
-    URL = f"{LAE_URL}/Employees"
+    URL = f"{N_LAE_URL}/Employees"
+    TOKEN = generateTokenForLae()
+    print(f"TOKEN: {TOKEN}")
+    HEADERS = {
+        "Authorization": f"Bearer {TOKEN}",
+        "Content-Type": "application/json"
+    }
 
     try:
-        employeesRequest = rq.get(url=URL, timeout=TIMEOUT)
+        employeesRequest = rq.get(url=URL, headers=HEADERS)
     except (
         rq.exceptions.ConnectionError,
         rq.exceptions.ReadTimeout,
@@ -33,6 +77,40 @@ def getEmployees() -> dict | None:
             logger.error(f"Status code {employeesRequest.status_code} in getEmployees")
         return employeesRequest.json()
 
+def getReceipt(id: int) -> dict | None:
+    """ Call Receitps endpoint from LAE to get one Receipt data.
+
+    Parameters
+        - id {int} the id of the receipt.
+
+    Returns
+        {dict | None} api response in Json format or None if exception raise.
+    """
+
+    URL = f"{N_LAE_URL}/Receipts/{id}"
+    TOKEN = generateTokenForLae()
+    HEADERS = {
+        "Authorization": f"Bearer {TOKEN}",
+        "Content-Type": "application/json"
+    }
+
+    try:
+        receiptsRequest = rq.get(url=URL, headers=HEADERS, timeout=TIMEOUT)
+    except (
+        rq.exceptions.ConnectionError, 
+        rq.exceptions.ReadTimeout,
+        rq.exceptions.RequestException
+    ) as e:
+        logger.error(f"Error in getReceipt: {str(e)}")
+        raise
+    else:
+        if receiptsRequest.status_code != rq.codes.ok:
+            logger.error(f"Error fetching receipt in getReceipt with id {id}. Response status {receiptsRequest.status_code}")
+            print(f"response text: {receiptsRequest.text}")
+            print(f"response content: {receiptsRequest.content}")
+            return {}
+        return receiptsRequest.json()
+
 def getReceiptsPayroll(start: str, end: str) -> dict | None:
     """ Call Receipts/Payroll endpoint from LAE to get Receipt Payroll data.
 
@@ -44,10 +122,15 @@ def getReceiptsPayroll(start: str, end: str) -> dict | None:
         {dict | None} api response in Json format or None if exception raise.
     """
 
-    URL = f"{LAE_URL}/Receipts/PayRoll?startDate={start}&endDate={end}"
+    URL = f"{N_LAE_URL}/Receipts/PayRoll?startDate={start}&endDate={end}"
+    TOKEN = generateTokenForLae()
+    HEADERS = {
+        "Authorization": f"Bearer {TOKEN}",
+        "Content-Type": "application/json"
+    }
 
     try:
-        rpRequest = rq.get(url=URL, timeout=TIMEOUT)
+        rpRequest = rq.get(url=URL, headers=HEADERS, timeout=TIMEOUT)
     except (
         rq.exceptions.ConnectionError,
         rq.exceptions.ReadTimeout,
@@ -73,10 +156,15 @@ def getCustomer(id: int) -> dict | None:
         {dict | None} api response in Json format or None if exception raise.
     """
 
-    URL = f"{LAE_URL}/Customers/{id}"
+    URL = f"{N_LAE_URL}/Customers/{id}"
+    TOKEN = generateTokenForLae()
+    HEADERS = {
+        "Authorization": f"Bearer {TOKEN}",
+        "Content-Type": "application/json"
+    }
 
     try:
-        customersRequest = rq.get(url=URL, timeout=TIMEOUT)
+        customersRequest = rq.get(url=URL, headers=HEADERS, timeout=TIMEOUT)
     except (
         rq.exceptions.ConnectionError,
         rq.exceptions.ReadTimeout,
@@ -232,83 +320,6 @@ def getDynamicForm(start: str, end: str) -> dict | None:
             logger.error(f"Status code {wqRequest.status_code} in getDynamicForm.")
         return wqRequest.json()
 
-def getReceipt(id: int) -> dict | None:
-    """ Call Receitps endpoint from LAE to get one Receipt data.
-
-    Parameters
-        - id {int} the id of the receipt.
-
-    Returns
-        {dict | None} api response in Json format or None if exception raise.
-    """
-
-    URL = f"{LAE_URL}/Receipts/{id}"
-
-    try:
-        receiptsRequest = rq.get(url=URL, timeout=TIMEOUT)
-    except (
-        rq.exceptions.ConnectionError, 
-        rq.exceptions.ReadTimeout,
-        rq.exceptions.RequestException
-    ) as e:
-        logger.error(f"Error in getReceipt: {str(e)}")
-        raise
-    else:
-        if receiptsRequest.status_code != rq.codes.ok:
-            logger.error(f"Error fetching receipt in getReceipt with id {id}. Response status {receiptsRequest.status_code}")
-            print(f"response text: {receiptsRequest.text}")
-            print(f"response content: {receiptsRequest.content}")
-            return {}
-        return receiptsRequest.json()
-
-def fetchAgiReports(reportId: int, username: str, password: str) -> rq.Response | None:
-    """ Call Secure2 to get AGI reports.
-
-    Parameters
-        - reportId {int} the ID of the report to fetch.
-        - username {str} tue username of the user.
-        - password {str} the password of the user.
-
-    Returns
-        {requests.Response} fetched AGI report in CSV format or None if
-        exception raise.
-    """
-
-    if username is None or password is None:
-        username = Config.get_username()
-        password = Config.get_password()
-    token = generateTokenForSecure2(username, password)
-    
-    PARAMETERS = {
-        "company:shortname": COMPANY_SHORTNAME
-    }
-    HEADERS = {
-        "Accept": "text/csv",
-        "Authentication": f"Bearer {token}",
-        "Content-Type": "application/json"
-    }
-    URL = f"{SECURE2_URL}/report/saved/{reportId}"
-
-    try:
-        response = rq.get(url=URL, headers=HEADERS, params=PARAMETERS)
-    except (
-        rq.exceptions.ConnectionError,
-        rq.exceptions.ReadTimeout,
-        rq.exceptions.RequestException
-    ) as e:
-        logger.error(f"Error fetching Agi Report in fetchReportOne: {str(e)}")
-        raise
-    else:
-        if response.status_code == rq.codes.unauthorized:
-            print("Token expired, refreshing...")
-            currentToken = generateTokenForSecure2(username, password)
-            if currentToken:
-                return fetchAgiReports(reportId)
-            
-            print("Unable to refresh token...")
-        
-        return response
-
 def generateTokenForSecure2(username: str, password: str) -> str | None:
     """ Call Secure2 to get user token for current session.
 
@@ -357,3 +368,51 @@ def generateTokenForSecure2(username: str, password: str) -> str | None:
         currentToken = response.json().get("token")
         
         return currentToken
+
+def fetchAgiReports(reportId: int, username: str, password: str) -> rq.Response | None:
+    """ Call Secure2 to get AGI reports.
+
+    Parameters
+        - reportId {int} the ID of the report to fetch.
+        - username {str} tue username of the user.
+        - password {str} the password of the user.
+
+    Returns
+        {requests.Response} fetched AGI report in CSV format or None if
+        exception raise.
+    """
+
+    if username is None or password is None:
+        username = Config.get_username()
+        password = Config.get_password()
+    token = generateTokenForSecure2(username, password)
+    
+    PARAMETERS = {
+        "company:shortname": COMPANY_SHORTNAME
+    }
+    HEADERS = {
+        "Accept": "text/csv",
+        "Authentication": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+    URL = f"{SECURE2_URL}/report/saved/{reportId}"
+
+    try:
+        response = rq.get(url=URL, headers=HEADERS, params=PARAMETERS)
+    except (
+        rq.exceptions.ConnectionError,
+        rq.exceptions.ReadTimeout,
+        rq.exceptions.RequestException
+    ) as e:
+        logger.error(f"Error fetching Agi Report in fetchReportOne: {str(e)}")
+        raise
+    else:
+        if response.status_code == rq.codes.unauthorized:
+            print("Token expired, refreshing...")
+            currentToken = generateTokenForSecure2(username, password)
+            if currentToken:
+                return fetchAgiReports(reportId)
+            
+            print("Unable to refresh token...")
+        
+        return response
