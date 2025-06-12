@@ -15,20 +15,15 @@ def generateTokenForLae() -> str | None:
     """ Call LAE to get Token for current session.
     """
 
-    AUTH_URL = "https://agilaesystem.us.auth0.com/oauth/token"
-    CLIENT_ID = os.getenv("CLIENT_ID")
-    CLIENT_SECRET = os.getenv("CLIENT_SECRET")
-    TOKEN_URL = os.getenv("AUTH_URL")
+    LAE_WQ_URL = "https://wq-api.adrianas.com/lae-token"
+    KEY = os.getenv("LAE_WQ_KEY")
 
-    DATA = {
-        "client_id": CLIENT_ID,
-        "client_secret": CLIENT_SECRET,
-        "audience": TOKEN_URL,
-        "grant_type": "client_credentials",
+    HEADERS = {
+        "Authorization": KEY
     }
 
     try:
-        response = rq.post(url=AUTH_URL, json=DATA)
+        response = rq.get(url=LAE_WQ_URL, headers=HEADERS)
     except (
         rq.exceptions.ConnectionError,
         rq.exceptions.ReadTimeout,
@@ -44,7 +39,7 @@ def generateTokenForLae() -> str | None:
             logger.error("Error generating token in generateTokenForLae: Temporary token issued. Please change your password")
             return None
         
-        currentToken = response.json().get("access_token")
+        currentToken = response.json().get("data")
         
         return currentToken
 
