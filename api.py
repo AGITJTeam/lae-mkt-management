@@ -19,6 +19,7 @@ from data.repository.stats_dash.dash_os import dashOs
 from data.repository.stats_dash.yelp_calls import generateYelpCallsReport
 from data.repository.stats_dash.dialpad_calls import countDialpadCallsByDateRange
 from service.dynamic_form import generateDynamicFormDf
+from utils.transformators import formatWebquotesLanguage
 from utils.validations import *
 from logs.config import setupLogging
 from config import Config
@@ -171,18 +172,20 @@ def getWebquotesFromDateRange():
     # 4) Recover data from database.
     webquotes = Webquotes()
     data = webquotes.getPartialFromDateRange(start, end)
+
+    formattedData = formatWebquotesLanguage(data)
     
     # 5) Check if Redis container is working for saving data.
     if redisCli:
         # Defines expiration time and save Redis key.
         expirationTime = 60*60*3
-        redisCli.set(name=redisKey, value=json.dumps(obj=data, default=str), ex=expirationTime)
+        redisCli.set(name=redisKey, value=json.dumps(obj=formattedData, default=str), ex=expirationTime)
         print("Webquotes saved in Redis, recovered from Database")
     else:
         print("Webquotes not found in Redis, recovered from Database")
     
     # 6) Return data.
-    return jsonify(data)
+    return jsonify(formattedData)
 
 @app.route("/Webquotes/Details", methods=["GET"])
 @jwt_required()
@@ -225,18 +228,20 @@ def getWebquotesDetails():
     # 4) Recover data from database.
     webquotes = Webquotes()
     data = webquotes.getWebquotesFromDateRange(start, end)
+
+    formattedData = formatWebquotesLanguage(data)
     
     # 5) Check if Redis container is working for saving data.
     if redisCli:
         # Defines expiration time and save Redis key.
         expirationTime = 60*60*3
-        redisCli.set(name=redisKey, value=json.dumps(obj=data, default=str), ex=expirationTime)
+        redisCli.set(name=redisKey, value=json.dumps(obj=formattedData, default=str), ex=expirationTime)
         print("Webquotes Details saved in Redis, recovered from Database")
     else:
         print("Webquotes Details not found in Redis, recovered from Database")
 
     # 6) Return data.
-    return jsonify(data)
+    return jsonify(formattedData)
 
 @app.route("/DynamicForms", methods=["GET"])
 @jwt_required()

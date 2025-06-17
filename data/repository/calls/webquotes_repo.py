@@ -20,7 +20,7 @@ class Webquotes(IWebquotes):
             - end {str} the end of the range of dates.
         """
 
-        query = f"SELECT name, email, phone, submission_date, status, agent, referer, campaign_id FROM webquotes WHERE submission_date BETWEEN \'{start}\' AND \'{end}\';"
+        query = f"SELECT name, email, phone, submission_date, status, agent, preference, referer, campaign_id FROM webquotes WHERE submission_date BETWEEN \'{start}\' AND \'{end}\';"
         return getData(query=query, filename="flask_api.ini")
 
     def getWebquotesFromDateRange(self, start, end):
@@ -32,7 +32,7 @@ class Webquotes(IWebquotes):
             - end {str} the end of the range of dates.
         """
 
-        query = f"SELECT name, email, phone, submission_date, birthday, model_year, make, model, status, agent, state, marital_status, gender, referer, campaign_id FROM webquotes WHERE submission_date BETWEEN \'{start}\' AND \'{end}\';"
+        query = f"SELECT name, email, phone, submission_date, birthday, model_year, make, model, status, agent, preference, state, marital_status, gender, referer, campaign_id FROM webquotes WHERE submission_date BETWEEN \'{start}\' AND \'{end}\';"
         webquotes = getData(query=query, filename="flask_api.ini")
         parsedWebquoteDate = parseWebquotesSubmissionDate(webquotes)
 
