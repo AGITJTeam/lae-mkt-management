@@ -63,9 +63,9 @@ def otRun(start: str, end: str, username: str, encryptedPassword: str, reportNam
         }
         redisCli = redis.Redis(host="localhost", port=6379, decode_responses=True)
         redisCli.hset(name=redisKey, mapping=hashValues)
-        print("OT Report calculated in backend and saved to Redis")
+        logger.info("OT Report calculated in backend and saved to Redis")
     else:
-        print("OT Report calculated in backend")
+        logger.info("OT Report calculated in backend")
 
     return jsonify({
         "status": 201,

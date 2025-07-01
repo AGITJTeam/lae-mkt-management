@@ -1,14 +1,16 @@
 from data.repository.calls.employees_repo import Employees
 from data.repository.calls.helpers import postDataframeToDb
 from service.employees import generateEmployeesDf
-import json, redis
+import json, logging, redis
+
+logger = logging.getLogger(__name__)
 
 def updateEmployeesTable() -> None:
     """ Updates Employees table in db. """
 
     employeesDf = generateEmployeesDf()
     postDataframeToDb(data=employeesDf, table="employees", mode="replace", filename="flask_api.ini")
-    print("Employees table generated and posted...")
+    logger.info("Employees table generated and posted...")
 
 def updateRedisKey() -> None:
     """ Updates Redis keys with retrieved employees data. """
@@ -27,7 +29,7 @@ def updateRedisKey() -> None:
 
     # Set Redis key with 10 hours expiration time.
     redisCli.set(name=redisKey, value=data, ex=expirationTime)
-    print("AllEmployes Redis key updated...")
+    logger.info("AllEmployes Redis key updated...")
 
     # Close Redis connection.
     redisCli.close()

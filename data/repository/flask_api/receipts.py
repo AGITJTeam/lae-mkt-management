@@ -4,7 +4,9 @@ from data.repository.calls.receipts_repo import Receipts
 from service.receipts import generateReceiptsDf
 from service.receipts_payroll import generateReceiptsPayrollDf
 from datetime import datetime, timedelta
-import json, pandas as pd, redis
+import json, logging, pandas as pd, redis
+
+logger = logging.getLogger(__name__)
 
 def updateReceiptsTable(receiptsPayrollDf: pd.DataFrame) -> None:
     """ Updates Receipts table in db with a date range.
@@ -57,7 +59,7 @@ def addReceiptsSpecificRange(start: str, end: str) -> None:
 
     # Updated Receipts table.
     updateReceiptsTable(rpNoDuplicates)
-    print(f"Receipts data from {start} to {end} added...")
+    logger.info(f"Receipts data from {start} to {end} added...")
 
 def updateReceiptsPreviousRecords() -> None:
     """ Update Receipts todays records. """
@@ -79,11 +81,11 @@ def updateReceiptsPreviousRecords() -> None:
     # Delete data that will be updated.
     receipts = Receipts()
     receipts.deleteByIds(receiptsIds)
-    print(f"Receipts data from {yesterdayStr} to {yesterdayStr} deleted...")
+    logger.info(f"Receipts data from {yesterdayStr} to {yesterdayStr} deleted...")
 
     # Updated Receipts table.
     updateReceiptsTable(receiptsPayrollDf)
-    print(f"Receipts data from {yesterdayStr} to {yesterdayStr} updated...")
+    logger.info(f"Receipts data from {yesterdayStr} to {yesterdayStr} updated...")
 
 def updateTwoMonthsRedisKeys() -> None:
     """ Generate date range for current mont and last month
@@ -106,4 +108,4 @@ def updateTwoMonthsRedisKeys() -> None:
         receiptsPayrollDf.drop_duplicates(subset=["id_receipt_hdr"], inplace=True)
         receiptsJson = receiptsPayrollDf.to_json(orient="records")
         updateRedisKeys(receiptsJson, redisKeys[i])
-        print(f"Redis keys {redisKeys[i]} updated...")
+        logger.info(f"Redis keys {redisKeys[i]} updated...")

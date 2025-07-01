@@ -92,7 +92,7 @@ def getDataBetweenDates():
         # Check if the data is already in Redis.
         redisData = valPreMadeRedisData(start, end, redisKey, validators)
         if redisData:
-            print("Receipts Payroll recovered from Redis")
+            logger.info("Receipts Payroll recovered from Redis")
             return jsonify(redisData)
 
     # 4) Recover data from database.
@@ -104,9 +104,9 @@ def getDataBetweenDates():
         # Defines expiration time and save Redis key.
         expirationTime = 60*60*3
         redisCli.set(name=redisKey, value=json.dumps(obj=data, default=str), ex=expirationTime)
-        print("Receipts Payroll saved in Redis, recovered from Database")
+        logger.info("Receipts Payroll saved in Redis, recovered from Database")
     else:
-        print("Receipts Payroll not found in Redis, recovered from Database")
+        logger.info("Receipts Payroll not found in Redis, recovered from Database")
     
     # 6) Return data.
     return jsonify(data)
@@ -127,7 +127,7 @@ def getReceiptsByCustId(id: str):
     data = receiptsPayroll.getByCustomerId(id)
 
     # 3) Return data.
-    print("Recovered Receipts Payroll from Database")
+    logger.info("Recovered Receipts Payroll from Database")
     return jsonify(data)
 
 @app.route("/Webquotes", methods=["GET"])
@@ -166,7 +166,7 @@ def getWebquotesFromDateRange():
         # Check if the data is already in Redis.
         redisData = valPreMadeRedisData(start, end, redisKey, validators)
         if redisData:
-            print("Webquotes recovered from Redis")
+            logger.info("Webquotes recovered from Redis")
             return jsonify(redisData)
 
     # 4) Recover data from database.
@@ -180,9 +180,9 @@ def getWebquotesFromDateRange():
         # Defines expiration time and save Redis key.
         expirationTime = 60*60*3
         redisCli.set(name=redisKey, value=json.dumps(obj=formattedData, default=str), ex=expirationTime)
-        print("Webquotes saved in Redis, recovered from Database")
+        logger.info("Webquotes saved in Redis, recovered from Database")
     else:
-        print("Webquotes not found in Redis, recovered from Database")
+        logger.info("Webquotes not found in Redis, recovered from Database")
     
     # 6) Return data.
     return jsonify(formattedData)
@@ -222,7 +222,7 @@ def getWebquotesDetails():
         # Check if the data is already in Redis.
         redisData = valPreMadeRedisData(start, end, redisKey, validators)
         if redisData:
-            print("Webquotes Details recovered from Redis")
+            logger.info("Webquotes Details recovered from Redis")
             return jsonify(redisData)
 
     # 4) Recover data from database.
@@ -236,9 +236,9 @@ def getWebquotesDetails():
         # Defines expiration time and save Redis key.
         expirationTime = 60*60*3
         redisCli.set(name=redisKey, value=json.dumps(obj=formattedData, default=str), ex=expirationTime)
-        print("Webquotes Details saved in Redis, recovered from Database")
+        logger.info("Webquotes Details saved in Redis, recovered from Database")
     else:
-        print("Webquotes Details not found in Redis, recovered from Database")
+        logger.info("Webquotes Details not found in Redis, recovered from Database")
 
     # 6) Return data.
     return jsonify(formattedData)
@@ -278,7 +278,7 @@ def getHomeOwnersDF():
         # Check if the data is already in Redis.
         redisData = valPreMadeRedisData(start, end, redisKey, validators)
         if redisData:
-            print("Dynamic Form recovered from Redis")
+            logger.info("Dynamic Form recovered from Redis")
             return jsonify(redisData)
 
     # 4) Recover data from database.
@@ -289,9 +289,9 @@ def getHomeOwnersDF():
         # Defines expiration time and save Redis key.
         expirationTime = 60*60*3
         redisCli.set(name=redisKey, value=json.dumps(obj=data, default=str), ex=expirationTime)
-        print("Dynamic Form saved in Redis, recovered from Database")
+        logger.info("Dynamic Form saved in Redis, recovered from Database")
     else:
-        print("Dynamic Form not found in Redis, recovered from Database")
+        logger.info("Dynamic Form not found in Redis, recovered from Database")
         
     # 6) Return data.
     return jsonify(data)
@@ -322,7 +322,7 @@ def getLaeBetweenDates():
     data = lae.getBetweenDates(start=start, end=end)
 
     # 3) Return data.
-    print("LAE Data recovered from Database")
+    logger.info("LAE Data recovered from Database")
     return jsonify(data)
 
 @app.route("/Customers", methods=["GET"])
@@ -334,7 +334,7 @@ def getAllCustomers():
     if redisCli:
         # Check if the data is already in Redis.
         if redisCli.get(redisKey):
-            print("All Customers recovered from Redis")
+            logger.info("All Customers recovered from Redis")
             return jsonify(json.loads(redisCli.get(redisKey)))
 
     # 2) Recover data from database.
@@ -346,9 +346,9 @@ def getAllCustomers():
         # Defines expiration time and save Redis key.
         expirationTime = 60*60*10
         redisCli.set(name=redisKey, value=json.dumps(obj=data, default=str), ex=expirationTime)
-        print("All Customers saved in Redis, recovered from Database")
+        logger.info("All Customers saved in Redis, recovered from Database")
     else:
-        print("All Customers not found in Redis, recovered from Database")
+        logger.info("All Customers not found in Redis, recovered from Database")
 
     # 4) Return data.
     return jsonify(data)
@@ -369,7 +369,7 @@ def getCustomerById(id: str):
     data = customers.getById(id)
 
     # 3) Return data.
-    print("Customer recovered from Database")
+    logger.info("Customer recovered from Database")
     return jsonify(data)
 
 @app.route("/Employees", methods=["GET"])
@@ -381,7 +381,7 @@ def getAllEmployees():
     if redisCli:
         # Check if the data is already in Redis.        
         if redisCli.get(redisKey):
-            print("All Employees recovered from Redis")
+            logger.info("All Employees recovered from Redis")
             return jsonify(json.loads(redisCli.get(redisKey)))
 
     # 2) Recover data from database.
@@ -393,9 +393,9 @@ def getAllEmployees():
         # Defines expiration time and save Redis key.
         expirationTime = 60*60*10
         redisCli.set(name=redisKey, value=json.dumps(obj=data, default=str), ex=expirationTime)
-        print("All Employees saved in Redis, recovered from Database")
+        logger.info("All Employees saved in Redis, recovered from Database")
     else:
-        print("All Employees not found in Redis, recovered from Database")
+        logger.info("All Employees not found in Redis, recovered from Database")
 
     # 4) Return data.
     return jsonify(data)
@@ -434,7 +434,7 @@ def getReceiptsBetweenDates():
         # Check if the data is already in Redis.
         redisData = valPreMadeRedisData(start, end, redisKey, validators)
         if redisData:
-            print("Receipts recovered from Redis")
+            logger.info("Receipts recovered from Redis")
             return jsonify(json.loads(redisData))
 
     # 4) Recover data from database.
@@ -446,9 +446,9 @@ def getReceiptsBetweenDates():
         # Defines expiration time and save Redis key.
         expirationTime = 60*60*3
         redisCli.set(name=redisKey, value=json.dumps(obj=data, default=str), ex=expirationTime)
-        print("Receipts saved in Redis, recovered from Database")
+        logger.info("Receipts saved in Redis, recovered from Database")
     else:
-        print("Receipts not found in Redis, recovered from Database")
+        logger.info("Receipts not found in Redis, recovered from Database")
 
     # 6) Return data.
     return jsonify(data)
@@ -462,7 +462,7 @@ def getRegionalsByOffice():
     if redisCli:
         # Check if the data is already in Redis.
         if redisCli.get(redisKey):
-            print("Recovered Regional Offices from Redis")
+            logger.info("Recovered Regional Offices from Redis")
             return jsonify(json.loads(redisCli.get(redisKey)))
 
     # 2) Recover data from database.
@@ -474,9 +474,9 @@ def getRegionalsByOffice():
         # Defines expiration time and save Redis key.
         expirationTime = 60*60*10
         redisCli.set(name=redisKey, value=json.dumps(obj=data, default=str), ex=expirationTime)
-        print("Recovered Regional Offices saved in Redis, recovered from Database")
+        logger.info("Recovered Regional Offices saved in Redis, recovered from Database")
     else:
-        print("Recovered Regional Offices not found in Redis, recovered from Database")
+        logger.info("Recovered Regional Offices not found in Redis, recovered from Database")
 
     # 4) Return data.
     return jsonify(data)
@@ -516,7 +516,7 @@ def countDialpadCalls():
         # Check if the data is already in Redis.
         redisData = valPreMadeHashData(start, end, redisKey, validators, hashKeys)
         if redisData:
-            print("Dialpad Calls count recovered from Redis")
+            logger.info("Dialpad Calls count recovered from Redis")
             return jsonify(redisData), 200
 
     # 4) Recover data from database.
@@ -532,9 +532,9 @@ def countDialpadCalls():
                 "uniqueCalls": json.dumps(uniqueCalls)
             }
         )
-        print("Dialpad Calls count saved in Redis, recovered from Database")
+        logger.info("Dialpad Calls count saved in Redis, recovered from Database")
     else:
-        print("Dialpad Calls count not found in Redis, recovered from Database")
+        logger.info("Dialpad Calls count not found in Redis, recovered from Database")
         
     # 6) Return data.
         
@@ -744,7 +744,7 @@ def getOtReport(id: str):
     if redisCli:
         # Check if the data is already in Redis.
         if redisCli.hgetall(redisKey):
-            print("Ot Report recovered from Redis")
+            logger.info("Ot Report recovered from Redis")
             data = json.loads(redisCli.hget(redisKey, "data"))
             weekData = json.loads(redisCli.hget(redisKey, "weekdata"))
             created = json.loads(redisCli.hget(redisKey, "created"))
@@ -774,9 +774,9 @@ def getOtReport(id: str):
                 "created": json.dumps(dateCreated)
             }
         )
-        print("Ot Report not found in Redis, recovered from Database")
+        logger.info("Ot Report not found in Redis, recovered from Database")
     else:
-        print("Ot Report recovered from Database")
+        logger.info("Ot Report recovered from Database")
 
     # 5) Return data.
     return jsonify({
@@ -950,7 +950,7 @@ def genFinalSales():
         # Check if the data is already in Redis.
         redisData = valPreMadeHashData(start, end, redisKey, validators, hashKeys)
         if redisData:
-            print("Final Sales Report recovered from Redis")
+            logger.info("Final Sales Report recovered from Redis")
             return jsonify(redisData), 200
 
     # 3) Generate Final Sales data with parameters.
@@ -970,9 +970,9 @@ def genFinalSales():
                 "lastWeekData": json.dumps(lastWeekData)
             }
         )
-        print("Final Sales Report calculated in backend and saved to Redis")
+        logger.info("Final Sales Report calculated in backend and saved to Redis")
     else:
-        print("Final Sales Report calculated in backend")
+        logger.info("Final Sales Report calculated in backend")
 
     # 5) Return data.
     return jsonify({
@@ -989,7 +989,7 @@ def genPvc():
     if redisCli:
         # Check if the data is already in Redis.
         if redisCli.hgetall(redisKey):
-            print("Pvc Report recovered from Redis")
+            logger.info("Pvc Report recovered from Redis")
             yesterdayData = json.loads(redisCli.hget(redisKey, "yesterdayData"))
             lastWeekData = json.loads(redisCli.hget(redisKey, "lastWeekData"))
 
@@ -1015,9 +1015,9 @@ def genPvc():
                 "lastWeekData": json.dumps(lastWeekData)
             }
         )
-        print("Pvc Report calculated in backend and saved to Redis")
+        logger.info("Pvc Report calculated in backend and saved to Redis")
     else:
-        print("Pvc Report calculated in backend")
+        logger.info("Pvc Report calculated in backend")
 
     # 4) Return data.
     return jsonify({
@@ -1067,7 +1067,7 @@ def genProjections():
     if redisCli:
         # Check if the data is already in Redis.
         if redisCli.hgetall(redisKey):
-            print("Projections Report recovered from Redis")
+            logger.info("Projections Report recovered from Redis")
             dailyData = json.loads(redisCli.hget(redisKey, "daily_data"))
             totalData = json.loads(redisCli.hget(redisKey, "total_data"))
             startDate = json.loads(redisCli.hget(redisKey, "startDate"))
@@ -1099,9 +1099,9 @@ def genProjections():
                 "endDate": json.dumps(endDate)
             }
         )
-        print("Projections Report calculated in backend and saved to Redis")
+        logger.info("Projections Report calculated in backend and saved to Redis")
     else:
-        print("Projections Report calculated in backend")
+        logger.info("Projections Report calculated in backend")
 
     # 7) Return data.
     return jsonify({
@@ -1162,7 +1162,7 @@ def genOffices():
     if redisCli:
         # Check if the data is already in Redis.
         if redisCli.hgetall(redisKey):
-            print("Offices Report recovered from Redis")
+            logger.info("Offices Report recovered from Redis")
             dailyData = json.loads(redisCli.hget(redisKey, "daily_data"))
             totalData = json.loads(redisCli.hget(redisKey, "total_data"))
 
@@ -1188,9 +1188,9 @@ def genOffices():
                 "total_data": json.dumps(totalSums)
             }
         )
-        print("Offices Report calculated in backend and saved to Redis")
+        logger.info("Offices Report calculated in backend and saved to Redis")
     else:
-        print("Offices Report calculated in backend")
+        logger.info("Offices Report calculated in backend")
 
     # 7) Return data.
     return jsonify({
@@ -1231,7 +1231,7 @@ def genOnlineSales():
         # Check if the data is already in Redis.
         redisData = valPreMadeHashData(start, end, redisKey, validators, hashKeys)
         if redisData:
-            print("Online Sales Report recovered from Redis")
+            logger.info("Online Sales Report recovered from Redis")
             return jsonify(redisData), 200
     
     # 4) Generate Online Sales data with parameters.
@@ -1251,9 +1251,9 @@ def genOnlineSales():
                 "total_data": json.dumps(totalSums)
             }
         )
-        print("Online Sales Report calculated in backend and saved to Redis")
+        logger.info("Online Sales Report calculated in backend and saved to Redis")
     else:
-        print("Online Sales Report calculated in backend")
+        logger.info("Online Sales Report calculated in backend")
         
     # 6) Return data.
     return jsonify({
@@ -1312,7 +1312,7 @@ def genCarriers():
     if redisCli:
         # Check if the data is already in Redis.
         if redisCli.hgetall(redisKey):
-            print("Carriers Report recovered from Redis")
+            logger.info("Carriers Report recovered from Redis")
             dailyData = json.loads(redisCli.hget(redisKey, "daily_data"))
             totalData = json.loads(redisCli.hget(redisKey, "total_data"))
 
@@ -1338,9 +1338,9 @@ def genCarriers():
                 "total_data": json.dumps(totalSums)
             }
         )
-        print("Carriers Report calculated in backend and saved to Redis")
+        logger.info("Carriers Report calculated in backend and saved to Redis")
     else:
-        print("Carriers Report calculated in backend")
+        logger.info("Carriers Report calculated in backend")
 
     # 7) Return data.
     return jsonify({
@@ -1381,7 +1381,7 @@ def genTopCarriers():
         # Check if the data is already in Redis.
         redisData = valPreMadeHashData(start, end, redisKey, validators, hashKeys)
         if redisData:
-            print("Top Carriers Report recovered from Redis")
+            logger.info("Top Carriers Report recovered from Redis")
             return jsonify(redisData), 200
 
     # 4) Generate Top Carriers data with parameters.
@@ -1402,9 +1402,9 @@ def genTopCarriers():
                 "total_data": json.dumps(totalSums)
             }
         )
-        print("Top Carriers Report calculated in backend and saved to Redis")
+        logger.info("Top Carriers Report calculated in backend and saved to Redis")
     else:
-        print("Top Carriers Report calculated in backend")
+        logger.info("Top Carriers Report calculated in backend")
 
     # 6) Return data.
     return jsonify({
@@ -1446,7 +1446,7 @@ def genOutOfState():
         # Check if the data is already in Redis.
         redisData = valPreMadeHashData(start, end, redisKey, validators, hashKeys)
         if redisData:
-            print("Out Of State Report recovered from Redis")
+            logger.info("Out Of State Report recovered from Redis")
             return jsonify(redisData), 200
 
     # 4) Generate Out Of State data with parameters.
@@ -1466,7 +1466,7 @@ def genOutOfState():
             }
         )
     else:
-        print("Out Of State Report calculated in backend")
+        logger.info("Out Of State Report calculated in backend")
 
     # 6) Return data.
     return jsonify({

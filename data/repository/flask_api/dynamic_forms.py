@@ -1,7 +1,9 @@
 from data.repository.calls.helpers import generateTwoMonthsDateRange
 from service.dynamic_form import generateDynamicFormDf
 from datetime import datetime
-import json, pandas as pd, redis
+import json, logging, pandas as pd, redis
+
+logger = logging.getLogger(__name__)
 
 def updateRedisKeys(rawData: pd.DataFrame, redisKey: str) -> None:
     """ Updates Redis keys with given DataFrame.
@@ -44,4 +46,4 @@ def updateTwoMonthsRedisKeys():
     for i, val in enumerate(dateRange):
         dynamicFormDf = generateDynamicFormDf(val["start"], val["end"])
         updateRedisKeys(dynamicFormDf, redisKeys[i])
-        print(f"Redis keys {redisKeys[i]} updated...")
+        logger.info(f"Redis keys {redisKeys[i]} updated...")

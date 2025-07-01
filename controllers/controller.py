@@ -1,8 +1,10 @@
 from config import Config
 import requests as rq
 import os, logging
+from dotenv import load_dotenv
 
 logger = logging.getLogger(__name__)
+load_dotenv('/home/berenice/Documents/python-dev.v3/.env')
 
 LAE_URL = "http://50.18.96.65:8080"
 N_LAE_URL = "http://lae.agibusinessgroup.com:8080"
@@ -52,7 +54,6 @@ def getEmployees() -> dict | None:
 
     URL = f"{N_LAE_URL}/Employees"
     TOKEN = generateTokenForLae()
-    print(f"TOKEN: {TOKEN}")
     HEADERS = {
         "Authorization": f"Bearer {TOKEN}",
         "Content-Type": "application/json"
@@ -101,8 +102,8 @@ def getReceipt(id: int) -> dict | None:
     else:
         if receiptsRequest.status_code != rq.codes.ok:
             logger.error(f"Error fetching receipt in getReceipt with id {id}. Response status {receiptsRequest.status_code}")
-            print(f"response text: {receiptsRequest.text}")
-            print(f"response content: {receiptsRequest.content}")
+            logger.warning(f"response text: {receiptsRequest.text}")
+            logger.warning(f"response content: {receiptsRequest.content}")
             return {}
         return receiptsRequest.json()
 
@@ -136,8 +137,8 @@ def getReceiptsPayroll(start: str, end: str) -> dict | None:
     else:
         if rpRequest.status_code != rq.codes.ok:
             logger.error(f"Status code {rpRequest.status_code} in getReceiptsPayroll from {start} to {end}.")
-            print(f"response text: {rpRequest.text}")
-            print(f"response content: {rpRequest.content}")
+            logger.warning(f"response text: {rpRequest.text}")
+            logger.warning(f"response content: {rpRequest.content}")
             return {}
         return rpRequest.json()
 
@@ -170,8 +171,8 @@ def getCustomer(id: int) -> dict | None:
     else:
         if customersRequest.status_code != rq.codes.ok:
             logger.error(f"Error fetching customer in getCustomer with id {id}. Response status {customersRequest.status_code}")
-            print(f"response text: {customersRequest.text}")
-            print(f"response content: {customersRequest.content}")
+            logger.warning(f"response text: {customersRequest.text}")
+            logger.warning(f"response content: {customersRequest.content}")
             return {}
         return customersRequest.json()
 
@@ -271,8 +272,8 @@ def getWebquotes(start: str, end: str) -> dict | None:
     else:
         if wqRequest.status_code != rq.codes.ok:
             logger.error(f"Status code {wqRequest.status_code} in getWebquotes from {start} to {end}.")
-            print(f"response text: {wqRequest.text}")
-            print(f"response content: {wqRequest.content}")
+            logger.warning(f"response text: {wqRequest.text}")
+            logger.warning(f"response content: {wqRequest.content}")
             return {}
         return wqRequest.json()
 
@@ -403,11 +404,11 @@ def fetchAgiReports(reportId: int, username: str, password: str) -> rq.Response 
         raise
     else:
         if response.status_code == rq.codes.unauthorized:
-            print("Token expired, refreshing...")
+            logger.warning("Token expired, refreshing...")
             currentToken = generateTokenForSecure2(username, password)
             if currentToken:
                 return fetchAgiReports(reportId)
             
-            print("Unable to refresh token...")
+            logger.warning("Unable to refresh token...")
         
         return response

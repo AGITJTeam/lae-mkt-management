@@ -5,8 +5,11 @@ from data.repository.calls.receipts_payroll_repo import ReceiptsPayroll
 from service.customers import transformCustomersDfForLaeData
 from service.lae_data import generateLaeData
 from service.receipts_payroll import transformReceiptsDfForLaeData
-import pandas as pd
 from datetime import datetime, timedelta
+import pandas as pd
+import logging
+
+logger = logging.getLogger(__name__)
 
 def updateLaeDataTables(start: str, end: str) -> None:
     """ Updates Lae Data table in db with a date range.
@@ -19,18 +22,18 @@ def updateLaeDataTables(start: str, end: str) -> None:
     receiptsPayroll = ReceiptsPayroll()
     receiptsPayrollJson = receiptsPayroll.getBetweenDates(start, end)
     receiptsPayrollDf = pd.DataFrame(receiptsPayrollJson)
-    print("ReceiptsPayroll table generated..")
+    logger.info("ReceiptsPayroll table generated..")
 
     uniqueCustIdRP = receiptsPayrollDf.drop_duplicates(subset=["customer_id"])
     customersDf = getUniqueCustomersDf(uniqueCustIdRP)
-    print("Customers table generated...")
+    logger.info("Customers table generated...")
 
     receipts = transformReceiptsDfForLaeData(receiptsPayrollDf)
     customers = transformCustomersDfForLaeData(customersDf)
     laeData = generateLaeData(receipts, customers)
 
     postDataframeToDb(data=laeData, table="lae_data", mode="append", filename="flask_api.ini")
-    print("Lae Data table generated and posted...")
+    logger.info("Lae Data table generated and posted...")
 
 def getUniqueCustomersDf(receiptsDf: pd.DataFrame) -> pd.DataFrame:
     """ Gets all data from unique customers.
@@ -59,10 +62,10 @@ def updateLaeDataTablesPreviousRecords() -> None:
 
     lae = LaeData()
     lae.deleteLastMonthData(start, end)
-    print(f"Lae data from {start} to {end} deleted...")
+    logger.info(f"Lae data from {start} to {end} deleted...")
     
     updateLaeDataTables(start, end)
-    print(f"Lae Data from {start} to {end} updated...")
+    logger.info(f"Lae Data from {start} to {end} updated...")
 
 def addLaeSpecificDateRange(start: str, end: str) -> None:
     """ Add data to Lae table in db with an specific date range.
@@ -73,4 +76,4 @@ def addLaeSpecificDateRange(start: str, end: str) -> None:
     """
 
     updateLaeDataTables(start, end)
-    print(f"Lae Data from {start} to {end} added...")
+    logger.info(f"Lae Data from {start} to {end} added...")

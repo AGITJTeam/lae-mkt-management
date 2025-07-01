@@ -4,7 +4,9 @@ from data.repository.stats_dash.dash_os import dashOs
 from data.repository.stats_dash.top_carriers import topCarriers
 from data.repository.stats_dash.out_of_state import outOfState
 from datetime import datetime, timedelta
-import redis, json
+import redis, logging, json
+
+logger = logging.getLogger(__name__)
 
 def updateRedisKeys(redisKey: str, data: dict) -> None:
     """ Updates Redis keys with given dictionary.
@@ -51,7 +53,7 @@ def updateFinalSalesKey() -> None:
 
     # Update Redis key.
     updateRedisKeys(redisKeys, hashValues)
-    print("Redis key 'FinalSalesCurrentMonth' updated...")
+    logger.info("Redis key 'FinalSalesCurrentMonth' updated...")
 
 def updatePvcKey() -> None:
     """ Updates 'PvcCurrentMonth' Redis Key for the Pvc Report. """
@@ -68,7 +70,7 @@ def updatePvcKey() -> None:
 
     # Update Redis key.
     updateRedisKeys(redisKeys, hashValues)
-    print("Redis key 'PvcCurrentMonth' updated...")
+    logger.info("Redis key 'PvcCurrentMonth' updated...")
 
 def updateOnlineSalesKey() -> None:
     """ Updates 'OnlineSalesCurrentMonth' Redis Key for the Online
@@ -94,7 +96,7 @@ def updateOnlineSalesKey() -> None:
 
     # Update Redis key.
     updateRedisKeys(redisKeys, hashValues)
-    print("Redis key 'OnlineSalesCurrentMonth' updated...")
+    logger.info("Redis key 'OnlineSalesCurrentMonth' updated...")
 
 def updateTopCarriersKey() -> None:
     """ Updates 'TopCarriersCurrentMonth' Redis Key for the Top
@@ -122,7 +124,7 @@ def updateTopCarriersKey() -> None:
 
     # Update Redis key.
     updateRedisKeys(redisKeys, hashValues)
-    print("Redis key 'TopCarriersCurrentMonth' updated...")
+    logger.info("Redis key 'TopCarriersCurrentMonth' updated...")
 
 def updateOutOfStateKey() -> None:
     """ Updates 'OutOfStateCurrentMonth' Redis Key for the Out Of State Report. """
@@ -147,4 +149,4 @@ def updateOutOfStateKey() -> None:
 
     # Update Redis key.
     updateRedisKeys(redisKeys, hashValues)
-    print("Redis key 'OutOfStateCurrentMonth' updated...")
+    logger.info("Redis key 'OutOfStateCurrentMonth' updated...")

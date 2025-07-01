@@ -1,7 +1,9 @@
 from data.repository.calls.helpers import generateTwoMonthsDateRange
 from data.repository.stats_dash.dialpad_calls import countDialpadCallsByDateRange
 from datetime import datetime
-import json, pandas as pd, redis
+import json, logging, pandas as pd, redis
+
+logger = logging.getLogger(__name__)
 
 def updateRedisKeys(allCalls: list[dict], uniqueCalls: list[dict], redisKey: str) -> None:
     """ Updates Redis keys with given DataFrame.
@@ -52,4 +54,4 @@ def updateTwoMonthsRedisKeys():
     for i, val in enumerate(dateRange):
         allCalls, uniqueCalls = countDialpadCallsByDateRange(val["start"], val["end"])
         updateRedisKeys(allCalls, uniqueCalls, redisKeys[i])
-        print(f"Redis keys {redisKeys[i]} updated...")
+        logger.info(f"Redis keys {redisKeys[i]} updated...")

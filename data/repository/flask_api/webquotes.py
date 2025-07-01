@@ -6,7 +6,9 @@ from data.repository.calls.helpers import (
 from data.repository.calls.webquotes_repo import Webquotes
 from service.webquotes import generateWebquotesDf
 from datetime import datetime, timedelta
-import json, redis
+import json, logging, redis
+
+logger = logging.getLogger(__name__)
 
 def updateWebquotesTables(start: str, end: str) -> None:
     """ Updates Webquotes table in db with a date range.
@@ -59,11 +61,11 @@ def updateWebquotesPreviousRecords() -> None:
     # Delete data that will be updated.
     webquotes = Webquotes()
     webquotes.deleteLastMonthData(start, end)
-    print(f"Webquotes data from {start} to {end} deleted...")
+    logger.info(f"Webquotes data from {start} to {end} deleted...")
 
     # Generates data for current month and updates Webquotes table.
     updateWebquotesTables(start, end)
-    print(f"Webquotes data from {start} to {end} updated...")
+    logger.info(f"Webquotes data from {start} to {end} updated...")
 
 def addWebquotesSpecificDateRange(start: str, end: str) -> None:
     """ Add data to Webquotes table in a specific date range.
@@ -74,7 +76,7 @@ def addWebquotesSpecificDateRange(start: str, end: str) -> None:
     """
 
     updateWebquotesTables(start, end)
-    print(f"Webquotes data from {start} to {end} added...")
+    logger.info(f"Webquotes data from {start} to {end} added...")
 
 def updateWTwoMonthsRedisKeys() -> None:
     """ Generate date range for current month and last month
@@ -104,7 +106,7 @@ def updateWTwoMonthsRedisKeys() -> None:
     for i, val in enumerate(dateRanges):
         webquotesJson = webquotes.getPartialFromDateRange(val["start"], val["end"])
         updateRedisKeys(webquotesJson, redisKeys[i])
-        print(f"Redis keys {redisKeys[i]} updated...")
+        logger.info(f"Redis keys {redisKeys[i]} updated...")
 
 def updateWDTwoMonthsRedisKeys() -> None:
     """ Generate date range for current month and last month
@@ -134,7 +136,7 @@ def updateWDTwoMonthsRedisKeys() -> None:
     for i, val in enumerate(dateRanges):
         webquotesDetailsJson = webquotes.getWebquotesFromDateRange(val["start"], val["end"])
         updateRedisKeys(webquotesDetailsJson, redisKeys[i])
-        print(f"Redis keys {redisKeys[i]} updated...")
+        logger.info(f"Redis keys {redisKeys[i]} updated...")
 
 def updateAllWebquotesRedisKey() -> None:
     """ Generate date range from 2024-01-01 to today for updating Redis
@@ -151,4 +153,4 @@ def updateAllWebquotesRedisKey() -> None:
 
     # Updates Redis key.
     updateRedisKeys(webquotesJson, redisKey)
-    print(f"Redis keys {redisKey} updated...")
+    logger.info(f"Redis keys {redisKey} updated...")

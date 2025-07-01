@@ -3,7 +3,9 @@ from data.repository.calls.receipts_payroll_repo import ReceiptsPayroll
 from data.repository.calls.helpers import postDataframeToDb
 from service.customers import generateCustomersDf
 from datetime import datetime, timedelta
-import json, pandas as pd, redis
+import json, logging, pandas as pd, redis
+
+logger = logging.getLogger(__name__)
 
 def updateCustomersTable(receiptsDf: pd.DataFrame) -> None:
     """ Updates Customers table in db with updated Receipts Payroll
@@ -38,7 +40,7 @@ def updateRedisKey() -> None:
 
     # Set Redis key with 10 hours expiration time.
     redisCli.set(name=redisKey, value=data, ex=expirationTime)
-    print("AllCustomers Redis key updated...")
+    logger.info("AllCustomers Redis key updated...")
 
     # Close Redis connection.
     redisCli.close()
@@ -65,9 +67,9 @@ def addCustomersSpecificRange(start: str, end: str) -> None:
     customers.deleteByIds(customersIds)
 
     # Updated Customers table.
-    print(f"Customers data from {start} to {end} deleted...")
+    logger.info(f"Customers data from {start} to {end} deleted...")
     updateCustomersTable(receiptsNoDuplicates)
-    print(f"Customers data from {start} to {end} added...")
+    logger.info(f"Customers data from {start} to {end} added...")
 
 def updateCustomersPreviousRecords() -> None:
     """ Generates todays customers ids and updates Customers table. """
@@ -89,8 +91,8 @@ def updateCustomersPreviousRecords() -> None:
     # Delete data that will be updated.
     customers = Customers()
     customers.deleteByIds(customersIds)
-    print(f"Customers data from {yesterdayStr} to {yesterdayStr} deleted...")
+    logger.info(f"Customers data from {yesterdayStr} to {yesterdayStr} deleted...")
 
     # Updated Customers table.
     updateCustomersTable(receiptsPayrollDf)
-    print(f"Customers data from {yesterdayStr} to {yesterdayStr} updated...")
+    logger.info(f"Customers data from {yesterdayStr} to {yesterdayStr} updated...")

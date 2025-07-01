@@ -6,7 +6,9 @@ from data.repository.calls.helpers import (
 )
 from service.receipts_payroll import generateReceiptsPayrollDf
 from datetime import datetime, timedelta
-import json, pandas as pd, redis
+import json, logging, pandas as pd, redis
+
+logger = logging.getLogger(__name__)
 
 def updateReceiptsPayrollTable(start: str, end: str) -> None:
     """ Updates Receipts Payroll table in db with a date range.
@@ -59,11 +61,11 @@ def updateReceiptsPayrollPreviousRecords() -> None:
     # Delete data that will be updated.
     receiptsPayroll = ReceiptsPayroll()
     receiptsPayroll.deleteLastMonthData(start, end)
-    print(f"Receipts Payroll data from {start} to {end} deleted...")
+    logger.info(f"Receipts Payroll data from {start} to {end} deleted...")
 
     # Generates data for current month and updates Receipts Payroll table.
     updateReceiptsPayrollTable(start, end) 
-    print(f"Receipts Payroll data from {start} to {end} updated...")
+    logger.info(f"Receipts Payroll data from {start} to {end} updated...")
 
 def addReceiptsPayrollSpecificDateRange(start: str, end: str) -> None:
     """ Add data to Receipts Payroll table in a specific date range.
@@ -74,7 +76,7 @@ def addReceiptsPayrollSpecificDateRange(start: str, end: str) -> None:
     """
 
     updateReceiptsPayrollTable(start, end)
-    print(f"Receipts Payroll data from {start} to {end} added...")
+    logger.info(f"Receipts Payroll data from {start} to {end} added...")
 
 def updateTwoMonthsRedisKeys() -> None:
     """ Generate date range for current month and last month
@@ -105,4 +107,4 @@ def updateTwoMonthsRedisKeys() -> None:
     for i, val in enumerate(dateRanges):
         receiptsPayrollJson = receiptsPayroll.getBetweenDates(val["start"], val["end"])
         updateRedisKeys(receiptsPayrollJson, redisKeys[i])
-        print(f"Redis keys {redisKeys[i]} updated...")
+        logger.info(f"Redis keys {redisKeys[i]} updated...")
