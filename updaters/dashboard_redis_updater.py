@@ -21,7 +21,7 @@ try:
     if redisCli:
         logger.info("-"*50)
         updateFinalSalesKey()
-        #updatePvcKey()
+        updatePvcKey()
         updateOnlineSalesKey()
         updateTopCarriersKey()
         updateOutOfStateKey()

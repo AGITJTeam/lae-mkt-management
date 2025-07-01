@@ -202,6 +202,10 @@ def formatPvcDf(reportId: int) -> pd.DataFrame:
     """
 
     pvcReport = generateAgiReport(reportId)
+
+    if pvcReport.empty:
+        raise Exception("PVC report is empty")
+
     pvcReport.rename(
         columns={
             "Primary Email": "usr_email", "Entity(Location)": "office"
@@ -225,7 +229,11 @@ def replaceColumnValues(pvcDf: pd.DataFrame) -> pd.DataFrame:
     """
 
     pvcDf["Hourly Pay"] = (
-        pvcDf["Hourly Pay"].str.replace("$", "").astype(float)
+        pvcDf["Hourly Pay"]
+        .str
+        .replace("$", "")
+        .replace("-", "0")
+        .astype(float)
     )
 
     pvcDf["Regular Hours"] = (
