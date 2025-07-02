@@ -3,12 +3,14 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from data.repository.calls.helpers import generateDateTimeUpdated
 from data.repository.flask_api.employees import *
+from logs.config import setupLogging
 from redisCli import redisCli
 
 PYTHON="/home/berenice/Documents/python-dev.v3/venv/bin/python"
 SCRIPTS="/home/berenice/Documents/python-dev.v3/updaters"
 LOGS="/home/berenice/Documents/cron-logs"
 
+setupLogging()
 logger = logging.getLogger(__name__)
 
 try:
@@ -22,6 +24,6 @@ except Exception as e:
     os.system(f'echo "cd {SCRIPTS} && {PYTHON} -m employee_updater >> {LOGS}/employees.log 2>&1" | at now + 5 minutes')
     sys.exit(1)
 finally:
+    # Info por external log in /home/berenice/Documents/cron-logs
     date, time = generateDateTimeUpdated()
-    logger.info(f"\n{date} {time}\n")
-    logger.info("-"*50)
+    print(f"\n{date} {time}\n")
