@@ -12,15 +12,22 @@ class ReceiptsPayroll(IReceiptsPayroll):
         - deleteLastMonthData.
     """
     
-    def getBetweenDates(self, start, end):
+    def getBetweenDates(self, start, end, *args):
         """ {list[dict]} get receipts in a range of dates.
 
         Parameters
             - start {str} the beginning of the range of dates.
             - end {str} the end of the range of dates.
+            - args {tuple} filters of the endpoint.
         """
 
-        query = f"SELECT * FROM receipts_payroll WHERE date BETWEEN \'{start} 00:00:00.000000\' AND \'{end} 23:59:00.000000\';"
+        query = ""
+
+        if args[0] is not None:
+            bankAccount = args[0]
+            query = f"SELECT * FROM receipts_payroll WHERE date BETWEEN \'{start} 00:00:00.000000\' AND \'{end} 23:59:00.000000\' AND bank_account LIKE '%{bankAccount}%';"
+        else:
+            query = f"SELECT * FROM receipts_payroll WHERE date BETWEEN \'{start} 00:00:00.000000\' AND \'{end} 23:59:00.000000\';"
 
         return getData(query=query, filename="flask_api.ini")
 

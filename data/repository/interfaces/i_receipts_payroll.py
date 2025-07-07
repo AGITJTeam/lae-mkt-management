@@ -1,5 +1,5 @@
 class IReceiptsPayroll:
-    def getBetweenDates(self, start: str, end: str) -> list[dict]:
+    def getBetweenDates(self, start: str, end: str, *args) -> list[dict]:
         pass
     def getByCustomerId(self, id: int) -> list[dict]:
         pass

@@ -63,6 +63,7 @@ def getDataBetweenDates():
     # 1) Retrieve parameters and validate them.
     start = request.args.get("startAt")
     end = request.args.get("endAt")
+    bankAccount = request.args.get("bankAccount")
     # 2) Defines pre-made Redis key with date parameters.
     redisKey = f"ReceiptsPayroll_{start}_{end}"
 
@@ -97,7 +98,7 @@ def getDataBetweenDates():
 
     # 4) Recover data from database.
     receiptsPayroll = ReceiptsPayroll()
-    data = receiptsPayroll.getBetweenDates(start, end)
+    data = receiptsPayroll.getBetweenDates(start, end, bankAccount)
     
     # 5) Check if Redis container is working for saving data.
     if redisCli:
