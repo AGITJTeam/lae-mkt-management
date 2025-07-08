@@ -23,7 +23,7 @@ class ReceiptsPayroll(IReceiptsPayroll):
 
         query = ""
 
-        if args[0] is not None:
+        if len(args) > 0:
             bankAccount = args[0]
             query = f"SELECT * FROM receipts_payroll WHERE date BETWEEN \'{start} 00:00:00.000000\' AND \'{end} 23:59:00.000000\' AND bank_account LIKE '%{bankAccount}%';"
         else:
