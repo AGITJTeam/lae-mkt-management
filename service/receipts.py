@@ -3,6 +3,7 @@ from service.helpers import deleteColumns, renameColumns
 from data.models.receipts_model import ReceiptModel
 from controllers.controller import getReceipt
 import pandas as pd
+import time
 
 def generateReceiptsDf(receiptPayroll: pd.DataFrame) -> pd.DataFrame:
     """ Create Receipts DataFrame with with API response.
@@ -48,5 +49,7 @@ def getReceiptById(receiptPayroll: pd.DataFrame) -> list[ReceiptModel]:
 
         receiptModel = ReceiptModel(**receipt)
         receipts.append(receiptModel)
+
+        time.sleep(1.0)
     
     return receipts

@@ -3,6 +3,7 @@ from service.helpers import deleteColumns, renameColumns
 from data.models.customers_model import CustomerModel
 from controllers.controller import getCustomer
 import pandas as pd
+import time
 
 def generateCustomersDf(receipts: pd.DataFrame) -> pd.DataFrame:
     """ Create Customers DataFrame with API response.
@@ -44,6 +45,8 @@ def getCustomersData(ids: list) -> list[CustomerModel]:
 
         customerModel = CustomerModel(**customer)
         customers.append(customerModel)
+
+        time.sleep(1.0)
     
     return customers
 
