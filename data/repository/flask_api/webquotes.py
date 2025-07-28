@@ -5,6 +5,7 @@ from data.repository.calls.helpers import (
 )
 from data.repository.calls.webquotes_repo import Webquotes
 from service.webquotes import generateWebquotesDf
+from service.wq_go import generateWebquotesGoDf
 from datetime import datetime, timedelta
 import json, logging, redis
 
@@ -18,7 +19,8 @@ def updateWebquotesTables(start: str, end: str) -> None:
         - end {str} end of the range.
     """
 
-    webquotesDf = generateWebquotesDf(start, end)
+    #webquotesDf = generateWebquotesDf(start, end)
+    webquotesDf = generateWebquotesGoDf(start, end)
     postDataframeToDb(
         data=webquotesDf,
         table="webquotes",

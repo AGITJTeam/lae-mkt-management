@@ -8,7 +8,8 @@ load_dotenv('/home/berenice/Documents/python-dev.v3/.env')
 
 LAE_URL = "http://50.18.96.65:8080"
 N_LAE_URL = "http://lae.agibusinessgroup.com:8080"
-ADRIANAS_URL = "https://app.adrianas.com/api"
+WQ_NEXT_URL = "https://app.adrianas.com/api"
+WQ_GO_URL = "https://wq-api.adrianas.com"
 SECURE2_URL = "http://secure2.saashr.com/ta/rest/v1"
 COMPANY_SHORTNAME = "AGI04"
 TIMEOUT = 60
@@ -226,7 +227,7 @@ def getPoliciesDetails(id: int) -> rq.Response:
         print(response)
 
 def getWebquotes(start: str, end: str) -> dict | None:
-    """ Call Webquotes endpoint from App.Adrianas to get Webquotes data.
+    """ Call Webquotes endpoint from Next backend to get Webquotes data.
 
     Parameters
         - start {end} beginning of date range.
@@ -237,7 +238,7 @@ def getWebquotes(start: str, end: str) -> dict | None:
     """
 
     URL = (
-        f"{ADRIANAS_URL}/webquotes/csv?"
+        f"{WQ_NEXT_URL}/webquotes/csv?"
         "search=&"
         "agent=&"
         "clistatus=&"
@@ -277,6 +278,46 @@ def getWebquotes(start: str, end: str) -> dict | None:
             return {}
         return wqRequest.json()
 
+def getWebquotesGo(start: str, end: str) -> dict | None:
+    """ Call Webquotes endpoint from Go backend to get Webquotes data.
+
+    Parameters
+        - start {end} beginning of date range.
+        - end {end} end of date range.
+
+    Returns
+        {dict | None} api response in Json format or None if exception raise.
+    """
+
+    API_KEY = os.getenv("LAE_WQ_KEY")
+    URL = (
+        f"{WQ_GO_URL}/webquotes/manager-dashboard-leads?"
+        f"fromDate={start}&"
+        f"toDate={end}&"
+        "csv=true&"
+        "limit=20000"
+    )
+    HEADERS = {
+        "Authorization": API_KEY,
+    }
+
+    try:
+        wqRequest = rq.get(url=URL, headers=HEADERS, timeout=TIMEOUT)
+    except (
+        rq.exceptions.ConnectionError, 
+        rq.exceptions.ReadTimeout,
+        rq.exceptions.RequestException
+    ) as e:
+        logger.error(f"Error in getWebquotesGo: {str(e)}")
+        raise
+    else:
+        if wqRequest.status_code != rq.codes.ok:
+            logger.error(f"Status code {wqRequest.status_code} in getWebquotesGo from {start} to {end}.")
+            logger.warning(f"response text: {wqRequest.text}")
+            logger.warning(f"response content: {wqRequest.content}")
+            return {}
+        return wqRequest.json()
+
 def getDynamicForm(start: str, end: str) -> dict | None:
     """ Call DynamicFroms endpoint from App.Adrianas to get Home Owners
     Dynamic Form data.
@@ -290,7 +331,7 @@ def getDynamicForm(start: str, end: str) -> dict | None:
     """
 
     URL = (
-        f"{ADRIANAS_URL}/dynamicforms/filtered?"
+        f"{WQ_NEXT_URL}/dynamicforms/filtered?"
         "limit=2000&"
         "status=&"
         "purpose=&"
