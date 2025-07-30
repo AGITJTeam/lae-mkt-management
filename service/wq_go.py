@@ -39,9 +39,9 @@ def formatWebquotesModel(wwebquotesGoModel: list[WebquotesGoResponse]) -> list[d
         if len(wq.cars) == 0:
             continue
 
-        year = wq.cars[0].CarYear
-        make = wq.cars[0].CarMake
-        model = wq.cars[0].CarModel
+        year = wq.cars[0].year
+        make = wq.cars[0].make
+        model = wq.cars[0].model
         notes = wq.notes
         status = wq.status
         agent = wq.agent
@@ -65,37 +65,37 @@ def formatWebquotesModel(wwebquotesGoModel: list[WebquotesGoResponse]) -> list[d
         calls = wq.calls
 
         wqModel = {
-            "ID": id,
-            "Form": form,
+            "id": id,
+            "form": form,
             "name": name,
             "email": email,
             "phone": phone,
             "submission_date": submissionDate,
             "submission_on_time": submissionOnTime,
-            "Birthday": birthday,
+            "birthday": birthday,
             "model_year": year,
-            "Make": make,
-            "Model": model,
+            "make": make,
+            "model": model,
             "notes": notes,
             "status": status,
             "agent": agent,
             "zip": zip,
-            "State": state,
-            "Preference": preference,
+            "state": state,
+            "preference": preference,
             "marital_status": maritalStatus,
             "licence_status": licenseStatus,
-            "Gender": gender,
+            "gender": gender,
             "residence_status": residenceStatus,
-            "Garaged": garaged,
-            "assignedTo": assignedTo,
-            "toAll": toAll,
-            "workedAt": workedAt,
+            "garaged": garaged,
+            "assigned_to": assignedTo,
+            "to_all": toAll,
+            "worked_at": workedAt,
             "region_worked_at": regionWorkedAt,
             "sold_at": soldAt,
             "date_sold": dateSold,
-            "Referer": referer,
+            "referer": referer,
             "campaign_id": campaignId,
-            "GCLID": gclid,
+            "gclid": gclid,
             "calls": calls
         }
 

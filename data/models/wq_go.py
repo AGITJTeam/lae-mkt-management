@@ -46,23 +46,23 @@ class Appointments:
 
 @dataclass
 class Car:
-    CarMake: str
-    CarModel: str
-    CarYear: str
-    IsOver50K: Optional[str]
-    VIN: str
     commercial_id: int
     coverage_type: Optional[str]
     createdAt: str
     customer_id: int
     damaged: Optional[str]
     id: int
+    is_over_50k: Optional[str]
+    make: str
+    model: str
     special_equipment: Optional[str]
     stated_value: Optional[str]
     type: str
     updatedAt: str
     vehicle_type: str
+    vin_number: str
     webquote_id: int
+    year: str
 
 @dataclass
 class Customer:
@@ -101,17 +101,17 @@ class WebquotesGoResponse:
     from_date: str
     full_link: str
     gclid: Optional[str]
-    hey_mkt_conv_id: int
+    hey_mkt_conv_id: Optional[int]
     id: int
     is_over_50k: Optional[str]
     itc_link: str
     lead_source: str
     notes: str
     office_sold_at: Optional[str]
-    office_worked: str
+    office_worked: Optional[str]
     quote_number: str
     referer: str
-    region_worked: str
+    region_worked: Optional[str]
     sale_type: Optional[str]
     sold_date: Optional[str]
     status: str
