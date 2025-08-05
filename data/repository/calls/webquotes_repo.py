@@ -8,6 +8,7 @@ class Webquotes(IWebquotes):
     Methods
         - getPartialFromDateRange.
         - getWebquotesFromDateRange.
+        - getExtendedWebquotes.
         - getLastRecord.
         - deleteLastMonthData.
     """
@@ -37,7 +38,21 @@ class Webquotes(IWebquotes):
         parsedWebquoteDate = parseWebquotesSubmissionDate(webquotes)
 
         return parsedWebquoteDate
-    
+
+    def getExtendedFromDateRange(self, start, end):
+        """ {list[dict]} get extended webquotes colums from a date range.
+
+        Parameters
+            - start {str} the beginning of the range of dates.
+            - end {str} the end of the range of dates.
+        """
+
+        query = f"SELECT * FROM webquotes WHERE submission_date BETWEEN \'{start}\' AND \'{end}\';"
+        webquotes = getData(query=query, filename="flask_api.ini")
+        parsedWebquoteDate = parseWebquotesSubmissionDate(webquotes)
+
+        return parsedWebquoteDate
+
     def getLastRecord(self):
         """ {list[dict]} get the last date from 'date' column. """
 

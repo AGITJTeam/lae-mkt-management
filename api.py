@@ -19,7 +19,7 @@ from data.repository.stats_dash.dash_os import dashOs
 from data.repository.stats_dash.yelp_calls import generateYelpCallsReport
 from data.repository.stats_dash.dialpad_calls import countDialpadCallsByDateRange
 from service.dynamic_form import generateDynamicFormDf
-from utils.transformators import formatWebquotesLanguage
+from utils.transformators import formatWebquotesDateSold, formatWebquotesLanguage
 from utils.validations import *
 from logs.config import setupLogging
 from config import Config
@@ -243,6 +243,63 @@ def getWebquotesDetails():
 
     # 6) Return data.
     return jsonify(formattedData)
+
+@app.route("/Webquotes/Extended", methods=["GET"])
+@jwt_required()
+def getWebquotesExtended():
+    # 1) Retrieve parameters and validate them.
+    start = request.args.get("fromDate")
+    end = request.args.get("toDate")
+    # 2) Defines pre-made Redis key with date parameters.
+    redisKey = f"WebquotesExtender_{start}_{end}"
+
+    if not valIsNotNone(start, end):
+        return jsonify({
+            "status": 400,
+            "label": "Bad request",
+            "error": "Missing arguments"
+        }), 400
+
+    if not valDateRanges(start, end):
+        return jsonify({
+            "status": 400,
+            "label": "Bad request",
+            "error": "Invalid date format"
+        }), 400
+    
+    # 3) Check if Redis container is working for retrieving data.
+    if redisCli:
+        # Defines pre-made Redis keys and validators.
+        validators = {
+            "WebquotesExtendedCurrentMonth": valCurrentMonthDates,
+            "WebquotesExtendedPreviousMonth": valPreviousMonthDates,
+            "WebquotesExtendedTwoMonths": valTwoMonthsDates
+        }
+
+        # Check if the data is already in Redis.
+        redisData = valPreMadeRedisData(start, end, redisKey, validators)
+        if redisData:
+            logger.info("Webquotes Extended recovered from Redis")
+            return jsonify(redisData)
+
+    # 4) Recover data from database.
+    webquotes = Webquotes()
+    data = webquotes.getExtendedFromDateRange(start, end)
+
+    formattedData = formatWebquotesLanguage(data)
+    formattedTable = formatWebquotesDateSold(formattedData)
+
+    # 5) Check if Redis container is working for saving data.
+    if redisCli:
+        # Defines expiration time and save Redis key.
+        expirationTime = 60*60*3
+        redisCli.set(name=redisKey, value=json.dumps(obj=formattedTable, default=str), ex=expirationTime)
+        logger.info("Webquotes Extended saved in Redis, recovered from Database")
+    else:
+        logger.info("Webquotes Extended not found in Redis, recovered from Database")
+
+    # 6) Return data.
+    return jsonify(formattedTable)
 
 @app.route("/DynamicForms", methods=["GET"])
 @jwt_required()
