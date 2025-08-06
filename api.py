@@ -27,7 +27,7 @@ from redisCli import redisCli
 
 # ======================== OTHER PACKAGES ========================
 #
-from flask_jwt_extended import create_access_token, jwt_required, JWTManager
+from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required, JWTManager
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from dotenv import load_dotenv
@@ -140,6 +140,12 @@ def getWebquotesFromDateRange():
     # 2) Defines pre-made Redis key with date parameters.
     redisKey = f"Webquotes_{start}_{end}"
 
+    ip = request.remote_addr
+    clientIp = request.headers.get("X-Forwarded-For", request.remote_addr)
+    userAgent = request.user_agent.string
+    userToken = get_jwt_identity()
+    requestLog = f"| IP: {ip} | User Agent: {userAgent} | Client IP: {clientIp} | User: {userToken}"
+
     if not valIsNotNone(start, end):
         return jsonify({
             "status": 400,
@@ -167,7 +173,7 @@ def getWebquotesFromDateRange():
         # Check if the data is already in Redis.
         redisData = valPreMadeRedisData(start, end, redisKey, validators)
         if redisData:
-            logger.info("Webquotes recovered from Redis")
+            logger.info(f"Webquotes recovered from Redis {requestLog}")
             return jsonify(redisData)
 
     # 4) Recover data from database.
@@ -181,9 +187,9 @@ def getWebquotesFromDateRange():
         # Defines expiration time and save Redis key.
         expirationTime = 60*60*3
         redisCli.set(name=redisKey, value=json.dumps(obj=formattedData, default=str), ex=expirationTime)
-        logger.info("Webquotes saved in Redis, recovered from Database")
+        logger.info(f"Webquotes saved in Redis, recovered from Database {requestLog}")
     else:
-        logger.info("Webquotes not found in Redis, recovered from Database")
+        logger.info(f"Webquotes not found in Redis, recovered from Database {requestLog}")
     
     # 6) Return data.
     return jsonify(formattedData)
@@ -196,6 +202,12 @@ def getWebquotesDetails():
     end = request.args.get("toDate")
     # 2) Defines pre-made Redis key with date parameters.
     redisKey = f"WebquotesDetails_{start}_{end}"
+
+    ip = request.remote_addr
+    clientIp = request.headers.get("X-Forwarded-For", request.remote_addr)
+    userAgent = request.user_agent.string
+    userToken = get_jwt_identity()
+    requestLog = f"| IP: {ip} | User Agent: {userAgent} | Client IP: {clientIp} | User: {userToken}"
 
     if not valIsNotNone(start, end):
         return jsonify({
@@ -223,7 +235,7 @@ def getWebquotesDetails():
         # Check if the data is already in Redis.
         redisData = valPreMadeRedisData(start, end, redisKey, validators)
         if redisData:
-            logger.info("Webquotes Details recovered from Redis")
+            logger.info(f"Webquotes Details recovered from Redis {requestLog}")
             return jsonify(redisData)
 
     # 4) Recover data from database.
@@ -237,9 +249,9 @@ def getWebquotesDetails():
         # Defines expiration time and save Redis key.
         expirationTime = 60*60*3
         redisCli.set(name=redisKey, value=json.dumps(obj=formattedData, default=str), ex=expirationTime)
-        logger.info("Webquotes Details saved in Redis, recovered from Database")
+        logger.info(f"Webquotes Details saved in Redis, recovered from Database {requestLog}")
     else:
-        logger.info("Webquotes Details not found in Redis, recovered from Database")
+        logger.info(f"Webquotes Details not found in Redis, recovered from Database {requestLog}")
 
     # 6) Return data.
     return jsonify(formattedData)
@@ -252,6 +264,12 @@ def getWebquotesExtended():
     end = request.args.get("toDate")
     # 2) Defines pre-made Redis key with date parameters.
     redisKey = f"WebquotesExtender_{start}_{end}"
+
+    ip = request.remote_addr
+    clientIp = request.headers.get("X-Forwarded-For", request.remote_addr)
+    userAgent = request.user_agent.string
+    userToken = get_jwt_identity()
+    requestLog = f"| IP: {ip} | User Agent: {userAgent} | Client IP: {clientIp} | User: {userToken}"
 
     if not valIsNotNone(start, end):
         return jsonify({
@@ -279,7 +297,7 @@ def getWebquotesExtended():
         # Check if the data is already in Redis.
         redisData = valPreMadeRedisData(start, end, redisKey, validators)
         if redisData:
-            logger.info("Webquotes Extended recovered from Redis")
+            logger.info(f"Webquotes Extended recovered from Redis {requestLog}")
             return jsonify(redisData)
 
     # 4) Recover data from database.
@@ -294,9 +312,9 @@ def getWebquotesExtended():
         # Defines expiration time and save Redis key.
         expirationTime = 60*60*3
         redisCli.set(name=redisKey, value=json.dumps(obj=formattedTable, default=str), ex=expirationTime)
-        logger.info("Webquotes Extended saved in Redis, recovered from Database")
+        logger.info(f"Webquotes Extended saved in Redis, recovered from Database {requestLog}")
     else:
-        logger.info("Webquotes Extended not found in Redis, recovered from Database")
+        logger.info(f"Webquotes Extended not found in Redis, recovered from Database {requestLog}")
 
     # 6) Return data.
     return jsonify(formattedTable)
@@ -309,6 +327,12 @@ def getHomeOwnersDF():
     end = request.args.get("toDate")
     # 2) Defines pre-made Redis key with date parameters.
     redisKey = f"DynamicForms_{start}_{end}"
+
+    ip = request.remote_addr
+    clientIp = request.headers.get("X-Forwarded-For", request.remote_addr)
+    userAgent = request.user_agent.string
+    userToken = get_jwt_identity()
+    requestLog = f"| IP: {ip} | User Agent: {userAgent} | Client IP: {clientIp} | User: {userToken}"
 
     if not valIsNotNone(start, end):
         return jsonify({
@@ -336,7 +360,7 @@ def getHomeOwnersDF():
         # Check if the data is already in Redis.
         redisData = valPreMadeRedisData(start, end, redisKey, validators)
         if redisData:
-            logger.info("Dynamic Form recovered from Redis")
+            logger.info(f"Dynamic Form recovered from Redis {requestLog}")
             return jsonify(redisData)
 
     # 4) Recover data from database.
@@ -347,9 +371,9 @@ def getHomeOwnersDF():
         # Defines expiration time and save Redis key.
         expirationTime = 60*60*3
         redisCli.set(name=redisKey, value=json.dumps(obj=data, default=str), ex=expirationTime)
-        logger.info("Dynamic Form saved in Redis, recovered from Database")
+        logger.info(f"Dynamic Form saved in Redis, recovered from Database {requestLog}")
     else:
-        logger.info("Dynamic Form not found in Redis, recovered from Database")
+        logger.info(f"Dynamic Form not found in Redis, recovered from Database {requestLog}")
         
     # 6) Return data.
     return jsonify(data)
@@ -360,6 +384,12 @@ def getLaeBetweenDates():
     # 1) Retrieve parameters and validate them.
     start = request.args.get("startAt")
     end = request.args.get("endAt")
+
+    ip = request.remote_addr
+    clientIp = request.headers.get("X-Forwarded-For", request.remote_addr)
+    userAgent = request.user_agent.string
+    userToken = get_jwt_identity()
+    requestLog = f"| IP: {ip} | User Agent: {userAgent} | Client IP: {clientIp} | User: {userToken}"
 
     if not valIsNotNone(start, end):
         return jsonify({
@@ -380,19 +410,24 @@ def getLaeBetweenDates():
     data = lae.getBetweenDates(start=start, end=end)
 
     # 3) Return data.
-    logger.info("LAE Data recovered from Database")
+    logger.info(f"LAE Data recovered from Database {requestLog}")
     return jsonify(data)
 
 @app.route("/Customers", methods=["GET"])
 @jwt_required()
 def getAllCustomers():
     redisKey = "AllCustomers"
+    ip = request.remote_addr
+    clientIp = request.headers.get("X-Forwarded-For", request.remote_addr)
+    userAgent = request.user_agent.string
+    userToken = get_jwt_identity()
+    requestLog = f"| IP: {ip} | User Agent: {userAgent} | Client IP: {clientIp} | User: {userToken}"
     
     # 1) Check if Redis container is working for retrieving data.
     if redisCli:
         # Check if the data is already in Redis.
         if redisCli.get(redisKey):
-            logger.info("All Customers recovered from Redis")
+            logger.info(f"All Customers recovered from Redis {requestLog}")
             return jsonify(json.loads(redisCli.get(redisKey)))
 
     # 2) Recover data from database.
@@ -404,9 +439,9 @@ def getAllCustomers():
         # Defines expiration time and save Redis key.
         expirationTime = 60*60*10
         redisCli.set(name=redisKey, value=json.dumps(obj=data, default=str), ex=expirationTime)
-        logger.info("All Customers saved in Redis, recovered from Database")
+        logger.info(f"All Customers saved in Redis, recovered from Database {requestLog}")
     else:
-        logger.info("All Customers not found in Redis, recovered from Database")
+        logger.info(f"All Customers not found in Redis, recovered from Database {requestLog}")
 
     # 4) Return data.
     return jsonify(data)
@@ -414,6 +449,12 @@ def getAllCustomers():
 @app.route("/Customers/<string:id>", methods=["GET"])
 @jwt_required()
 def getCustomerById(id: str):
+    ip = request.remote_addr
+    clientIp = request.headers.get("X-Forwarded-For", request.remote_addr)
+    userAgent = request.user_agent.string
+    userToken = get_jwt_identity()
+    requestLog = f"| IP: {ip} | User Agent: {userAgent} | Client IP: {clientIp} | User: {userToken}"
+
     # 1) Validate parameter.
     if not validateStringNumber(id):
         return jsonify({
@@ -427,19 +468,24 @@ def getCustomerById(id: str):
     data = customers.getById(id)
 
     # 3) Return data.
-    logger.info("Customer recovered from Database")
+    logger.info(f"Customer recovered from Database {requestLog}")
     return jsonify(data)
 
 @app.route("/Employees", methods=["GET"])
 @jwt_required()
 def getAllEmployees():
     redisKey = "AllEmployees"
+    ip = request.remote_addr
+    clientIp = request.headers.get("X-Forwarded-For", request.remote_addr)
+    userAgent = request.user_agent.string
+    userToken = get_jwt_identity()
+    requestLog = f"| IP: {ip} | User Agent: {userAgent} | Client IP: {clientIp} | User: {userToken}"
 
     # 1) Check if Redis container is working for retrieving data.
     if redisCli:
         # Check if the data is already in Redis.        
         if redisCli.get(redisKey):
-            logger.info("All Employees recovered from Redis")
+            logger.info(f"All Employees recovered from Redis {requestLog}")
             return jsonify(json.loads(redisCli.get(redisKey)))
 
     # 2) Recover data from database.
@@ -451,9 +497,9 @@ def getAllEmployees():
         # Defines expiration time and save Redis key.
         expirationTime = 60*60*10
         redisCli.set(name=redisKey, value=json.dumps(obj=data, default=str), ex=expirationTime)
-        logger.info("All Employees saved in Redis, recovered from Database")
+        logger.info(f"All Employees saved in Redis, recovered from Database {requestLog}")
     else:
-        logger.info("All Employees not found in Redis, recovered from Database")
+        logger.info(f"All Employees not found in Redis, recovered from Database {requestLog}")
 
     # 4) Return data.
     return jsonify(data)
@@ -466,6 +512,12 @@ def getReceiptsBetweenDates():
     end = request.args.get("endAt")
     # 2) Defines pre-made Redis key with date parameters.
     redisKey = f"Receipts_{start}_{end}"
+
+    ip = request.remote_addr
+    clientIp = request.headers.get("X-Forwarded-For", request.remote_addr)
+    userAgent = request.user_agent.string
+    userToken = get_jwt_identity()
+    requestLog = f"| IP: {ip} | User Agent: {userAgent} | Client IP: {clientIp} | User: {userToken}"
 
     if not valIsNotNone(start, end):
         return jsonify({
@@ -492,7 +544,7 @@ def getReceiptsBetweenDates():
         # Check if the data is already in Redis.
         redisData = valPreMadeRedisData(start, end, redisKey, validators)
         if redisData:
-            logger.info("Receipts recovered from Redis")
+            logger.info(f"Receipts recovered from Redis {requestLog}")
             return jsonify(json.loads(redisData))
 
     # 4) Recover data from database.
@@ -504,9 +556,9 @@ def getReceiptsBetweenDates():
         # Defines expiration time and save Redis key.
         expirationTime = 60*60*3
         redisCli.set(name=redisKey, value=json.dumps(obj=data, default=str), ex=expirationTime)
-        logger.info("Receipts saved in Redis, recovered from Database")
+        logger.info(f"Receipts saved in Redis, recovered from Database {requestLog}")
     else:
-        logger.info("Receipts not found in Redis, recovered from Database")
+        logger.info(f"Receipts not found in Redis, recovered from Database {requestLog}")
 
     # 6) Return data.
     return jsonify(data)
@@ -515,12 +567,17 @@ def getReceiptsBetweenDates():
 @jwt_required()
 def getRegionalsByOffice():
     redisKey = "RegionalsOfficesReport"
+    ip = request.remote_addr
+    clientIp = request.headers.get("X-Forwarded-For", request.remote_addr)
+    userAgent = request.user_agent.string
+    userToken = get_jwt_identity()
+    requestLog = f"| IP: {ip} | User Agent: {userAgent} | Client IP: {clientIp} | User: {userToken}"
 
     # 1) Check if Redis container is working for retrieving data.
     if redisCli:
         # Check if the data is already in Redis.
         if redisCli.get(redisKey):
-            logger.info("Recovered Regional Offices from Redis")
+            logger.info(f"Recovered Regional Offices from Redis {requestLog}")
             return jsonify(json.loads(redisCli.get(redisKey)))
 
     # 2) Recover data from database.
@@ -532,9 +589,9 @@ def getRegionalsByOffice():
         # Defines expiration time and save Redis key.
         expirationTime = 60*60*10
         redisCli.set(name=redisKey, value=json.dumps(obj=data, default=str), ex=expirationTime)
-        logger.info("Recovered Regional Offices saved in Redis, recovered from Database")
+        logger.info(f"Recovered Regional Offices saved in Redis, recovered from Database {requestLog}")
     else:
-        logger.info("Recovered Regional Offices not found in Redis, recovered from Database")
+        logger.info(f"Recovered Regional Offices not found in Redis, recovered from Database {requestLog}")
 
     # 4) Return data.
     return jsonify(data)
@@ -547,6 +604,12 @@ def countDialpadCalls():
     end = request.args.get("endAt")
     # 2) Defines Redis key, validators and resulting Json keys.
     redisKey = f"DialpadCalls_{start}_{end}"
+
+    ip = request.remote_addr
+    clientIp = request.headers.get("X-Forwarded-For", request.remote_addr)
+    userAgent = request.user_agent.string
+    userToken = get_jwt_identity()
+    requestLog = f"| IP: {ip} | User Agent: {userAgent} | Client IP: {clientIp} | User: {userToken}"
 
     if not valIsNotNone(start, end):
         return jsonify({
@@ -574,7 +637,7 @@ def countDialpadCalls():
         # Check if the data is already in Redis.
         redisData = valPreMadeHashData(start, end, redisKey, validators, hashKeys)
         if redisData:
-            logger.info("Dialpad Calls count recovered from Redis")
+            logger.info(f"Dialpad Calls count recovered from Redis {requestLog}")
             return jsonify(redisData), 200
 
     # 4) Recover data from database.
@@ -590,9 +653,9 @@ def countDialpadCalls():
                 "uniqueCalls": json.dumps(uniqueCalls)
             }
         )
-        logger.info("Dialpad Calls count saved in Redis, recovered from Database")
+        logger.info(f"Dialpad Calls count saved in Redis, recovered from Database {requestLog}")
     else:
-        logger.info("Dialpad Calls count not found in Redis, recovered from Database")
+        logger.info(f"Dialpad Calls count not found in Redis, recovered from Database {requestLog}")
         
     # 6) Return data.
         
